@@ -16,25 +16,23 @@ const WhatsAppIntegration = ({ cartItems, onSuccess }: WhatsAppIntegrationProps)
     if (cartItems.length === 0) return;
 
     // Create message content
-    let message = "🛒 *New Order Request from MediCare Plus*\n\n";
-    message += "📋 *Order Details:*\n";
+    let message = "🛒 New Order Request\n\n";
+    message += "📋Order Details:\n";
     
     let total = 0;
     cartItems.forEach((item, index) => {
       const itemTotal = item.mrp * item.quantity;
       total += itemTotal;
       message += `${index + 1}. ${item.name}\n`;
-      message += `   Company: ${item.company}\n`;
-      message += `   Price: ₹${item.mrp} x ${item.quantity} = ₹${itemTotal}\n\n`;
+      //message += `   Company: ${item.company}\n\n`;
     });
 
-    message += `💰 *Total Amount: ₹${total}*\n\n`;
-    message += "📞 Please confirm this order and provide delivery details.\n";
-    message += `🕒 Order Time: ${new Date().toLocaleString()}`;
+    message += `\n🕒 Order Time: ${new Date().toLocaleString()}`;
 
     // Encode message for WhatsApp URL
     const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
+    const whatsappUrl = "https://api.whatsapp.com/send/?phone=" + WHATSAPP_NUMBER + "&text=" + encodedMessage;
+    //const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
 
     // Open WhatsApp
     window.open(whatsappUrl, '_blank');

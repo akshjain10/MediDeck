@@ -156,14 +156,18 @@ const ProductDetail = () => {
             <div>
               <Badge variant="secondary" className="mb-2">{product.category}</Badge>
               <h1 className="text-3xl font-bold mb-2">{product.brandName}</h1>
-              <p className="text-lg text-gray-600">Description:</p>
-              <p className="text-2xl text-gray-600">{product.name}</p>
+            </div>
+            <div>
+              <p className="text-lg text-gray-600">{product.name}</p>
+            </div>
+            <div>
               <p className="text-lg text-gray-600">by {product.company}</p>
             </div>
-
+            <div>
+              <p className="text-2xl">Packing: {product.packing}</p>
+            </div>
             <div>
               <p className="text-3xl font-bold text-blue-600">MRP ₹{product.mrp}</p>
-              <p className="text-gray-600">Packing: {product.packing}</p>
             </div>
 
             <Card>

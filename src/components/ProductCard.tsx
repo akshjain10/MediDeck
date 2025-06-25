@@ -28,10 +28,11 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
             {product.brandName}
           </h3>
         </Link>
-        <p className="text-sm text-gray-600 mb-1">Name: {product.name}</p>
+        <p className="text-sm text-gray-600 mb-1"></p>
+        <p className="text-sm text-gray-600 mb-1">{product.name}</p>
         <p className="text-sm text-gray-600 mb-1">Company: {product.company}</p>
         <p className="text-sm text-gray-600 mb-2">Packing: {product.packing}</p>
-        <p className="text-xl font-bold text-blue-600">₹{product.mrp}</p>
+        <p className="text-xl font-bold text-blue-600">MRP ₹{product.mrp}</p>
       </CardContent>
       <CardFooter className="p-4 pt-0">
         <Button
