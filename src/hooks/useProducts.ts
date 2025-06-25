@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 export interface Product {
   id: string;
   name: string;
-  brandName: string;
+  Salt: string;
   company: string;
   packing: string;
   mrp: number;
@@ -36,8 +36,8 @@ export const useProducts = () => {
       // Transform the data to match our interface
       const transformedProducts: Product[] = (data || []).map((item: any) => ({
         id: item.id,
-        name: item.Name || '',
-        brandName: item.Company || '', // Using Company as brandName based on your requirements
+        brandName: item.Name || '', // Using Company as brandName based on your requirements
+        name: item.Salt || '',
         company: item.Company || '',
         packing: item.Packing || '',
         mrp: item.MRP || 0,
