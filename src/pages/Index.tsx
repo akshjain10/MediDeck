@@ -1,14 +1,14 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import Header from '@/components/Header';
-import ProductCard, { Product } from '@/components/ProductCard';
 import Cart, { CartItem } from '@/components/Cart';
 import OrderSuccess from '@/components/OrderSuccess';
 import EnquiryForm, { EnquiryData } from '@/components/EnquiryForm';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { mockProducts, categories } from '@/data/products';
 import { useToast } from '@/hooks/use-toast';
+import { Link } from 'react-router-dom';
+import { Search, ShoppingBag, Phone, Mail } from 'lucide-react';
 
 const Index = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -16,42 +16,10 @@ const Index = () => {
   const [showOrderSuccess, setShowOrderSuccess] = useState(false);
   const [showEnquiryForm, setShowEnquiryForm] = useState(false);
   const [orderNumber, setOrderNumber] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
   const { toast } = useToast();
 
-  const filteredProducts = useMemo(() => {
-    return mockProducts.filter(product => {
-      const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           product.company.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
-      return matchesSearch && matchesCategory;
-    });
-  }, [searchQuery, selectedCategory]);
-
-  const addToCart = (product: Product) => {
-    setCartItems(prev => {
-      const existingItem = prev.find(item => item.id === product.id);
-      if (existingItem) {
-        return prev.map(item =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-      return [...prev, {
-        id: product.id,
-        name: product.name,
-        company: product.company,
-        mrp: product.mrp,
-        quantity: 1,
-        image: product.image
-      }];
-    });
-    toast({
-      title: "Added to Cart",
-      description: `${product.name} has been added to your cart.`,
-    });
+  const handleSetCartItems = (items: CartItem[]) => {
+    setCartItems(items);
   };
 
   const updateQuantity = (id: string, quantity: number) => {
@@ -94,94 +62,111 @@ const Index = () => {
       <Header
         cartItemsCount={cartItemsCount}
         onCartClick={() => setShowCart(true)}
-        onSearchChange={setSearchQuery}
+        onSearchChange={() => {}}
+        onSetCartItems={handleSetCartItems}
       />
       
-      <main className="container mx-auto px-4 py-8">
-        {/* Hero Section */}
-        <section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg p-8 mb-8">
-          <div className="max-w-2xl">
-            <h2 className="text-4xl font-bold mb-4">Your Trusted Medical Supplies Partner</h2>
-            <p className="text-xl mb-6">Quality medical equipment and supplies delivered to your doorstep</p>
-            <Button
-              onClick={() => setShowEnquiryForm(true)}
-              className="bg-white text-blue-600 hover:bg-gray-100"
-            >
-              Request Product Enquiry
-            </Button>
-          </div>
-        </section>
-
-        {/* Category Filter */}
-        <div className="mb-6">
-          <div className="flex flex-wrap gap-2">
-            {categories.map(category => (
-              <Button
-                key={category}
-                variant={selectedCategory === category ? "default" : "outline"}
-                onClick={() => setSelectedCategory(category)}
-                className={selectedCategory === category ? "bg-blue-600 hover:bg-blue-700" : ""}
-              >
-                {category}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        {/* Products Grid */}
-        <section>
-          <h3 className="text-2xl font-bold mb-6">Our Products</h3>
-          {filteredProducts.length === 0 ? (
-            <Card className="p-8 text-center">
-              <CardContent>
-                <p className="text-gray-500 mb-4">No products found matching your criteria.</p>
-                <Button onClick={() => setShowEnquiryForm(true)}>
-                  Request This Product
+      <main>
+        {/* Hero Section with Background */}
+        <section 
+          className="relative bg-cover bg-center bg-no-repeat min-h-[80vh] flex items-center"
+          style={{
+            backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url("https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1920&h=1080&fit=crop")'
+          }}
+        >
+          <div className="container mx-auto px-4 text-white">
+            <div className="max-w-3xl">
+              <h1 className="text-5xl md:text-6xl font-bold mb-6">
+                Your Trusted Medical Supplies Partner
+              </h1>
+              <p className="text-xl md:text-2xl mb-8 opacity-90">
+                Quality medical equipment and supplies delivered to your doorstep with care and reliability
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link to="/products">
+                  <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-4">
+                    <ShoppingBag className="mr-2" />
+                    Browse Products
+                  </Button>
+                </Link>
+                <Button
+                  onClick={() => setShowEnquiryForm(true)}
+                  variant="outline"
+                  size="lg"
+                  className="bg-white/10 border-white text-white hover:bg-white/20 text-lg px-8 py-4"
+                >
+                  Request Enquiry
                 </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredProducts.map(product => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onAddToCart={addToCart}
-                />
-              ))}
+              </div>
             </div>
-          )}
+          </div>
         </section>
 
         {/* Features Section */}
-        <section className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
-          <Card className="text-center p-6">
-            <CardContent>
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">🚚</span>
+        <section className="py-20 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-bold mb-4">Why Choose MediCare Plus?</h2>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                We provide comprehensive medical solutions with a commitment to quality and service excellence
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <Card className="text-center p-8 hover:shadow-lg transition-shadow">
+                <CardContent>
+                  <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span className="text-3xl">🚚</span>
+                  </div>
+                  <h3 className="text-2xl font-semibold mb-4">Fast Delivery</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Quick and reliable delivery to your location with real-time tracking and updates
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card className="text-center p-8 hover:shadow-lg transition-shadow">
+                <CardContent>
+                  <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span className="text-3xl">✅</span>
+                  </div>
+                  <h3 className="text-2xl font-semibold mb-4">Quality Products</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Certified and genuine medical supplies from trusted manufacturers worldwide
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card className="text-center p-8 hover:shadow-lg transition-shadow">
+                <CardContent>
+                  <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span className="text-3xl">💬</span>
+                  </div>
+                  <h3 className="text-2xl font-semibold mb-4">24/7 Support</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Always available to help with your queries and provide expert guidance
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
+
+        {/* Contact Section */}
+        <section className="py-16 bg-gray-100">
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="text-3xl font-bold mb-8">Get In Touch</h2>
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-8">
+              <div className="flex items-center gap-3">
+                <Phone className="text-blue-600" />
+                <span className="text-lg">+91 98765 43210</span>
               </div>
-              <h4 className="font-semibold mb-2">Fast Delivery</h4>
-              <p className="text-gray-600">Quick and reliable delivery to your location</p>
-            </CardContent>
-          </Card>
-          <Card className="text-center p-6">
-            <CardContent>
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">✅</span>
+              <div className="flex items-center gap-3">
+                <Mail className="text-blue-600" />
+                <span className="text-lg">info@medicareplus.com</span>
               </div>
-              <h4 className="font-semibold mb-2">Quality Products</h4>
-              <p className="text-gray-600">Certified and genuine medical supplies</p>
-            </CardContent>
-          </Card>
-          <Card className="text-center p-6">
-            <CardContent>
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">💬</span>
-              </div>
-              <h4 className="font-semibold mb-2">24/7 Support</h4>
-              <p className="text-gray-600">Always available to help with your queries</p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </section>
       </main>
 

@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Trash2, Plus, Minus } from 'lucide-react';
+import WhatsAppIntegration from '@/components/WhatsAppIntegration';
 
 export interface CartItem {
   id: string;
@@ -23,6 +24,10 @@ interface CartProps {
 
 const Cart = ({ items, onUpdateQuantity, onRemoveItem, onPlaceOrder, onClose }: CartProps) => {
   const total = items.reduce((sum, item) => sum + (item.mrp * item.quantity), 0);
+
+  const handleWhatsAppSuccess = () => {
+    onPlaceOrder();
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -74,11 +79,21 @@ const Cart = ({ items, onUpdateQuantity, onRemoveItem, onPlaceOrder, onClose }: 
                   </div>
                 </div>
               ))}
-              <div className="border-t pt-4">
+              <div className="border-t pt-4 space-y-4">
                 <div className="flex justify-between items-center text-xl font-bold">
                   <span>Total: ₹{total}</span>
-                  <Button onClick={onPlaceOrder} className="bg-green-600 hover:bg-green-700">
-                    Place Order
+                </div>
+                <div className="grid grid-cols-1 gap-2">
+                  <WhatsAppIntegration 
+                    cartItems={items}
+                    onSuccess={handleWhatsAppSuccess}
+                  />
+                  <Button 
+                    onClick={onPlaceOrder} 
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Place Order (Traditional)
                   </Button>
                 </div>
               </div>
