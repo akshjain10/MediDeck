@@ -62,7 +62,6 @@ const Index = () => {
       <Header
         cartItemsCount={cartItemsCount}
         onCartClick={() => setShowCart(true)}
-        onSearchChange={() => {}}
         onSetCartItems={handleSetCartItems}
       />
       
