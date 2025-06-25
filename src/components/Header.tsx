@@ -18,7 +18,8 @@ const Header = ({ cartItemsCount, onCartClick }: HeaderProps) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-6">
             <Link to="/" className="flex items-center space-x-2">
-              <h1 className="text-2xl font-bold text-blue-600">Arihant MediGens</h1>
+              <img src="/favicon.ico" alt="arihant Logo" className="h-12 w-auto"/>
+              <h1 className="text-2xl font-bold text-blue-600">Arihant Medigens</h1>
             </Link>
             
             <nav className="hidden md:flex items-center space-x-6">
