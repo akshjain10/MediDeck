@@ -23,11 +23,14 @@ const Products = () => {
   const { toast } = useToast();
 
   const filteredProducts = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return [];
+    }
+    
     return mockProducts.filter(product => {
-      const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      const matchesSearch = product.brandName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            product.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           product.brandName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           product.salt.toLowerCase().includes(searchQuery.toLowerCase());
+                           product.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
@@ -45,7 +48,7 @@ const Products = () => {
       }
       return [...prev, {
         id: product.id,
-        name: product.name,
+        name: product.brandName,
         company: product.company,
         mrp: product.mrp,
         quantity: 1,
@@ -54,7 +57,7 @@ const Products = () => {
     });
     toast({
       title: "Added to Cart",
-      description: `${product.name} has been added to your cart.`,
+      description: `${product.brandName} has been added to your cart.`,
     });
   };
 
@@ -121,24 +124,32 @@ const Products = () => {
         </div>
 
         {/* Category Filter */}
-        <div className="mb-6">
-          <div className="flex flex-wrap gap-2">
-            {categories.map(category => (
-              <Button
-                key={category}
-                variant={selectedCategory === category ? "default" : "outline"}
-                onClick={() => setSelectedCategory(category)}
-                className={selectedCategory === category ? "bg-blue-600 hover:bg-blue-700" : ""}
-              >
-                {category}
-              </Button>
-            ))}
+        {searchQuery.trim() && (
+          <div className="mb-6">
+            <div className="flex flex-wrap gap-2">
+              {categories.map(category => (
+                <Button
+                  key={category}
+                  variant={selectedCategory === category ? "default" : "outline"}
+                  onClick={() => setSelectedCategory(category)}
+                  className={selectedCategory === category ? "bg-blue-600 hover:bg-blue-700" : ""}
+                >
+                  {category}
+                </Button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Products Grid */}
         <section>
-          {filteredProducts.length === 0 ? (
+          {!searchQuery.trim() ? (
+            <Card className="p-8 text-center">
+              <CardContent>
+                <p className="text-gray-500 mb-4">Start typing to search for products.</p>
+              </CardContent>
+            </Card>
+          ) : filteredProducts.length === 0 ? (
             <Card className="p-8 text-center">
               <CardContent>
                 <p className="text-gray-500 mb-4">No products found matching your criteria.</p>

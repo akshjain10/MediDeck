@@ -10,7 +10,7 @@ interface WhatsAppIntegrationProps {
 }
 
 const WhatsAppIntegration = ({ cartItems, onSuccess }: WhatsAppIntegrationProps) => {
-  const WHATSAPP_NUMBER = "919876543210"; // Replace with actual WhatsApp number
+  const WHATSAPP_NUMBER = "918209703661"; // Updated number
 
   const sendToWhatsApp = () => {
     if (cartItems.length === 0) return;

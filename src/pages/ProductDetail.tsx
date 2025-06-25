@@ -7,7 +7,7 @@ import OrderSuccess from '@/components/OrderSuccess';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Star } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { mockProducts } from '@/data/products';
 import { useToast } from '@/hooks/use-toast';
 
@@ -40,9 +40,9 @@ const ProductDetail = () => {
     );
   }
 
-  // Get similar products with the same salt but different brands
+  // Get similar products with the same name but different brands
   const similarProducts = mockProducts.filter(p => 
-    p.salt === product.salt && 
+    p.name === product.name && 
     p.brandName !== product.brandName && 
     p.id !== product.id
   ).slice(0, 4);
@@ -59,7 +59,7 @@ const ProductDetail = () => {
       }
       return [...prev, {
         id: productToAdd.id,
-        name: productToAdd.name,
+        name: productToAdd.brandName,
         company: productToAdd.company,
         mrp: productToAdd.mrp,
         quantity: qty,
@@ -68,7 +68,7 @@ const ProductDetail = () => {
     });
     toast({
       title: "Added to Cart",
-      description: `${productToAdd.name} has been added to your cart.`,
+      description: `${productToAdd.brandName} has been added to your cart.`,
     });
   };
 
@@ -126,10 +126,10 @@ const ProductDetail = () => {
         {/* Product Details */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           {/* Product Image */}
-          <div className="aspect-square overflow-hidden rounded-lg bg-white p-4">
+          <div className="aspect-square overflow-hidden rounded-lg bg-white p-4 max-w-md">
             <img
-              src={`https://images.unsplash.com/${product.image}?w=600&h=600&fit=crop`}
-              alt={product.name}
+              src={`https://images.unsplash.com/${product.image}?w=400&h=400&fit=crop`}
+              alt={product.brandName}
               className="w-full h-full object-cover rounded"
             />
           </div>
@@ -138,24 +138,14 @@ const ProductDetail = () => {
           <div className="space-y-6">
             <div>
               <Badge variant="secondary" className="mb-2">{product.category}</Badge>
-              <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
-              <p className="text-lg text-gray-600">Brand: {product.brandName}</p>
+              <h1 className="text-3xl font-bold mb-2">{product.brandName}</h1>
+              <p className="text-lg text-gray-600">Name: {product.name}</p>
               <p className="text-lg text-gray-600">by {product.company}</p>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                ))}
-              </div>
-              <span className="text-gray-600">(4.5 stars)</span>
             </div>
 
             <div>
               <p className="text-3xl font-bold text-blue-600">₹{product.mrp}</p>
               <p className="text-gray-600">Packing: {product.packing}</p>
-              <p className="text-gray-600">Salt: {product.salt}</p>
             </div>
 
             <Card>
@@ -218,7 +208,7 @@ const ProductDetail = () => {
         {/* Similar Products */}
         {similarProducts.length > 0 && (
           <section>
-            <h2 className="text-2xl font-bold mb-6">Similar Products with {product.salt}</h2>
+            <h2 className="text-2xl font-bold mb-6">Similar Products with {product.name}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {similarProducts.map(similarProduct => (
                 <ProductCard
