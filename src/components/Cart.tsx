@@ -83,19 +83,10 @@ const Cart = ({ items, onUpdateQuantity, onRemoveItem, onPlaceOrder, onClose }: 
                 <div className="flex justify-between items-center text-xl font-bold">
                   <span>Total: ₹{total}</span>
                 </div>
-                <div className="grid grid-cols-1 gap-2">
-                  <WhatsAppIntegration 
-                    cartItems={items}
-                    onSuccess={handleWhatsAppSuccess}
-                  />
-                  <Button 
-                    onClick={onPlaceOrder} 
-                    variant="outline"
-                    className="w-full"
-                  >
-                    Place Order (Traditional)
-                  </Button>
-                </div>
+                <WhatsAppIntegration 
+                  cartItems={items}
+                  onSuccess={handleWhatsAppSuccess}
+                />
               </div>
             </div>
           )}

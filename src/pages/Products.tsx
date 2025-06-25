@@ -7,6 +7,8 @@ import OrderSuccess from '@/components/OrderSuccess';
 import EnquiryForm, { EnquiryData } from '@/components/EnquiryForm';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
 import { mockProducts, categories } from '@/data/products';
 import { useToast } from '@/hooks/use-toast';
 
@@ -23,7 +25,9 @@ const Products = () => {
   const filteredProducts = useMemo(() => {
     return mockProducts.filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           product.company.toLowerCase().includes(searchQuery.toLowerCase());
+                           product.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           product.brandName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           product.salt.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
@@ -98,14 +102,22 @@ const Products = () => {
       <Header
         cartItemsCount={cartItemsCount}
         onCartClick={() => setShowCart(true)}
-        onSearchChange={setSearchQuery}
         onSetCartItems={handleSetCartItems}
       />
       
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-4">Our Products</h1>
-          <p className="text-gray-600">Browse our comprehensive range of medical supplies and equipment</p>
+        {/* Search Section */}
+        <div className="mb-6">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              type="text"
+              placeholder="Search products..."
+              className="pl-10"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </div>
 
         {/* Category Filter */}

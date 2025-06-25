@@ -7,8 +7,10 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 export interface Product {
   id: string;
   name: string;
+  brandName: string;
   company: string;
   packing: string;
+  salt: string;
   mrp: number;
   image: string;
   category: string;
@@ -37,8 +39,10 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
             {product.name}
           </h3>
         </Link>
+        <p className="text-sm text-gray-600 mb-1">Brand: {product.brandName}</p>
         <p className="text-sm text-gray-600 mb-1">Company: {product.company}</p>
-        <p className="text-sm text-gray-600 mb-2">Packing: {product.packing}</p>
+        <p className="text-sm text-gray-600 mb-1">Packing: {product.packing}</p>
+        <p className="text-sm text-gray-600 mb-2">Salt: {product.salt}</p>
         <p className="text-xl font-bold text-blue-600">₹{product.mrp}</p>
       </CardContent>
       <CardFooter className="p-4 pt-0">

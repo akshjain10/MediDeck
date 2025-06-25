@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -29,7 +28,6 @@ const ProductDetail = () => {
         <Header
           cartItemsCount={0}
           onCartClick={() => {}}
-          onSearchChange={() => {}}
           onSetCartItems={() => {}}
         />
         <div className="container mx-auto px-4 py-8 text-center">
@@ -42,10 +40,10 @@ const ProductDetail = () => {
     );
   }
 
-  // Get similar products from the same category but different brands
+  // Get similar products with the same salt but different brands
   const similarProducts = mockProducts.filter(p => 
-    p.category === product.category && 
-    p.company !== product.company && 
+    p.salt === product.salt && 
+    p.brandName !== product.brandName && 
     p.id !== product.id
   ).slice(0, 4);
 
@@ -113,7 +111,6 @@ const ProductDetail = () => {
       <Header
         cartItemsCount={cartItemsCount}
         onCartClick={() => setShowCart(true)}
-        onSearchChange={() => {}}
         onSetCartItems={handleSetCartItems}
       />
       
@@ -142,6 +139,7 @@ const ProductDetail = () => {
             <div>
               <Badge variant="secondary" className="mb-2">{product.category}</Badge>
               <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
+              <p className="text-lg text-gray-600">Brand: {product.brandName}</p>
               <p className="text-lg text-gray-600">by {product.company}</p>
             </div>
 
@@ -157,13 +155,14 @@ const ProductDetail = () => {
             <div>
               <p className="text-3xl font-bold text-blue-600">₹{product.mrp}</p>
               <p className="text-gray-600">Packing: {product.packing}</p>
+              <p className="text-gray-600">Salt: {product.salt}</p>
             </div>
 
             <Card>
               <CardContent className="p-4">
                 <h3 className="font-semibold mb-2">Product Details</h3>
                 <ul className="space-y-1 text-gray-600">
-                  <li>• High-quality medical grade product</li>
+                  <li>• High-quality pharmaceutical product</li>
                   <li>• Certified and tested for safety</li>
                   <li>• Fast and reliable delivery</li>
                   <li>• 24/7 customer support</li>
@@ -219,7 +218,7 @@ const ProductDetail = () => {
         {/* Similar Products */}
         {similarProducts.length > 0 && (
           <section>
-            <h2 className="text-2xl font-bold mb-6">Similar Products from Other Brands</h2>
+            <h2 className="text-2xl font-bold mb-6">Similar Products with {product.salt}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {similarProducts.map(similarProduct => (
                 <ProductCard
