@@ -105,7 +105,7 @@ const Index = () => {
         <section className="py-20 bg-white">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold mb-4">Why Choose MediCare Plus?</h2>
+              <h2 className="text-4xl font-bold mb-4">Why Choose Us?</h2>
               <p className="text-xl text-gray-600 max-w-2xl mx-auto">
                 We provide comprehensive medical solutions with a commitment to quality and service excellence
               </p>
