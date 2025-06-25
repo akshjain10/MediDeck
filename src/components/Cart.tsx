@@ -81,7 +81,7 @@ const Cart = ({ items, onUpdateQuantity, onRemoveItem, onPlaceOrder, onClose }: 
               ))}
               <div className="border-t pt-4 space-y-4">
                 <div className="flex justify-between items-center text-xl font-bold">
-                  <span>Total: ₹{total}</span>
+                  <span></span>
                 </div>
                 <WhatsAppIntegration 
                   cartItems={items}
