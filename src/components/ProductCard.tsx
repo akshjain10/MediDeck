@@ -3,17 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
-
-export interface Product {
-  id: string;
-  name: string;
-  brandName: string;
-  company: string;
-  packing: string;
-  mrp: number;
-  image: string;
-  category: string;
-}
+import { Product } from '@/hooks/useProducts';
 
 interface ProductCardProps {
   product: Product;
@@ -24,9 +14,9 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
   return (
     <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-300">
       <Link to={`/product/${product.id}`} className="block">
-        <div className="aspect-square overflow-hidden rounded-t-lg h-48">
+        <div className="aspect-square overflow-hidden rounded-t-lg h-32">
           <img
-            src={`https://images.unsplash.com/${product.image}?w=200&h=200&fit=crop`}
+            src={`https://images.unsplash.com/${product.image}?w=150&h=150&fit=crop`}
             alt={product.brandName}
             className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
           />

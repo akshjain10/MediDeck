@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Header from '@/components/Header';
-import ProductCard, { Product } from '@/components/ProductCard';
+import ProductCard from '@/components/ProductCard';
 import Cart, { CartItem } from '@/components/Cart';
 import OrderSuccess from '@/components/OrderSuccess';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft } from 'lucide-react';
-import { mockProducts } from '@/data/products';
+import { ArrowLeft, Loader2 } from 'lucide-react';
+import { useProducts, Product } from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
 
 const ProductDetail = () => {
@@ -19,9 +19,33 @@ const ProductDetail = () => {
   const [orderNumber, setOrderNumber] = useState('');
   const [quantity, setQuantity] = useState(1);
   const { toast } = useToast();
+  const { products, loading } = useProducts();
 
-  const product = mockProducts.find(p => p.id === id);
+  const product = products.find(p => p.id === id);
   
+  // Get similar products with the same name
+  const similarProducts = products.filter(p => 
+    p.name === product?.name && 
+    p.brandName !== product?.brandName && 
+    p.id !== product?.id
+  ).slice(0, 4);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header
+          cartItemsCount={0}
+          onCartClick={() => {}}
+          onSetCartItems={() => {}}
+        />
+        <div className="container mx-auto px-4 py-8 text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-500">Loading product...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!product) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -39,13 +63,6 @@ const ProductDetail = () => {
       </div>
     );
   }
-
-  // Get similar products with the same name but different brands
-  const similarProducts = mockProducts.filter(p => 
-    p.name === product.name && 
-    p.brandName !== product.brandName && 
-    p.id !== product.id
-  ).slice(0, 4);
 
   const addToCart = (productToAdd: Product, qty: number = 1) => {
     setCartItems(prev => {
@@ -128,7 +145,7 @@ const ProductDetail = () => {
           {/* Product Image */}
           <div className="aspect-square overflow-hidden rounded-lg bg-white p-4 max-w-md">
             <img
-              src={`https://images.unsplash.com/${product.image}?w=400&h=400&fit=crop`}
+              src={`https://images.unsplash.com/${product.image}?w=300&h=300&fit=crop`}
               alt={product.brandName}
               className="w-full h-full object-cover rounded"
             />

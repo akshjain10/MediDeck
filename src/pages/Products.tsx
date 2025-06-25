@@ -1,15 +1,14 @@
-
 import React, { useState, useMemo } from 'react';
 import Header from '@/components/Header';
-import ProductCard, { Product } from '@/components/ProductCard';
+import ProductCard from '@/components/ProductCard';
 import Cart, { CartItem } from '@/components/Cart';
 import OrderSuccess from '@/components/OrderSuccess';
 import EnquiryForm, { EnquiryData } from '@/components/EnquiryForm';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
-import { mockProducts, categories } from '@/data/products';
+import { Search, Loader2 } from 'lucide-react';
+import { useProducts, Product } from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
 
 const Products = () => {
@@ -21,20 +20,27 @@ const Products = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const { toast } = useToast();
+  const { products, loading, error } = useProducts();
+
+  // Generate categories from the fetched products
+  const categories = useMemo(() => {
+    const uniqueCategories = ['All', ...new Set(products.map(p => p.category))];
+    return uniqueCategories;
+  }, [products]);
 
   const filteredProducts = useMemo(() => {
     if (!searchQuery.trim()) {
       return [];
     }
     
-    return mockProducts.filter(product => {
+    return products.filter(product => {
       const matchesSearch = product.brandName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            product.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            product.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
-  }, [searchQuery, selectedCategory]);
+  }, [products, searchQuery, selectedCategory]);
 
   const addToCart = (product: Product) => {
     setCartItems(prev => {
@@ -143,7 +149,21 @@ const Products = () => {
 
         {/* Products Grid */}
         <section>
-          {!searchQuery.trim() ? (
+          {loading ? (
+            <Card className="p-8 text-center">
+              <CardContent>
+                <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+                <p className="text-gray-500">Loading products...</p>
+              </CardContent>
+            </Card>
+          ) : error ? (
+            <Card className="p-8 text-center">
+              <CardContent>
+                <p className="text-red-500 mb-4">Error loading products: {error}</p>
+                <p className="text-gray-500">Please try again later.</p>
+              </CardContent>
+            </Card>
+          ) : !searchQuery.trim() ? (
             <Card className="p-8 text-center">
               <CardContent>
                 <p className="text-gray-500 mb-4">Start typing to search for products.</p>
