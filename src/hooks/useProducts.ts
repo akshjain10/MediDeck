@@ -5,8 +5,8 @@ import { useToast } from '@/hooks/use-toast';
 
 export interface Product {
   id: string;
-  name: string;
-  Salt: string;
+  brandName: string; // This will be mapped from Name field
+  name: string; // This will be mapped from Salt field
   company: string;
   packing: string;
   mrp: number;
@@ -36,12 +36,12 @@ export const useProducts = () => {
       // Transform the data to match our interface
       const transformedProducts: Product[] = (data || []).map((item: any) => ({
         id: item.id,
-        brandName: item.Name || '', // Using Company as brandName based on your requirements
-        name: item.Salt || '',
+        brandName: item.Name || '', // Using Name as brandName
+        name: item.Salt || '', // Using Salt as name
         company: item.Company || '',
         packing: item.Packing || '',
         mrp: item.MRP || 0,
-        image: 'photo-1581091226825-a6a2a5aee158', // Default image, you can enhance this later
+        image: 'photo-1581091226825-a6a2a5aee158', // Default image
         category: item.Category || 'General'
       }));
 
