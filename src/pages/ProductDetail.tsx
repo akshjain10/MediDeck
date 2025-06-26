@@ -2,15 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Header from '@/components/Header';
-import ProductCard from '@/components/ProductCard';
+import ProductImage from '@/components/ProductImage';
+import ProductInfo from '@/components/ProductInfo';
+import SimilarProducts from '@/components/SimilarProducts';
 import Cart, { CartItem } from '@/components/Cart';
 import OrderSuccess from '@/components/OrderSuccess';
 import EnquiryForm, { EnquiryData } from '@/components/EnquiryForm';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { ArrowLeft, Loader2, MessageCircle, Plus, Minus } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useProducts, Product } from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
 
@@ -102,6 +101,11 @@ const ProductDetail = () => {
     addToCart(product, quantity);
   };
 
+  const handleBuyNow = () => {
+    handleAddToCart();
+    setShowCart(true);
+  };
+
   const handleSetCartItems = (items: CartItem[]) => {
     setCartItems(items);
   };
@@ -175,129 +179,23 @@ const ProductDetail = () => {
 
         {/* Product Details */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          {/* Product Image */}
-          <div className="aspect-square overflow-hidden rounded-lg bg-white p-4 max-w-sm">
-            <img
-              src={`https://images.unsplash.com/${product.image}?w=200&h=200&fit=crop`}
-              alt={product.brandName}
-              className="w-full h-full object-cover rounded"
-            />
-          </div>
-
-          {/* Product Info */}
-          <div className="space-y-6">
-            <div>
-              <Badge variant="secondary" className="mb-2">{product.category}</Badge>
-              <h1 className="text-3xl font-bold mb-2">
-                {product.brandName}
-              </h1>
-            </div>
-            <div>
-              <p className="text-lg text-gray-600">
-                {product.name}
-              </p>
-            </div>
-            <div>
-              <p className="text-lg text-gray-600">by {product.company}</p>
-            </div>
-            <div>
-              <p className="text-2xl">Packing: {product.packing}</p>
-            </div>
-            <div>
-              <p className="text-3xl font-bold text-blue-600">MRP ₹{product.mrp}</p>
-            </div>
-
-            <Card>
-              <CardContent className="p-4">
-                <h3 className="font-semibold mb-2">Product Details</h3>
-                <ul className="space-y-1 text-gray-600">
-                  <li>• High-quality pharmaceutical product</li>
-                  <li>• Certified and tested for safety</li>
-                  <li>• Fast and reliable delivery</li>
-                  <li>• 24/7 customer support</li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <label className="font-medium">Quantity:</label>
-                <div className="flex items-center space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="h-8 w-8 p-0"
-                  >
-                    <Minus className="w-3 h-3" />
-                  </Button>
-                  <Input
-                    type="number"
-                    value={quantity}
-                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-16 h-8 text-center text-sm"
-                    min="1"
-                  />
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="h-8 w-8 p-0"
-                  >
-                    <Plus className="w-3 h-3" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex space-x-4">
-              <Button 
-                onClick={handleAddToCart}
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
-                size="lg"
-              >
-                Add to Cart
-              </Button>
-              <Button 
-                variant="outline" 
-                size="lg"
-                onClick={() => {
-                  handleAddToCart();
-                  setShowCart(true);
-                }}
-              >
-                Buy Now
-              </Button>
-            </div>
-
-            <div className="pt-4">
-              <Button
-                onClick={() => setShowEnquiryForm(true)}
-                variant="outline"
-                className="w-full flex items-center justify-center space-x-2"
-              >
-                <MessageCircle className="w-4 h-4" />
-                <span>Product Enquiry</span>
-              </Button>
-            </div>
-          </div>
+          <ProductImage product={product} />
+          <ProductInfo 
+            product={product}
+            quantity={quantity}
+            setQuantity={setQuantity}
+            onAddToCart={handleAddToCart}
+            onBuyNow={handleBuyNow}
+            onEnquiry={() => setShowEnquiryForm(true)}
+          />
         </div>
 
         {/* Similar Products */}
-        {similarProducts.length > 0 && (
-          <section>
-            <h2 className="text-2xl font-bold mb-6">Similar Products with {product.name}</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {similarProducts.map(similarProduct => (
-                <ProductCard
-                  key={similarProduct.id}
-                  product={similarProduct}
-                  onAddToCart={(prod, qty = 1) => addToCart(prod, qty)}
-                />
-              ))}
-            </div>
-          </section>
-        )}
+        <SimilarProducts 
+          products={similarProducts}
+          currentProductName={product.name}
+          onAddToCart={addToCart}
+        />
       </main>
 
       {showCart && (
