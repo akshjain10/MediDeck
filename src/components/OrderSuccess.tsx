@@ -23,9 +23,6 @@ const OrderSuccess = ({ orderNumber, onClose }: OrderSuccessProps) => {
           <p className="text-gray-600">
             Your order has been placed successfully. 
           </p>
-          <p className="font-semibold">
-            Order Number: #{orderNumber}
-          </p>
           <p className="text-sm text-gray-500">
             We will contact you soon to confirm your order details.
           </p>

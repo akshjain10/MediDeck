@@ -23,7 +23,8 @@ const WhatsAppIntegration = ({ cartItems, onSuccess }: WhatsAppIntegrationProps)
     cartItems.forEach((item, index) => {
       const itemTotal = item.mrp * item.quantity;
       total += itemTotal;
-      message += `${index + 1}. ${item.name}\n`;
+      message += `${index + 1}. ${item.name}-`;
+      message += `${item.quantity} pc\n`;
       //message += `   Company: ${item.company}\n\n`;
     });
 
