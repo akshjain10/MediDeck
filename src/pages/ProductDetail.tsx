@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -8,7 +9,8 @@ import EnquiryForm, { EnquiryData } from '@/components/EnquiryForm';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Loader2, MessageCircle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ArrowLeft, Loader2, MessageCircle, Plus, Minus } from 'lucide-react';
 import { useProducts, Product } from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
 
@@ -187,24 +189,12 @@ const ProductDetail = () => {
             <div>
               <Badge variant="secondary" className="mb-2">{product.category}</Badge>
               <h1 className="text-3xl font-bold mb-2">
-                {product.brandName.length > 50 ? (
-                  <span title={product.brandName}>
-                    {product.brandName.substring(0, 50)}...
-                  </span>
-                ) : (
-                  product.brandName
-                )}
+                {product.brandName}
               </h1>
             </div>
             <div>
               <p className="text-lg text-gray-600">
-                {product.name.length > 60 ? (
-                  <span title={product.name}>
-                    {product.name.substring(0, 60)}...
-                  </span>
-                ) : (
-                  product.name
-                )}
+                {product.name}
               </p>
             </div>
             <div>
@@ -237,16 +227,24 @@ const ProductDetail = () => {
                     variant="outline" 
                     size="sm"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="h-8 w-8 p-0"
                   >
-                    -
+                    <Minus className="w-3 h-3" />
                   </Button>
-                  <span className="w-12 text-center font-medium">{quantity}</span>
+                  <Input
+                    type="number"
+                    value={quantity}
+                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-16 h-8 text-center text-sm"
+                    min="1"
+                  />
                   <Button 
                     variant="outline" 
                     size="sm"
                     onClick={() => setQuantity(quantity + 1)}
+                    className="h-8 w-8 p-0"
                   >
-                    +
+                    <Plus className="w-3 h-3" />
                   </Button>
                 </div>
               </div>
@@ -294,7 +292,7 @@ const ProductDetail = () => {
                 <ProductCard
                   key={similarProduct.id}
                   product={similarProduct}
-                  onAddToCart={(prod) => addToCart(prod, 1)}
+                  onAddToCart={(prod, qty = 1) => addToCart(prod, qty)}
                 />
               ))}
             </div>

@@ -54,45 +54,46 @@ const Cart = ({ items, onUpdateQuantity, onRemoveItem, onPlaceOrder, onClose }: 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl max-h-[80vh] overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between">
+      <Card className="w-full max-w-2xl max-h-[90vh] flex flex-col">
+        <CardHeader className="flex flex-row items-center justify-between flex-shrink-0 pb-4">
           <CardTitle>Shopping Cart</CardTitle>
-          <Button variant="ghost" onClick={onClose}>×</Button>
+          <Button variant="ghost" onClick={onClose} className="text-xl">×</Button>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="flex-1 overflow-hidden p-0">
           {items.length === 0 ? (
-            <p className="text-center text-gray-500 py-8">Your cart is empty</p>
+            <div className="text-center text-gray-500 py-8 px-6">Your cart is empty</div>
           ) : (
-            <div className="space-y-4">
-              <ScrollArea className="h-[400px] px-6">
+            <div className="flex flex-col h-full">
+              <ScrollArea className="flex-1 px-6">
                 <div className="space-y-4 py-4">
                   {items.map((item) => (
-                    <div key={item.id} className="flex items-center space-x-4 p-4 border rounded-lg">
+                    <div key={item.id} className="flex items-center space-x-4 p-4 border rounded-lg bg-white">
                       <img
                         src={`https://images.unsplash.com/${item.image}?w=80&h=80&fit=crop`}
                         alt={item.name}
-                        className="w-16 h-16 object-cover rounded"
+                        className="w-16 h-16 object-cover rounded flex-shrink-0"
                       />
-                      <div className="flex-1">
-                        <h4 className="font-semibold">
-                          {item.name.length > 30 ? (
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-sm leading-tight">
+                          {item.name.length > 40 ? (
                             <span title={item.name}>
-                              {item.name.substring(0, 30)}...
+                              {item.name.substring(0, 40)}...
                             </span>
                           ) : (
                             item.name
                           )}
                         </h4>
-                        <p className="text-sm text-gray-600">{item.company}</p>
-                        <p className="font-bold text-blue-600">₹{item.mrp}</p>
+                        <p className="text-xs text-gray-600 truncate">{item.company}</p>
+                        <p className="font-bold text-blue-600 text-sm">₹{item.mrp}</p>
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 flex-shrink-0">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => onUpdateQuantity(item.id, Math.max(0, item.quantity - 1))}
+                          className="h-8 w-8 p-0"
                         >
-                          <Minus className="w-4 h-4" />
+                          <Minus className="w-3 h-3" />
                         </Button>
                         {editingQuantity === item.id ? (
                           <div className="flex items-center space-x-1">
@@ -100,7 +101,7 @@ const Cart = ({ items, onUpdateQuantity, onRemoveItem, onPlaceOrder, onClose }: 
                               type="number"
                               value={tempQuantity}
                               onChange={(e) => setTempQuantity(e.target.value)}
-                              className="w-16 h-8 text-center"
+                              className="w-16 h-8 text-center text-sm"
                               min="1"
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
@@ -115,7 +116,7 @@ const Cart = ({ items, onUpdateQuantity, onRemoveItem, onPlaceOrder, onClose }: 
                               size="sm"
                               variant="outline"
                               onClick={() => handleQuantitySubmit(item.id)}
-                              className="h-8 px-2"
+                              className="h-8 w-8 p-0"
                             >
                               ✓
                             </Button>
@@ -123,14 +124,14 @@ const Cart = ({ items, onUpdateQuantity, onRemoveItem, onPlaceOrder, onClose }: 
                               size="sm"
                               variant="outline"
                               onClick={handleQuantityCancel}
-                              className="h-8 px-2"
+                              className="h-8 w-8 p-0"
                             >
                               ✕
                             </Button>
                           </div>
                         ) : (
                           <span 
-                            className="w-8 text-center cursor-pointer hover:bg-gray-100 rounded px-1"
+                            className="w-8 h-8 flex items-center justify-center text-center cursor-pointer hover:bg-gray-100 rounded text-sm border"
                             onClick={() => handleQuantityEdit(item.id, item.quantity)}
                             title="Click to edit quantity"
                           >
@@ -141,23 +142,25 @@ const Cart = ({ items, onUpdateQuantity, onRemoveItem, onPlaceOrder, onClose }: 
                           size="sm"
                           variant="outline"
                           onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+                          className="h-8 w-8 p-0"
                         >
-                          <Plus className="w-4 h-4" />
+                          <Plus className="w-3 h-3" />
                         </Button>
                         <Button
                           size="sm"
                           variant="destructive"
                           onClick={() => onRemoveItem(item.id)}
+                          className="h-8 w-8 p-0"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3 h-3" />
                         </Button>
                       </div>
                     </div>
                   ))}
                 </div>
               </ScrollArea>
-              <div className="border-t pt-4 px-6 pb-6 space-y-4">
-                <div className="flex justify-between items-center text-xl font-bold">
+              <div className="border-t bg-white p-6 flex-shrink-0">
+                <div className="flex justify-between items-center text-xl font-bold mb-4">
                   <span>Total: ₹{total}</span>
                 </div>
                 <WhatsAppIntegration 

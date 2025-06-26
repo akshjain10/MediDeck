@@ -1,19 +1,55 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Plus, Minus } from 'lucide-react';
 import { Product } from '@/hooks/useProducts';
 
 interface ProductCardProps {
   product: Product;
-  onAddToCart: (product: Product) => void;
+  onAddToCart: (product: Product, quantity?: number) => void;
 }
 
 const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
+  const [quantity, setQuantity] = useState(1);
+  const [showFullName, setShowFullName] = useState(false);
+  const [showFullBrandName, setShowFullBrandName] = useState(false);
+
+  const handleAddToCart = () => {
+    onAddToCart(product, quantity);
+  };
+
+  const getDisplayName = (text: string, maxLength: number, showFull: boolean, setShowFull: (show: boolean) => void) => {
+    if (text.length <= maxLength || showFull) {
+      return text;
+    }
+    
+    // Find the last complete word before maxLength
+    const truncated = text.substring(0, maxLength);
+    const lastSpaceIndex = truncated.lastIndexOf(' ');
+    const cutPoint = lastSpaceIndex > 0 ? lastSpaceIndex : maxLength;
+    
+    return (
+      <>
+        {text.substring(0, cutPoint)}{' '}
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            setShowFull(true);
+          }}
+          className="text-blue-600 hover:text-blue-800 underline text-sm"
+        >
+          Read More
+        </button>
+      </>
+    );
+  };
+
   return (
     <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-300">
-      <Link to={`/product/${product.id}`} className="block">
+      <Link to={`/product/${product.id}`} className="block" onClick={() => window.scrollTo(0, 0)}>
         <div className="aspect-square overflow-hidden rounded-t-lg h-32">
           <img
             src={`https://images.unsplash.com/${product.image}?w=150&h=150&fit=crop`}
@@ -23,29 +59,46 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
         </div>
       </Link>
       <CardContent className="flex-1 p-4">
-        <Link to={`/product/${product.id}`}>
+        <Link to={`/product/${product.id}`} onClick={() => window.scrollTo(0, 0)}>
           <h3 className="font-semibold text-lg mb-2 hover:text-blue-600 transition-colors" title={product.brandName}>
-            {product.brandName.length > 40 ? (
-              `${product.brandName.substring(0, 40)}...`
-            ) : (
-              product.brandName
-            )}
+            {getDisplayName(product.brandName, 40, showFullBrandName, setShowFullBrandName)}
           </h3>
         </Link>
         <p className="text-sm text-gray-600 mb-1" title={product.name}>
-          {product.name.length > 50 ? (
-            `${product.name.substring(0, 50)}...`
-          ) : (
-            product.name
-          )}
+          {getDisplayName(product.name, 50, showFullName, setShowFullName)}
         </p>
         <p className="text-sm text-gray-600 mb-1">Company: {product.company}</p>
         <p className="text-sm text-gray-600 mb-2">Packing: {product.packing}</p>
         <p className="text-xl font-bold text-blue-600">MRP ₹{product.mrp}</p>
       </CardContent>
-      <CardFooter className="p-4 pt-0">
+      <CardFooter className="p-4 pt-0 space-y-3">
+        <div className="flex items-center justify-center space-x-2 w-full">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+            className="h-8 w-8 p-0"
+          >
+            <Minus className="w-3 h-3" />
+          </Button>
+          <Input
+            type="number"
+            value={quantity}
+            onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+            className="w-16 h-8 text-center text-sm"
+            min="1"
+          />
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setQuantity(quantity + 1)}
+            className="h-8 w-8 p-0"
+          >
+            <Plus className="w-3 h-3" />
+          </Button>
+        </div>
         <Button
-          onClick={() => onAddToCart(product)}
+          onClick={handleAddToCart}
           className="w-full bg-blue-600 hover:bg-blue-700"
         >
           Add to Cart
