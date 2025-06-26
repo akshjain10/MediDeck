@@ -4,10 +4,11 @@ import Header from '@/components/Header';
 import ProductCard from '@/components/ProductCard';
 import Cart, { CartItem } from '@/components/Cart';
 import OrderSuccess from '@/components/OrderSuccess';
+import EnquiryForm, { EnquiryData } from '@/components/EnquiryForm';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, MessageCircle } from 'lucide-react';
 import { useProducts, Product } from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
 
@@ -16,6 +17,7 @@ const ProductDetail = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
   const [showOrderSuccess, setShowOrderSuccess] = useState(false);
+  const [showEnquiryForm, setShowEnquiryForm] = useState(false);
   const [orderNumber, setOrderNumber] = useState('');
   const [quantity, setQuantity] = useState(1);
   const { toast } = useToast();
@@ -29,6 +31,11 @@ const ProductDetail = () => {
     p.brandName !== product?.brandName && 
     p.id !== product?.id
   ).slice(0, 4);
+
+  // Scroll to top when component mounts or id changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
 
   if (loading) {
     return (
@@ -121,6 +128,30 @@ const ProductDetail = () => {
     setShowOrderSuccess(true);
   };
 
+  const handleEnquirySubmit = (enquiry: EnquiryData) => {
+    // Create WhatsApp message
+    let message = "🔍 Product Enquiry\n\n";
+    message += `Name: ${enquiry.name}\n`;
+    message += `Email: ${enquiry.email}\n`;
+    message += `Phone: ${enquiry.phone}\n`;
+    message += `Product: ${enquiry.productName}\n`;
+    if (enquiry.description) {
+      message += `Description: ${enquiry.description}\n`;
+    }
+    message += `\n🕒 Enquiry Time: ${new Date().toLocaleString()}`;
+
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://api.whatsapp.com/send/?phone=918209703661&text=${encodedMessage}`;
+    
+    window.open(whatsappUrl, '_blank');
+    setShowEnquiryForm(false);
+    
+    toast({
+      title: "Enquiry Sent",
+      description: "Your enquiry has been sent via WhatsApp!",
+    });
+  };
+
   const cartItemsCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
@@ -143,9 +174,9 @@ const ProductDetail = () => {
         {/* Product Details */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           {/* Product Image */}
-          <div className="aspect-square overflow-hidden rounded-lg bg-white p-4 max-w-md">
+          <div className="aspect-square overflow-hidden rounded-lg bg-white p-4 max-w-sm">
             <img
-              src={`https://images.unsplash.com/${product.image}?w=300&h=300&fit=crop`}
+              src={`https://images.unsplash.com/${product.image}?w=200&h=200&fit=crop`}
               alt={product.brandName}
               className="w-full h-full object-cover rounded"
             />
@@ -155,10 +186,26 @@ const ProductDetail = () => {
           <div className="space-y-6">
             <div>
               <Badge variant="secondary" className="mb-2">{product.category}</Badge>
-              <h1 className="text-3xl font-bold mb-2">{product.brandName}</h1>
+              <h1 className="text-3xl font-bold mb-2">
+                {product.brandName.length > 50 ? (
+                  <span title={product.brandName}>
+                    {product.brandName.substring(0, 50)}...
+                  </span>
+                ) : (
+                  product.brandName
+                )}
+              </h1>
             </div>
             <div>
-              <p className="text-lg text-gray-600">{product.name}</p>
+              <p className="text-lg text-gray-600">
+                {product.name.length > 60 ? (
+                  <span title={product.name}>
+                    {product.name.substring(0, 60)}...
+                  </span>
+                ) : (
+                  product.name
+                )}
+              </p>
             </div>
             <div>
               <p className="text-lg text-gray-600">by {product.company}</p>
@@ -224,6 +271,17 @@ const ProductDetail = () => {
                 Buy Now
               </Button>
             </div>
+
+            <div className="pt-4">
+              <Button
+                onClick={() => setShowEnquiryForm(true)}
+                variant="outline"
+                className="w-full flex items-center justify-center space-x-2"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>Product Enquiry</span>
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -258,6 +316,13 @@ const ProductDetail = () => {
         <OrderSuccess
           orderNumber={orderNumber}
           onClose={() => setShowOrderSuccess(false)}
+        />
+      )}
+
+      {showEnquiryForm && (
+        <EnquiryForm
+          onClose={() => setShowEnquiryForm(false)}
+          onSubmit={handleEnquirySubmit}
         />
       )}
     </div>

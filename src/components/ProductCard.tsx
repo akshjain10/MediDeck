@@ -24,12 +24,21 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
       </Link>
       <CardContent className="flex-1 p-4">
         <Link to={`/product/${product.id}`}>
-          <h3 className="font-semibold text-lg mb-2 line-clamp-2 hover:text-blue-600 transition-colors">
-            {product.brandName}
+          <h3 className="font-semibold text-lg mb-2 hover:text-blue-600 transition-colors" title={product.brandName}>
+            {product.brandName.length > 40 ? (
+              `${product.brandName.substring(0, 40)}...`
+            ) : (
+              product.brandName
+            )}
           </h3>
         </Link>
-        <p className="text-sm text-gray-600 mb-1"></p>
-        <p className="text-sm text-gray-600 mb-1">{product.name}</p>
+        <p className="text-sm text-gray-600 mb-1" title={product.name}>
+          {product.name.length > 50 ? (
+            `${product.name.substring(0, 50)}...`
+          ) : (
+            product.name
+          )}
+        </p>
         <p className="text-sm text-gray-600 mb-1">Company: {product.company}</p>
         <p className="text-sm text-gray-600 mb-2">Packing: {product.packing}</p>
         <p className="text-xl font-bold text-blue-600">MRP ₹{product.mrp}</p>
