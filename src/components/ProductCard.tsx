@@ -21,8 +21,32 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
     onAddToCart(product, quantity);
   };
 
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value === '') {
+      setQuantity(0);
+    } else {
+      const numValue = parseInt(value);
+      if (!isNaN(numValue) && numValue >= 0) {
+        setQuantity(numValue);
+      }
+    }
+  };
+
+  const handleQuantityBlur = () => {
+    if (quantity === 0) {
+      setQuantity(1);
+    }
+  };
+
   const getDisplayName = (text: string, maxLength: number, showFull: boolean, setShowFull: (show: boolean) => void) => {
     if (text.length <= maxLength || showFull) {
+      return text;
+    }
+    
+    // Check if text would exceed 2 lines (approximately 80 characters for 2 lines)
+    const twoLineLimit = 80;
+    if (text.length <= twoLineLimit) {
       return text;
     }
     
@@ -34,15 +58,13 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
     return (
       <>
         {text.substring(0, cutPoint)}{' '}
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            setShowFull(true);
-          }}
+        <Link
+          to={`/product/${product.id}`}
+          onClick={() => window.scrollTo(0, 0)}
           className="text-blue-600 hover:text-blue-800 underline text-sm"
         >
           Read More
-        </button>
+        </Link>
       </>
     );
   };
@@ -83,10 +105,12 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
           </Button>
           <Input
             type="number"
-            value={quantity}
-            onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+            value={quantity === 0 ? '' : quantity}
+            onChange={handleQuantityChange}
+            onBlur={handleQuantityBlur}
             className="w-16 h-8 text-center text-sm"
             min="1"
+            placeholder="1"
           />
           <Button
             size="sm"
@@ -100,6 +124,7 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
         <Button
           onClick={handleAddToCart}
           className="w-full bg-blue-600 hover:bg-blue-700"
+          disabled={quantity === 0}
         >
           Add to Cart
         </Button>

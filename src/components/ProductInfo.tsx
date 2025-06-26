@@ -23,6 +23,24 @@ const ProductInfo = ({
   onBuyNow, 
   onEnquiry 
 }: ProductInfoProps) => {
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value === '') {
+      setQuantity(0);
+    } else {
+      const numValue = parseInt(value);
+      if (!isNaN(numValue) && numValue >= 0) {
+        setQuantity(numValue);
+      }
+    }
+  };
+
+  const handleQuantityBlur = () => {
+    if (quantity === 0) {
+      setQuantity(1);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -71,10 +89,12 @@ const ProductInfo = ({
             </Button>
             <Input
               type="number"
-              value={quantity}
-              onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+              value={quantity === 0 ? '' : quantity}
+              onChange={handleQuantityChange}
+              onBlur={handleQuantityBlur}
               className="w-16 h-8 text-center text-sm"
               min="1"
+              placeholder="1"
             />
             <Button 
               variant="outline" 
@@ -93,6 +113,7 @@ const ProductInfo = ({
           onClick={onAddToCart}
           className="flex-1 bg-blue-600 hover:bg-blue-700"
           size="lg"
+          disabled={quantity === 0}
         >
           Add to Cart
         </Button>
@@ -100,6 +121,7 @@ const ProductInfo = ({
           variant="outline" 
           size="lg"
           onClick={onBuyNow}
+          disabled={quantity === 0}
         >
           Buy Now
         </Button>
