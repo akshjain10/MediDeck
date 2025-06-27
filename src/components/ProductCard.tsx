@@ -16,27 +16,31 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
   const [quantity, setQuantity] = useState(1);
   const [showFullName, setShowFullName] = useState(false);
   const [showFullBrandName, setShowFullBrandName] = useState(false);
+  const [editingQuantity, setEditingQuantity] = useState(false);
+  const [tempQuantity, setTempQuantity] = useState('');
 
   const handleAddToCart = () => {
     onAddToCart(product, quantity);
   };
 
-  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value === '') {
-      setQuantity(0);
-    } else {
-      const numValue = parseInt(value);
-      if (!isNaN(numValue) && numValue >= 0) {
-        setQuantity(numValue);
-      }
-    }
+  const handleQuantityEdit = () => {
+    setEditingQuantity(true);
+    setTempQuantity(quantity.toString());
   };
 
-  const handleQuantityBlur = () => {
-    if (quantity === 0) {
+  const handleQuantitySubmit = () => {
+    const newQuantity = parseInt(tempQuantity);
+    if (newQuantity > 0) {
+      setQuantity(newQuantity);
+    } else {
       setQuantity(1);
     }
+    setEditingQuantity(false);
+  };
+
+  const handleQuantityCancel = () => {
+    setEditingQuantity(false);
+    setTempQuantity('');
   };
 
   const getDisplayName = (text: string, maxLength: number, showFull: boolean, setShowFull: (show: boolean) => void) => {
@@ -72,11 +76,11 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
   return (
     <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-300">
       <Link to={`/product/${product.id}`} className="block" onClick={() => window.scrollTo(0, 0)}>
-        <div className="overflow-hidden rounded-t-lg h-32">
+        <div className="overflow-hidden rounded-t-lg h-48 flex items-center justify-center bg-gray-50">
           <img
             src={`/images/products/${product.id}.png`}
             alt={product.brandName}
-            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+            className="max-w-full max-h-full object-contain hover:scale-105 transition-transform duration-300"
           />
         </div>
       </Link>
@@ -100,23 +104,59 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
             variant="outline"
             onClick={() => setQuantity(Math.max(1, quantity - 1))}
             className="h-8 w-8 p-0"
+            disabled={editingQuantity}
           >
             <Minus className="w-3 h-3" />
           </Button>
-          <Input
-            type="number"
-            value={quantity === 0 ? '' : quantity}
-            onChange={handleQuantityChange}
-            onBlur={handleQuantityBlur}
-            className="w-16 h-8 text-center text-sm"
-            min="1"
-            placeholder="1"
-          />
+          {editingQuantity ? (
+            <div className="flex items-center space-x-1">
+              <Input
+                type="number"
+                value={tempQuantity}
+                onChange={(e) => setTempQuantity(e.target.value)}
+                className="w-16 h-8 text-center text-sm"
+                min="1"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleQuantitySubmit();
+                  } else if (e.key === 'Escape') {
+                    handleQuantityCancel();
+                  }
+                }}
+                autoFocus
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleQuantitySubmit}
+                className="h-8 w-8 p-0"
+              >
+                ✓
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleQuantityCancel}
+                className="h-8 w-8 p-0"
+              >
+                ✕
+              </Button>
+            </div>
+          ) : (
+            <span 
+              className="w-16 h-8 flex items-center justify-center text-center cursor-pointer hover:bg-gray-100 rounded text-sm border"
+              onClick={handleQuantityEdit}
+              title="Click to edit quantity"
+            >
+              {quantity}
+            </span>
+          )}
           <Button
             size="sm"
             variant="outline"
             onClick={() => setQuantity(quantity + 1)}
             className="h-8 w-8 p-0"
+            disabled={editingQuantity}
           >
             <Plus className="w-3 h-3" />
           </Button>
@@ -124,7 +164,7 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
         <Button
           onClick={handleAddToCart}
           className="w-full bg-blue-600 hover:bg-blue-700"
-          disabled={quantity === 0}
+          disabled={quantity === 0 || editingQuantity}
         >
           Add to Cart
         </Button>

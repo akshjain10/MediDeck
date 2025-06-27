@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,22 +22,27 @@ const ProductInfo = ({
   onBuyNow, 
   onEnquiry 
 }: ProductInfoProps) => {
-  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value === '') {
-      setQuantity(0);
-    } else {
-      const numValue = parseInt(value);
-      if (!isNaN(numValue) && numValue >= 0) {
-        setQuantity(numValue);
-      }
-    }
+  const [editingQuantity, setEditingQuantity] = useState(false);
+  const [tempQuantity, setTempQuantity] = useState('');
+
+  const handleQuantityEdit = () => {
+    setEditingQuantity(true);
+    setTempQuantity(quantity.toString());
   };
 
-  const handleQuantityBlur = () => {
-    if (quantity === 0) {
+  const handleQuantitySubmit = () => {
+    const newQuantity = parseInt(tempQuantity);
+    if (newQuantity > 0) {
+      setQuantity(newQuantity);
+    } else {
       setQuantity(1);
     }
+    setEditingQuantity(false);
+  };
+
+  const handleQuantityCancel = () => {
+    setEditingQuantity(false);
+    setTempQuantity('');
   };
 
   return (
@@ -84,23 +88,59 @@ const ProductInfo = ({
               size="sm"
               onClick={() => setQuantity(Math.max(1, quantity - 1))}
               className="h-8 w-8 p-0"
+              disabled={editingQuantity}
             >
               <Minus className="w-3 h-3" />
             </Button>
-            <Input
-              type="number"
-              value={quantity === 0 ? '' : quantity}
-              onChange={handleQuantityChange}
-              onBlur={handleQuantityBlur}
-              className="w-16 h-8 text-center text-sm"
-              min="1"
-              placeholder="1"
-            />
+            {editingQuantity ? (
+              <div className="flex items-center space-x-1">
+                <Input
+                  type="number"
+                  value={tempQuantity}
+                  onChange={(e) => setTempQuantity(e.target.value)}
+                  className="w-16 h-8 text-center text-sm"
+                  min="1"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleQuantitySubmit();
+                    } else if (e.key === 'Escape') {
+                      handleQuantityCancel();
+                    }
+                  }}
+                  autoFocus
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleQuantitySubmit}
+                  className="h-8 w-8 p-0"
+                >
+                  ✓
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleQuantityCancel}
+                  className="h-8 w-8 p-0"
+                >
+                  ✕
+                </Button>
+              </div>
+            ) : (
+              <span 
+                className="w-16 h-8 flex items-center justify-center text-center cursor-pointer hover:bg-gray-100 rounded text-sm border"
+                onClick={handleQuantityEdit}
+                title="Click to edit quantity"
+              >
+                {quantity}
+              </span>
+            )}
             <Button 
               variant="outline" 
               size="sm"
               onClick={() => setQuantity(quantity + 1)}
               className="h-8 w-8 p-0"
+              disabled={editingQuantity}
             >
               <Plus className="w-3 h-3" />
             </Button>
@@ -113,7 +153,7 @@ const ProductInfo = ({
           onClick={onAddToCart}
           className="flex-1 bg-blue-600 hover:bg-blue-700"
           size="lg"
-          disabled={quantity === 0}
+          disabled={quantity === 0 || editingQuantity}
         >
           Add to Cart
         </Button>
@@ -121,7 +161,7 @@ const ProductInfo = ({
           variant="outline" 
           size="lg"
           onClick={onBuyNow}
-          disabled={quantity === 0}
+          disabled={quantity === 0 || editingQuantity}
         >
           Buy Now
         </Button>
