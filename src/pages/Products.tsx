@@ -42,13 +42,13 @@ const Products = () => {
     });
   }, [products, searchQuery, selectedCategory]);
 
-  const addToCart = (product: Product) => {
+  const addToCart = (product: Product, quantity: number = 1) => {
     setCartItems(prev => {
       const existingItem = prev.find(item => item.id === product.id);
       if (existingItem) {
         return prev.map(item =>
           item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       }
@@ -57,13 +57,14 @@ const Products = () => {
         name: product.brandName,
         company: product.company,
         mrp: product.mrp,
-        quantity: 1,
+        quantity: quantity,
         image: product.image
       }];
     });
     toast({
       title: "Added to Cart",
       description: `${product.brandName} has been added to your cart.`,
+      duration: 1500,
     });
   };
 

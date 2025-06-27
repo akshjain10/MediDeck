@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, Loader2 } from 'lucide-react';
 
 interface EnquiryFormProps {
   onClose: () => void;
@@ -30,6 +30,7 @@ const EnquiryForm = ({ onClose, onSubmit }: EnquiryFormProps) => {
   });
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -43,12 +44,43 @@ const EnquiryForm = ({ onClose, onSubmit }: EnquiryFormProps) => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
-      ...formData,
-      image: selectedImage || undefined,
-    });
+    setIsSubmitting(true);
+
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append('access_key', 'YOUR_WEB3FORM_ACCESS_KEY'); // Replace with your Web3Form access key
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('email', formData.email);
+      formDataToSend.append('phone', formData.phone);
+      formDataToSend.append('product_name', formData.productName);
+      formDataToSend.append('description', formData.description);
+      
+      if (selectedImage) {
+        formDataToSend.append('attachment', selectedImage);
+      }
+
+      const response = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        body: formDataToSend,
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        onSubmit({
+          ...formData,
+          image: selectedImage || undefined,
+        });
+      } else {
+        throw new Error('Form submission failed');
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -69,6 +101,7 @@ const EnquiryForm = ({ onClose, onSubmit }: EnquiryFormProps) => {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  disabled={isSubmitting}
                 />
               </div>
               <div>
@@ -78,6 +111,7 @@ const EnquiryForm = ({ onClose, onSubmit }: EnquiryFormProps) => {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -89,6 +123,7 @@ const EnquiryForm = ({ onClose, onSubmit }: EnquiryFormProps) => {
                   required
                   value={formData.phone}
                   onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  disabled={isSubmitting}
                 />
               </div>
               <div>
@@ -97,6 +132,7 @@ const EnquiryForm = ({ onClose, onSubmit }: EnquiryFormProps) => {
                   required
                   value={formData.productName}
                   onChange={(e) => setFormData({...formData, productName: e.target.value})}
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -108,6 +144,7 @@ const EnquiryForm = ({ onClose, onSubmit }: EnquiryFormProps) => {
                 value={formData.description}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
                 placeholder="Please describe the product you're looking for..."
+                disabled={isSubmitting}
               />
             </div>
 
@@ -124,6 +161,7 @@ const EnquiryForm = ({ onClose, onSubmit }: EnquiryFormProps) => {
                         setSelectedImage(null);
                         setImagePreview(null);
                       }}
+                      disabled={isSubmitting}
                     >
                       Remove Image
                     </Button>
@@ -139,6 +177,7 @@ const EnquiryForm = ({ onClose, onSubmit }: EnquiryFormProps) => {
                           className="hidden"
                           accept="image/*"
                           onChange={handleImageChange}
+                          disabled={isSubmitting}
                         />
                       </label>
                     </div>
@@ -148,11 +187,28 @@ const EnquiryForm = ({ onClose, onSubmit }: EnquiryFormProps) => {
             </div>
 
             <div className="flex space-x-4">
-              <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={onClose} 
+                className="flex-1"
+                disabled={isSubmitting}
+              >
                 Cancel
               </Button>
-              <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
-                Submit Enquiry
+              <Button 
+                type="submit" 
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  'Submit Enquiry'
+                )}
               </Button>
             </div>
           </form>

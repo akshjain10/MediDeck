@@ -43,6 +43,14 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
     setTempQuantity('');
   };
 
+  const increaseQuantity = () => {
+    setQuantity(prev => prev + 1);
+  };
+
+  const decreaseQuantity = () => {
+    setQuantity(prev => Math.max(1, prev - 1));
+  };
+
   const getDisplayName = (text: string, maxLength: number, showFull: boolean, setShowFull: (show: boolean) => void) => {
     if (text.length <= maxLength || showFull) {
       return text;
@@ -102,7 +110,7 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+            onClick={decreaseQuantity}
             className="h-8 w-8 p-0"
             disabled={editingQuantity}
           >
@@ -154,7 +162,7 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => setQuantity(quantity + 1)}
+            onClick={increaseQuantity}
             className="h-8 w-8 p-0"
             disabled={editingQuantity}
           >
