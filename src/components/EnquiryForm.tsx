@@ -50,7 +50,7 @@ const EnquiryForm = ({ onClose, onSubmit }: EnquiryFormProps) => {
 
     try {
       const formDataToSend = new FormData();
-      formDataToSend.append('access_key', 'YOUR_WEB3FORM_ACCESS_KEY'); // Replace with your Web3Form access key
+      formDataToSend.append('access_key', 'fc40508f-b383-4f6f-80e2-49112db7e8d7'); // Replace with your Web3Form access key
       formDataToSend.append('name', formData.name);
       formDataToSend.append('email', formData.email);
       formDataToSend.append('phone', formData.phone);
