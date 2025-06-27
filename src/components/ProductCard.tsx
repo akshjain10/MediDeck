@@ -72,9 +72,10 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
   return (
     <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-300">
       <Link to={`/product/${product.id}`} className="block" onClick={() => window.scrollTo(0, 0)}>
-        <div className="aspect-square overflow-hidden rounded-t-lg h-32">
+        <div className="overflow-hidden rounded-t-lg h-32">
           <img
-            src={`https://images.unsplash.com/${product.image}?w=150&h=150&fit=crop`}
+            src={`/images/products/${product.id}.png`}
+            //{`https://images.unsplash.com/${product.image}?w=150&h=150&fit=crop`}
             alt={product.brandName}
             className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
           />

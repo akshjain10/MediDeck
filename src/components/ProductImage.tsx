@@ -14,9 +14,9 @@ const ProductImage = ({ product }: ProductImageProps) => {
   return (
     <div className="space-y-4">
       <Badge variant="secondary">{product.category}</Badge>
-      <div className="aspect-square overflow-hidden rounded-lg bg-white p-4 max-w-sm">
+      <div className="overflow-hidden rounded-lg bg-white p-4 max-w-sm">
         <img
-          src={`https://images.unsplash.com/${product.image}?w=200&h=200&fit=crop`}
+          src={`/images/products/${product.id}.png`}
           alt={product.brandName}
           className="w-full h-full object-cover rounded"
         />
