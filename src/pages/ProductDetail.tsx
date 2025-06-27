@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -94,6 +93,7 @@ const ProductDetail = () => {
     toast({
       title: "Added to Cart",
       description: `${productToAdd.brandName} has been added to your cart.`,
+      duration: 1500, // 1.5 seconds
     });
   };
 

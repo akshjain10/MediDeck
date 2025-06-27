@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,8 +26,6 @@ interface CartProps {
 const Cart = ({ items, onUpdateQuantity, onRemoveItem, onPlaceOrder, onClose }: CartProps) => {
   const [editingQuantity, setEditingQuantity] = useState<string | null>(null);
   const [tempQuantity, setTempQuantity] = useState<string>('');
-  
-  const total = items.reduce((sum, item) => sum + (item.mrp * item.quantity), 0);
 
   const handleWhatsAppSuccess = () => {
     onPlaceOrder();
@@ -165,9 +162,6 @@ const Cart = ({ items, onUpdateQuantity, onRemoveItem, onPlaceOrder, onClose }: 
             </CardContent>
             
             <div className="border-t bg-white p-6 flex-shrink-0">
-              <div className="flex justify-between items-center text-xl font-bold mb-4">
-                <span>Total: ₹{total}</span>
-              </div>
               <WhatsAppIntegration 
                 cartItems={items}
                 onSuccess={handleWhatsAppSuccess}
