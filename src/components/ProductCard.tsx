@@ -75,7 +75,6 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
         <div className="overflow-hidden rounded-t-lg h-32">
           <img
             src={`/images/products/${product.id}.png`}
-            //{`https://images.unsplash.com/${product.image}?w=150&h=150&fit=crop`}
             alt={product.brandName}
             className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
           />
