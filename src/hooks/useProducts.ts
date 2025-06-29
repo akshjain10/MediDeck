@@ -12,6 +12,8 @@ export interface Product {
   mrp: number;
   image: string;
   category: string;
+  salt?: string; // Adding salt property
+  stockAvailable?: boolean; // Adding stockAvailable property
 }
 
 export const useProducts = () => {
@@ -42,7 +44,9 @@ export const useProducts = () => {
         packing: item.Packing || '',
         mrp: item.MRP || 0,
         image: 'photo-1581091226825-a6a2a5aee158', // Default image
-        category: item.Category || 'General'
+        category: item.Category || 'General',
+        salt: item.Salt || '', // Adding salt field
+        stockAvailable: item['Stock Available'] || false // Adding stock availability
       }));
 
       setProducts(transformedProducts);
