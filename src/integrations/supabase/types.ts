@@ -19,16 +19,18 @@ export type Database = {
           Name: string | null
           Packing: string | null
           Salt: string | null
+          "Stock Available": boolean | null
         }
         Insert: {
           Category?: string | null
           Company?: string | null
           created_at?: string
-          id?: string
+          id: string
           MRP?: number | null
           Name?: string | null
           Packing?: string | null
           Salt?: string | null
+          "Stock Available"?: boolean | null
         }
         Update: {
           Category?: string | null
@@ -39,6 +41,7 @@ export type Database = {
           Name?: string | null
           Packing?: string | null
           Salt?: string | null
+          "Stock Available"?: boolean | null
         }
         Relationships: []
       }

@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import Header from '@/components/Header';
 import ProductCard from '@/components/ProductCard';
@@ -7,7 +8,8 @@ import EnquiryForm, { EnquiryData } from '@/components/EnquiryForm';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Search, Loader2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Search, Loader2, Filter } from 'lucide-react';
 import { useProducts, Product } from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
 
@@ -118,33 +120,46 @@ const Products = () => {
       <main className="container mx-auto px-4 py-8">
         {/* Search Section */}
         <div className="mb-6">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              type="text"
-              placeholder="Search products..."
-              className="pl-10"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          <div className="flex gap-4 items-center">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                type="text"
+                placeholder="Search products..."
+                className="pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            
+            {/* Category Filter - Only show when searching */}
+            {searchQuery.trim() && (
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-gray-500" />
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Filter by category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map(category => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Category Filter */}
-        {searchQuery.trim() && (
-          <div className="mb-6">
-            <div className="flex flex-wrap gap-2">
-              {categories.map(category => (
-                <Button
-                  key={category}
-                  variant={selectedCategory === category ? "default" : "outline"}
-                  onClick={() => setSelectedCategory(category)}
-                  className={selectedCategory === category ? "bg-blue-600 hover:bg-blue-700" : ""}
-                >
-                  {category}
-                </Button>
-              ))}
-            </div>
+        {/* Results count - Only show when searching */}
+        {searchQuery.trim() && filteredProducts.length > 0 && (
+          <div className="mb-4">
+            <p className="text-sm text-gray-600">
+              Found {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
+              {selectedCategory !== 'All' && ` in ${selectedCategory}`}
+            </p>
           </div>
         )}
 
@@ -167,14 +182,18 @@ const Products = () => {
           ) : !searchQuery.trim() ? (
             <Card className="p-8 text-center">
               <CardContent>
-                <p className="text-gray-500 mb-4">Start typing to search for products.</p>
+                <div className="mb-4 text-4xl">🔍</div>
+                <p className="text-gray-500 mb-4 text-lg">Start searching to discover products</p>
+                <p className="text-sm text-gray-400">Type in the search box above to find medicines and healthcare products</p>
               </CardContent>
             </Card>
           ) : filteredProducts.length === 0 ? (
             <Card className="p-8 text-center">
               <CardContent>
-                <p className="text-gray-500 mb-4">No products found matching your criteria.</p>
-                <Button onClick={() => setShowEnquiryForm(true)}>
+                <div className="mb-4 text-4xl">📦</div>
+                <p className="text-gray-500 mb-4 text-lg">No products found</p>
+                <p className="text-sm text-gray-400 mb-4">Try adjusting your search terms or category filter</p>
+                <Button onClick={() => setShowEnquiryForm(true)} className="bg-blue-600 hover:bg-blue-700">
                   Request This Product
                 </Button>
               </CardContent>
