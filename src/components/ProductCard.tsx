@@ -86,7 +86,7 @@ const ProductCard = memo(({ product, onAddToCart }: ProductCardProps) => {
       <Link to={`/product/${product.id}`} className="block" onClick={() => window.scrollTo(0, 0)}>
         <div className="overflow-hidden rounded-t-lg h-48 flex items-center justify-center bg-gray-50">
           <img
-            src={`/images/products/${product.id}.png`}
+            src={`/images/products/${product.id}.webp`}
             alt={product.brandName}
             className="max-w-full max-h-full object-contain hover:scale-105 transition-transform duration-300"
             loading="lazy"

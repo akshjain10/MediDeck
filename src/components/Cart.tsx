@@ -82,7 +82,7 @@ const Cart = ({ items, onUpdateQuantity, onRemoveItem, onPlaceOrder, onClose }: 
                     <div key={item.id} className="flex items-center space-x-2 sm:space-x-4 p-2 sm:p-4 border rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow">
                       <div className="flex-shrink-0">
                         <img
-                          src={`/images/products/${item.id}.png`}
+                          src={`/images/products/${item.id}.webp`}
                           alt={item.name}
                           className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 object-contain rounded-lg bg-gray-50 p-1 sm:p-2"
                         />
