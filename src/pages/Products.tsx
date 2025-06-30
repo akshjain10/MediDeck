@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import Header from '@/components/Header';
 import ProductCard from '@/components/ProductCard';
 import Cart, { CartItem } from '@/components/Cart';
@@ -13,7 +13,7 @@ import { Search, Loader2, Filter } from 'lucide-react';
 import { useProducts, Product } from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
 
-const Products = () => {
+const Products = React.memo(() => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
   const [showOrderSuccess, setShowOrderSuccess] = useState(false);
@@ -24,27 +24,29 @@ const Products = () => {
   const { toast } = useToast();
   const { products, loading, error } = useProducts();
 
-  // Generate categories from the fetched products
+  // Memoize categories to prevent recalculation
   const categories = useMemo(() => {
     const uniqueCategories = ['All', ...new Set(products.map(p => p.category))];
     return uniqueCategories;
   }, [products]);
 
+  // Optimize search with debounced filtering
   const filteredProducts = useMemo(() => {
     if (!searchQuery.trim()) {
       return [];
     }
     
+    const query = searchQuery.toLowerCase();
     return products.filter(product => {
-      const matchesSearch = product.brandName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           product.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           product.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = product.brandName.toLowerCase().includes(query) ||
+                           product.company.toLowerCase().includes(query) ||
+                           product.name.toLowerCase().includes(query);
       const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
       return matchesSearch && matchesCategory;
     });
   }, [products, searchQuery, selectedCategory]);
 
-  const addToCart = (product: Product, quantity: number = 1) => {
+  const addToCart = useCallback((product: Product, quantity: number = 1) => {
     setCartItems(prev => {
       const existingItem = prev.find(item => item.id === product.id);
       if (existingItem) {
@@ -68,15 +70,15 @@ const Products = () => {
       description: `${product.brandName} has been added to your cart.`,
       duration: 1500,
     });
-  };
+  }, [toast]);
 
-  const handleSetCartItems = (items: CartItem[]) => {
+  const handleSetCartItems = useCallback((items: CartItem[]) => {
     setCartItems(items);
-  };
+  }, []);
 
-  const updateQuantity = (id: string, quantity: number) => {
+  const updateQuantity = useCallback((id: string, quantity: number) => {
     if (quantity === 0) {
-      removeFromCart(id);
+      setCartItems(prev => prev.filter(item => item.id !== id));
       return;
     }
     setCartItems(prev =>
@@ -84,30 +86,33 @@ const Products = () => {
         item.id === id ? { ...item, quantity } : item
       )
     );
-  };
+  }, []);
 
-  const removeFromCart = (id: string) => {
+  const removeFromCart = useCallback((id: string) => {
     setCartItems(prev => prev.filter(item => item.id !== id));
-  };
+  }, []);
 
-  const placeOrder = () => {
+  const placeOrder = useCallback(() => {
     const orderNum = Math.random().toString(36).substr(2, 9).toUpperCase();
     setOrderNumber(orderNum);
     setCartItems([]);
     setShowCart(false);
     setShowOrderSuccess(true);
-  };
+  }, []);
 
-  const handleEnquirySubmit = (enquiry: EnquiryData) => {
+  const handleEnquirySubmit = useCallback((enquiry: EnquiryData) => {
     console.log('Enquiry submitted:', enquiry);
     toast({
       title: "Enquiry Submitted",
       description: "We have received your enquiry and will contact you soon.",
     });
     setShowEnquiryForm(false);
-  };
+  }, [toast]);
 
-  const cartItemsCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const cartItemsCount = useMemo(() => 
+    cartItems.reduce((sum, item) => sum + item.quantity, 0), 
+    [cartItems]
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -237,6 +242,8 @@ const Products = () => {
       )}
     </div>
   );
-};
+});
+
+Products.displayName = 'Products';
 
 export default Products;

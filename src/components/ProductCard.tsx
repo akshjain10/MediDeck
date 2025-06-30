@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -12,23 +12,23 @@ interface ProductCardProps {
   onAddToCart: (product: Product, quantity?: number) => void;
 }
 
-const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
+const ProductCard = memo(({ product, onAddToCart }: ProductCardProps) => {
   const [quantity, setQuantity] = useState(1);
   const [showFullName, setShowFullName] = useState(false);
   const [showFullBrandName, setShowFullBrandName] = useState(false);
   const [editingQuantity, setEditingQuantity] = useState(false);
   const [tempQuantity, setTempQuantity] = useState('');
 
-  const handleAddToCart = () => {
+  const handleAddToCart = useCallback(() => {
     onAddToCart(product, quantity);
-  };
+  }, [onAddToCart, product, quantity]);
 
-  const handleQuantityEdit = () => {
+  const handleQuantityEdit = useCallback(() => {
     setEditingQuantity(true);
     setTempQuantity(quantity.toString());
-  };
+  }, [quantity]);
 
-  const handleQuantitySubmit = () => {
+  const handleQuantitySubmit = useCallback(() => {
     const newQuantity = parseInt(tempQuantity);
     if (newQuantity > 0) {
       setQuantity(newQuantity);
@@ -36,22 +36,22 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
       setQuantity(1);
     }
     setEditingQuantity(false);
-  };
+  }, [tempQuantity]);
 
-  const handleQuantityCancel = () => {
+  const handleQuantityCancel = useCallback(() => {
     setEditingQuantity(false);
     setTempQuantity('');
-  };
+  }, []);
 
-  const increaseQuantity = () => {
+  const increaseQuantity = useCallback(() => {
     setQuantity(prev => prev + 1);
-  };
+  }, []);
 
-  const decreaseQuantity = () => {
+  const decreaseQuantity = useCallback(() => {
     setQuantity(prev => Math.max(1, prev - 1));
-  };
+  }, []);
 
-  const getDisplayName = (text: string, maxLength: number, showFull: boolean, setShowFull: (show: boolean) => void) => {
+  const getDisplayName = useCallback((text: string, maxLength: number, showFull: boolean, setShowFull: (show: boolean) => void) => {
     if (text.length <= maxLength || showFull) {
       return text;
     }
@@ -79,7 +79,7 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
         </Link>
       </>
     );
-  };
+  }, [product.id]);
 
   return (
     <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-300">
@@ -89,6 +89,7 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
             src={`/images/products/${product.id}.png`}
             alt={product.brandName}
             className="max-w-full max-h-full object-contain hover:scale-105 transition-transform duration-300"
+            loading="lazy"
           />
         </div>
       </Link>
@@ -179,6 +180,8 @@ const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
       </CardFooter>
     </Card>
   );
-};
+});
+
+ProductCard.displayName = 'ProductCard';
 
 export default ProductCard;
