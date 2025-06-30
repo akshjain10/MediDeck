@@ -54,8 +54,8 @@ const ProductInfo = ({ product, quantity, setQuantity, onAddToCart, onBuyNow, on
               </div>
             </div>
             
-            <div>
-              <h3 className="font-semibold text-gray-700 mb-2">Pricing</h3>
+            <div className="text-right">
+              <h3 className="font-semibold text-gray-700 mb-2">MRP</h3>
               <div className="text-3xl font-bold text-blue-600 mb-2">
                 ₹{product.mrp}
               </div>
