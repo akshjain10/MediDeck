@@ -144,18 +144,18 @@ const ProductDetail = () => {
     if (enquiry.description) {
       message += `Description: ${enquiry.description}\n`;
     }
-    message += `\n🕒 Enquiry Time: ${new Date().toLocaleString()}`;
 
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://api.whatsapp.com/send/?phone=918209703661&text=${encodedMessage}`;
     
     window.open(whatsappUrl, '_blank');
+    toast({
+          title: "Enquiry Sent",
+          description: "Your enquiry has been sent via WhatsApp!",
+        });
     setShowEnquiryForm(false);
     
-    toast({
-      title: "Enquiry Sent",
-      description: "Your enquiry has been sent via WhatsApp!",
-    });
+
   };
 
   const cartItemsCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -186,7 +186,7 @@ const ProductDetail = () => {
             setQuantity={setQuantity}
             onAddToCart={handleAddToCart}
             onBuyNow={handleBuyNow}
-            onEnquiry={() => setShowEnquiryForm(true)}
+            onEnquiry={() => setShowEnquiryForm(false)}
           />
         </div>
 
