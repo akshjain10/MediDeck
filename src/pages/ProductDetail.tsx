@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useProducts, Product } from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
+import { areProductsSimilar } from '@/utils/stringUtils';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -25,14 +26,13 @@ const ProductDetail = () => {
 
   const product = products.find(p => p.id === id);
   
-  // Get similar products with the same name
+  // Get similar products using 80% matching algorithm
   const similarProducts = products.filter(p => 
-    p.name === product?.name && 
-    p.brandName !== product?.brandName && 
-    p.id !== product?.id
+    p.id !== product?.id && 
+    product && 
+    areProductsSimilar(p.name, product.name, 0.8)
   ).slice(0, 4);
 
-  // Scroll to top when component mounts or id changes
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
@@ -93,7 +93,7 @@ const ProductDetail = () => {
     toast({
       title: "Added to Cart",
       description: `${productToAdd.brandName} has been added to your cart.`,
-      duration: 1500, // 1.5 seconds
+      duration: 1500,
     });
   };
 
@@ -135,7 +135,6 @@ const ProductDetail = () => {
   };
 
   const handleEnquirySubmit = (enquiry: EnquiryData) => {
-    // Create WhatsApp message
     let message = "🔍 Product Enquiry\n\n";
     message += `Name: ${enquiry.name}\n`;
     message += `Email: ${enquiry.email}\n`;
@@ -154,8 +153,6 @@ const ProductDetail = () => {
           description: "Your enquiry has been sent via WhatsApp!",
         });
     setShowEnquiryForm(false);
-    
-
   };
 
   const cartItemsCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -169,7 +166,6 @@ const ProductDetail = () => {
       />
       
       <main className="container mx-auto px-4 py-8">
-        {/* Breadcrumb */}
         <div className="mb-6">
           <Link to="/products" className="flex items-center text-blue-600 hover:text-blue-700 mb-4">
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -177,7 +173,6 @@ const ProductDetail = () => {
           </Link>
         </div>
 
-        {/* Product Details */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           <ProductImage product={product} />
           <ProductInfo 
@@ -190,7 +185,6 @@ const ProductDetail = () => {
           />
         </div>
 
-        {/* Similar Products */}
         <SimilarProducts 
           products={similarProducts}
           currentProductName={product.name}
