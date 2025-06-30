@@ -1,5 +1,4 @@
-
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import Header from '@/components/Header';
 import ProductCard from '@/components/ProductCard';
 import Cart, { CartItem } from '@/components/Cart';
@@ -19,10 +18,27 @@ const Products = React.memo(() => {
   const [showOrderSuccess, setShowOrderSuccess] = useState(false);
   const [showEnquiryForm, setShowEnquiryForm] = useState(false);
   const [orderNumber, setOrderNumber] = useState('');
+  const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const { toast } = useToast();
   const { products, loading, error } = useProducts();
+
+  // Debounced search effect
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setSearchQuery(searchInput);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timeoutId);
+  }, [searchInput]);
+
+  // Handle enter key press for immediate search
+  const handleSearchKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      setSearchQuery(searchInput);
+    }
+  }, [searchInput]);
 
   // Memoize categories to prevent recalculation
   const categories = useMemo(() => {
@@ -130,10 +146,11 @@ const Products = React.memo(() => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
                 type="text"
-                placeholder="Search products..."
+                placeholder="Search products... (Press Enter to search)"
                 className="pl-10"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
               />
             </div>
             
