@@ -5,13 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Search, Loader2, ShoppingCart, Trash2 } from 'lucide-react';
+import { Search, Loader2, ShoppingCart } from 'lucide-react';
 import { useProducts, Product } from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
 import { CartItem } from '@/components/Cart';
 import Cart from '@/components/Cart';
-import WhatsAppIntegration from '@/components/WhatsAppIntegration';
 
 const Order = () => {
   const [searchInput, setSearchInput] = useState('');
@@ -59,6 +58,12 @@ const Order = () => {
       ...prev,
       [productId]: Math.max(0, quantity)
     }));
+  };
+
+  const handleQuantityKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, product: Product) => {
+    if (e.key === 'Enter') {
+      addToCart(product);
+    }
   };
 
   const addToCart = (product: Product) => {
@@ -242,6 +247,7 @@ const Order = () => {
                             placeholder="0"
                             value={quantities[product.id] || ''}
                             onChange={(e) => handleQuantityChange(product.id, e.target.value)}
+                            onKeyDown={(e) => handleQuantityKeyDown(e, product)}
                             className="w-20 h-8"
                           />
                         </TableCell>
