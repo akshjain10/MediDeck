@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -7,9 +8,7 @@ import SimilarProducts from '@/components/SimilarProducts';
 import Cart, { CartItem } from '@/components/Cart';
 import OrderSuccess from '@/components/OrderSuccess';
 import EnquiryForm, { EnquiryData } from '@/components/EnquiryForm';
-import ProductSearchTab from '@/components/ProductSearchTab';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useProducts, Product } from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
@@ -179,36 +178,23 @@ const ProductDetail = () => {
           </Link>
         </div>
 
-        <Tabs defaultValue="product-detail" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="product-detail">Product Details</TabsTrigger>
-            <TabsTrigger value="search-order">Search & Order</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="product-detail" className="space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-              <ProductImage product={product} />
-              <ProductInfo 
-                product={product}
-                quantity={quantity}
-                setQuantity={setQuantity}
-                onAddToCart={() => {}} // Commented out
-                onBuyNow={() => {}} // Commented out
-                onEnquiry={() => setShowEnquiryForm(true)}
-              />
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+          <ProductImage product={product} />
+          <ProductInfo 
+            product={product}
+            quantity={quantity}
+            setQuantity={setQuantity}
+            onAddToCart={() => {}} // Commented out
+            onBuyNow={() => {}} // Commented out
+            onEnquiry={() => setShowEnquiryForm(true)}
+          />
+        </div>
 
-            <SimilarProducts 
-              products={similarProducts}
-              currentProductName={product.name}
-              onAddToCart={() => {}} // Commented out
-            />
-          </TabsContent>
-          
-          <TabsContent value="search-order">
-            <ProductSearchTab />
-          </TabsContent>
-        </Tabs>
+        <SimilarProducts 
+          products={similarProducts}
+          currentProductName={product.name}
+          onAddToCart={() => {}} // Commented out
+        />
       </main>
 
       

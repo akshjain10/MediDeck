@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Home, Package, Phone } from 'lucide-react';
+import { ShoppingCart, Home, Package, Phone, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CartItem } from '@/components/Cart';
 
@@ -43,6 +43,13 @@ const Header = ({ cartItemsCount, onCartClick }: HeaderProps) => {
               >
                 <Package className="w-4 h-4" />
                 <span>Products</span>
+              </Link>
+              <Link 
+                to="/order" 
+                className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                <span>Order</span>
               </Link>
               <Button
                 variant="ghost"
