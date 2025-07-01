@@ -34,6 +34,6 @@ export const calculateSimilarity = (str1: string, str2: string): number => {
 };
 
 // Check if two product names are similar (80% threshold)
-export const areProductsSimilar = (name1: string, name2: string, threshold: number = 0.8): boolean => {
+export const areProductsSimilar = (name1: string, name2: string, threshold: number = 0.9): boolean => {
   return calculateSimilarity(name1, name2) >= threshold;
 };
