@@ -1,9 +1,10 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Minus, ShoppingCart, Zap } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import { Product } from '@/hooks/useProducts';
 import ProductEnquiry from '@/components/ProductEnquiry';
 
@@ -17,6 +18,17 @@ interface ProductInfoProps {
 }
 
 const ProductInfo = ({ product, quantity, setQuantity, onAddToCart, onBuyNow, onEnquiry }: ProductInfoProps) => {
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value) || 1;
+    setQuantity(Math.max(1, value));
+  };
+
+  const handleQuantityKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      onAddToCart();
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -63,28 +75,17 @@ const ProductInfo = ({ product, quantity, setQuantity, onAddToCart, onBuyNow, on
           </div>
 
           <div className="space-y-4">
-            {/* Commented out quantity and cart buttons
             <div className="flex items-center space-x-4">
               <span className="text-sm font-medium">Quantity:</span>
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="h-8 w-8 p-0"
-                >
-                  <Minus className="w-4 h-4" />
-                </Button>
-                <span className="w-12 text-center font-medium">{quantity}</span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="h-8 w-8 p-0"
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
+              <Input
+                type="number"
+                value={quantity}
+                onChange={handleQuantityChange}
+                onKeyDown={handleQuantityKeyDown}
+                min="1"
+                className="w-20 text-center"
+                placeholder="1"
+              />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -95,16 +96,7 @@ const ProductInfo = ({ product, quantity, setQuantity, onAddToCart, onBuyNow, on
                 <ShoppingCart className="w-4 h-4" />
                 <span>Add to Cart</span>
               </Button>
-              
-              <Button
-                onClick={onBuyNow}
-                className="flex items-center justify-center space-x-2 bg-green-600 hover:bg-green-700"
-              >
-                <Zap className="w-4 h-4" />
-                <span>Buy Now</span>
-              </Button>
             </div>
-            */}
 
             <div className="pt-2">
               <ProductEnquiry 

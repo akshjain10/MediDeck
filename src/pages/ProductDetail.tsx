@@ -184,8 +184,8 @@ const ProductDetail = () => {
             product={product}
             quantity={quantity}
             setQuantity={setQuantity}
-            onAddToCart={() => {}} // Commented out
-            onBuyNow={() => {}} // Commented out
+            onAddToCart={handleAddToCart}
+            onBuyNow={handleBuyNow}
             onEnquiry={() => setShowEnquiryForm(true)}
           />
         </div>
@@ -193,12 +193,10 @@ const ProductDetail = () => {
         <SimilarProducts 
           products={similarProducts}
           currentProductName={product.name}
-          onAddToCart={() => {}} // Commented out
+          onAddToCart={addToCart}
         />
       </main>
 
-      
-      {/* Commented out cart modals
       {showCart && (
         <Cart
           items={cartItems}
@@ -215,8 +213,6 @@ const ProductDetail = () => {
           onClose={() => setShowOrderSuccess(false)}
         />
       )}
-      */}
-      
 
       {showEnquiryForm && (
         <EnquiryForm
