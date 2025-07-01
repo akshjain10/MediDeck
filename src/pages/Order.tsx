@@ -154,14 +154,14 @@ const Order = () => {
           {/* Search Section */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl">Search Products</CardTitle>
+              <CardTitle className="text-xl">Order Products</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="relative max-w-md">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
                   type="text"
-                  placeholder="Search products... (Press Enter to search)"
+                  placeholder="Search products to order..."
                   className="pl-10"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}

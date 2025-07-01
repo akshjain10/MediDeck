@@ -106,9 +106,9 @@ const ProductCard = memo(({ product, onAddToCart }: ProductCardProps) => {
         <p className="text-sm text-gray-600 mb-2">Packing: {product.packing}</p>
         <p className="text-xl font-bold text-blue-600">MRP ₹{product.mrp}</p>
       </CardContent>
-      <CardFooter className="p-4 pt-0 space-y-3">
+      {/*<CardFooter className="p-4 pt-0 space-y-3">
         <div className="flex items-center justify-center space-x-2 w-full">
-          <Button
+         <Button
             size="sm"
             variant="outline"
             onClick={decreaseQuantity}
@@ -152,7 +152,7 @@ const ProductCard = memo(({ product, onAddToCart }: ProductCardProps) => {
               </Button>
             </div>
           ) : (
-            <span 
+            <span
               className="w-16 h-8 flex items-center justify-center text-center cursor-pointer hover:bg-gray-100 rounded text-sm border"
               onClick={handleQuantityEdit}
               title="Click to edit quantity"
@@ -177,7 +177,7 @@ const ProductCard = memo(({ product, onAddToCart }: ProductCardProps) => {
         >
           Add to Cart
         </Button>
-      </CardFooter>
+      </CardFooter>*/}
     </Card>
   );
 });
