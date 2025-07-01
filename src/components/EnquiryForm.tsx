@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +8,7 @@ import { Upload, X, Loader2 } from 'lucide-react';
 interface EnquiryFormProps {
   onClose: () => void;
   onSubmit: (enquiry: EnquiryData) => void;
+  productName?: string;
 }
 
 export interface EnquiryData {
@@ -20,12 +20,12 @@ export interface EnquiryData {
   image?: File;
 }
 
-const EnquiryForm = ({ onClose, onSubmit }: EnquiryFormProps) => {
+const EnquiryForm = ({ onClose, onSubmit, productName = '' }: EnquiryFormProps) => {
   const [formData, setFormData] = useState<EnquiryData>({
     name: '',
     email: '',
     phone: '',
-    productName: '',
+    productName: productName,
     description: '',
   });
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
