@@ -59,18 +59,11 @@ const ProductInfo = ({ product, quantity, setQuantity, onAddToCart, onBuyNow, on
               <div className="text-3xl font-bold text-blue-600 mb-2">
                 ₹{product.mrp}
               </div>
-              {/* Commented out stock availability section
-              <div className="flex items-center space-x-2">
-                <div className={`w-2 h-2 rounded-full ${product.stockAvailable ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                <span className={`text-sm ${product.stockAvailable ? 'text-green-600' : 'text-red-600'}`}>
-                  {product.stockAvailable ? 'In Stock' : 'Out of Stock'}
-                </span>
-              </div>
-              */}
             </div>
           </div>
 
           <div className="space-y-4">
+            {/* Commented out quantity and cart buttons
             <div className="flex items-center space-x-4">
               <span className="text-sm font-medium">Quantity:</span>
               <div className="flex items-center space-x-2">
@@ -98,7 +91,6 @@ const ProductInfo = ({ product, quantity, setQuantity, onAddToCart, onBuyNow, on
               <Button
                 onClick={onAddToCart}
                 className="flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700"
-                // disabled={!product.stockAvailable} - commented out stock check
               >
                 <ShoppingCart className="w-4 h-4" />
                 <span>Add to Cart</span>
@@ -107,12 +99,12 @@ const ProductInfo = ({ product, quantity, setQuantity, onAddToCart, onBuyNow, on
               <Button
                 onClick={onBuyNow}
                 className="flex items-center justify-center space-x-2 bg-green-600 hover:bg-green-700"
-                // disabled={!product.stockAvailable} - commented out stock check
               >
                 <Zap className="w-4 h-4" />
                 <span>Buy Now</span>
               </Button>
             </div>
+            */}
 
             <div className="pt-2">
               <ProductEnquiry 

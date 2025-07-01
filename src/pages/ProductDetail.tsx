@@ -7,7 +7,9 @@ import SimilarProducts from '@/components/SimilarProducts';
 import Cart, { CartItem } from '@/components/Cart';
 import OrderSuccess from '@/components/OrderSuccess';
 import EnquiryForm, { EnquiryData } from '@/components/EnquiryForm';
+import ProductSearchTab from '@/components/ProductSearchTab';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useProducts, Product } from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
@@ -71,6 +73,7 @@ const ProductDetail = () => {
     );
   }
 
+  
   const addToCart = (productToAdd: Product, qty: number = 1) => {
     setCartItems(prev => {
       const existingItem = prev.find(item => item.id === productToAdd.id);
@@ -105,11 +108,13 @@ const ProductDetail = () => {
     handleAddToCart();
     setShowCart(true);
   };
+  
 
   const handleSetCartItems = (items: CartItem[]) => {
     setCartItems(items);
   };
 
+  
   const updateQuantity = (id: string, quantity: number) => {
     if (quantity === 0) {
       removeFromCart(id);
@@ -133,6 +138,7 @@ const ProductDetail = () => {
     setShowCart(false);
     setShowOrderSuccess(true);
   };
+  
 
   const handleEnquirySubmit = (enquiry: EnquiryData) => {
     let message = "🔍 Product Enquiry\n\n";
@@ -173,25 +179,40 @@ const ProductDetail = () => {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          <ProductImage product={product} />
-          <ProductInfo 
-            product={product}
-            quantity={quantity}
-            setQuantity={setQuantity}
-            onAddToCart={handleAddToCart}
-            onBuyNow={handleBuyNow}
-            onEnquiry={() => setShowEnquiryForm(false)}
-          />
-        </div>
+        <Tabs defaultValue="product-detail" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="product-detail">Product Details</TabsTrigger>
+            <TabsTrigger value="search-order">Search & Order</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="product-detail" className="space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+              <ProductImage product={product} />
+              <ProductInfo 
+                product={product}
+                quantity={quantity}
+                setQuantity={setQuantity}
+                onAddToCart={() => {}} // Commented out
+                onBuyNow={() => {}} // Commented out
+                onEnquiry={() => setShowEnquiryForm(true)}
+              />
+            </div>
 
-        <SimilarProducts 
-          products={similarProducts}
-          currentProductName={product.name}
-          onAddToCart={addToCart}
-        />
+            <SimilarProducts 
+              products={similarProducts}
+              currentProductName={product.name}
+              onAddToCart={() => {}} // Commented out
+            />
+          </TabsContent>
+          
+          <TabsContent value="search-order">
+            <ProductSearchTab />
+          </TabsContent>
+        </Tabs>
       </main>
 
+      
+      {/* Commented out cart modals
       {showCart && (
         <Cart
           items={cartItems}
@@ -208,6 +229,8 @@ const ProductDetail = () => {
           onClose={() => setShowOrderSuccess(false)}
         />
       )}
+      */}
+      
 
       {showEnquiryForm && (
         <EnquiryForm
