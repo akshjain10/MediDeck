@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Search, Loader2, ShoppingCart } from 'lucide-react';
 import { useProducts, Product } from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
+import { useCartPersistence } from '@/hooks/useCartPersistence';
 import Header from '@/components/Header';
 import { CartItem } from '@/components/Cart';
 import Cart from '@/components/Cart';
@@ -15,11 +15,11 @@ import Cart from '@/components/Cart';
 const Order = () => {
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [showCart, setShowCart] = useState(false);
   const { products, loading, error } = useProducts();
   const { toast } = useToast();
+  const { cartItems, setCartItems, clearCart } = useCartPersistence();
 
   // Debounced search effect
   useEffect(() => {
@@ -78,24 +78,23 @@ const Order = () => {
       return;
     }
 
-    setCartItems(prev => {
-      const existingItem = prev.find(item => item.id === product.id);
-      if (existingItem) {
-        return prev.map(item =>
+    const existingItem = cartItems.find(item => item.id === product.id);
+    const updatedCartItems = existingItem
+      ? cartItems.map(item =>
           item.id === product.id
             ? { ...item, quantity: item.quantity + quantity }
             : item
-        );
-      }
-      return [...prev, {
-        id: product.id,
-        name: product.brandName,
-        company: product.company,
-        mrp: product.mrp,
-        quantity: quantity,
-        image: product.image || ''
-      }];
-    });
+        )
+      : [...cartItems, {
+          id: product.id,
+          name: product.brandName,
+          company: product.company,
+          mrp: product.mrp,
+          quantity: quantity,
+          image: product.image || ''
+        }];
+
+    setCartItems(updatedCartItems);
 
     setQuantities(prev => ({
       ...prev,
@@ -114,19 +113,19 @@ const Order = () => {
       removeFromCart(id);
       return;
     }
-    setCartItems(prev =>
-      prev.map(item =>
-        item.id === id ? { ...item, quantity } : item
-      )
+    const updatedCartItems = cartItems.map(item =>
+      item.id === id ? { ...item, quantity } : item
     );
+    setCartItems(updatedCartItems);
   };
 
   const removeFromCart = (productId: string) => {
-    setCartItems(prev => prev.filter(item => item.id !== productId));
+    const updatedCartItems = cartItems.filter(item => item.id !== productId);
+    setCartItems(updatedCartItems);
   };
 
   const handleWhatsAppSuccess = () => {
-    setCartItems([]);
+    clearCart();
     setShowCart(false);
     toast({
       title: "Order Sent",

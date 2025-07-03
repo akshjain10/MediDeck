@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -12,11 +11,11 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useProducts, Product } from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
+import { useCartPersistence } from '@/hooks/useCartPersistence';
 import { areProductsSimilar } from '@/utils/stringUtils';
 
 const ProductDetail = () => {
   const { id } = useParams();
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
   const [showOrderSuccess, setShowOrderSuccess] = useState(false);
   const [showEnquiryForm, setShowEnquiryForm] = useState(false);
@@ -24,6 +23,7 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const { toast } = useToast();
   const { products, loading } = useProducts();
+  const { cartItems, setCartItems, clearCart } = useCartPersistence();
 
   const product = products.find(p => p.id === id);
   
@@ -72,26 +72,24 @@ const ProductDetail = () => {
     );
   }
 
-  
   const addToCart = (productToAdd: Product, qty: number = 1) => {
-    setCartItems(prev => {
-      const existingItem = prev.find(item => item.id === productToAdd.id);
-      if (existingItem) {
-        return prev.map(item =>
+    const existingItem = cartItems.find(item => item.id === productToAdd.id);
+    const updatedCartItems = existingItem
+      ? cartItems.map(item =>
           item.id === productToAdd.id
             ? { ...item, quantity: item.quantity + qty }
             : item
-        );
-      }
-      return [...prev, {
-        id: productToAdd.id,
-        name: productToAdd.brandName,
-        company: productToAdd.company,
-        mrp: productToAdd.mrp,
-        quantity: qty,
-        image: productToAdd.image
-      }];
-    });
+        )
+      : [...cartItems, {
+          id: productToAdd.id,
+          name: productToAdd.brandName,
+          company: productToAdd.company,
+          mrp: productToAdd.mrp,
+          quantity: qty,
+          image: productToAdd.image
+        }];
+
+    setCartItems(updatedCartItems);
     toast({
       title: "Added to Cart",
       description: `${productToAdd.brandName} has been added to your cart.`,
@@ -107,37 +105,30 @@ const ProductDetail = () => {
     handleAddToCart();
     setShowCart(true);
   };
-  
 
-  const handleSetCartItems = (items: CartItem[]) => {
-    setCartItems(items);
-  };
-
-  
   const updateQuantity = (id: string, quantity: number) => {
     if (quantity === 0) {
       removeFromCart(id);
       return;
     }
-    setCartItems(prev =>
-      prev.map(item =>
-        item.id === id ? { ...item, quantity } : item
-      )
+    const updatedCartItems = cartItems.map(item =>
+      item.id === id ? { ...item, quantity } : item
     );
+    setCartItems(updatedCartItems);
   };
 
   const removeFromCart = (id: string) => {
-    setCartItems(prev => prev.filter(item => item.id !== id));
+    const updatedCartItems = cartItems.filter(item => item.id !== id);
+    setCartItems(updatedCartItems);
   };
 
   const placeOrder = () => {
     const orderNum = Math.random().toString(36).substr(2, 9).toUpperCase();
     setOrderNumber(orderNum);
-    setCartItems([]);
+    clearCart();
     setShowCart(false);
     setShowOrderSuccess(true);
   };
-  
 
   const handleEnquirySubmit = (enquiry: EnquiryData) => {
     let message = "🔍 Product Enquiry\n\n";
@@ -167,7 +158,7 @@ const ProductDetail = () => {
       <Header
         cartItemsCount={cartItemsCount}
         onCartClick={() => setShowCart(true)}
-        onSetCartItems={handleSetCartItems}
+        onSetCartItems={setCartItems}
       />
       
       <main className="container mx-auto px-4 py-8">

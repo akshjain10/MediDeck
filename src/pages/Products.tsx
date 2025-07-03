@@ -11,9 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, Loader2, Filter } from 'lucide-react';
 import { useProducts, Product } from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
+import { useCartPersistence } from '@/hooks/useCartPersistence';
 
 const Products = React.memo(() => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
   const [showOrderSuccess, setShowOrderSuccess] = useState(false);
   const [showEnquiryForm, setShowEnquiryForm] = useState(false);
@@ -23,6 +23,7 @@ const Products = React.memo(() => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const { toast } = useToast();
   const { products, loading, error } = useProducts();
+  const { cartItems, setCartItems, clearCart } = useCartPersistence();
 
   // Debounced search effect
   useEffect(() => {
@@ -63,58 +64,54 @@ const Products = React.memo(() => {
   }, [products, searchQuery, selectedCategory]);
 
   const addToCart = useCallback((product: Product, quantity: number = 1) => {
-    setCartItems(prev => {
-      const existingItem = prev.find(item => item.id === product.id);
-      if (existingItem) {
-        return prev.map(item =>
+    const existingItem = cartItems.find(item => item.id === product.id);
+    const updatedCartItems = existingItem
+      ? cartItems.map(item =>
           item.id === product.id
             ? { ...item, quantity: item.quantity + quantity }
             : item
-        );
-      }
-      return [...prev, {
-        id: product.id,
-        name: product.brandName,
-        company: product.company,
-        mrp: product.mrp,
-        quantity: quantity,
-        image: product.image
-      }];
-    });
+        )
+      : [...cartItems, {
+          id: product.id,
+          name: product.brandName,
+          company: product.company,
+          mrp: product.mrp,
+          quantity: quantity,
+          image: product.image
+        }];
+
+    setCartItems(updatedCartItems);
     toast({
       title: "Added to Cart",
       description: `${product.brandName} has been added to your cart.`,
       duration: 1500,
     });
-  }, [toast]);
-
-  const handleSetCartItems = useCallback((items: CartItem[]) => {
-    setCartItems(items);
-  }, []);
+  }, [cartItems, setCartItems, toast]);
 
   const updateQuantity = useCallback((id: string, quantity: number) => {
     if (quantity === 0) {
-      setCartItems(prev => prev.filter(item => item.id !== id));
+      const updatedCartItems = cartItems.filter(item => item.id !== id);
+      setCartItems(updatedCartItems);
       return;
     }
-    setCartItems(prev =>
-      prev.map(item =>
-        item.id === id ? { ...item, quantity } : item
-      )
+    const updatedCartItems = cartItems.map(item =>
+      item.id === id ? { ...item, quantity } : item
     );
-  }, []);
+    setCartItems(updatedCartItems);
+  }, [cartItems, setCartItems]);
 
   const removeFromCart = useCallback((id: string) => {
-    setCartItems(prev => prev.filter(item => item.id !== id));
-  }, []);
+    const updatedCartItems = cartItems.filter(item => item.id !== id);
+    setCartItems(updatedCartItems);
+  }, [cartItems, setCartItems]);
 
   const placeOrder = useCallback(() => {
     const orderNum = Math.random().toString(36).substr(2, 9).toUpperCase();
     setOrderNumber(orderNum);
-    setCartItems([]);
+    clearCart();
     setShowCart(false);
     setShowOrderSuccess(true);
-  }, []);
+  }, [clearCart]);
 
   const handleEnquirySubmit = useCallback((enquiry: EnquiryData) => {
     console.log('Enquiry submitted:', enquiry);
@@ -135,7 +132,7 @@ const Products = React.memo(() => {
       <Header
         cartItemsCount={cartItemsCount}
         onCartClick={() => setShowCart(true)}
-        onSetCartItems={handleSetCartItems}
+        onSetCartItems={setCartItems}
       />
       
       <main className="container mx-auto px-4 py-8">
