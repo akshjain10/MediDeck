@@ -138,8 +138,9 @@ const Products = React.memo(() => {
       <main className="container mx-auto px-4 py-8">
         {/* Search Section */}
         <div className="mb-6">
-          <div className="flex gap-4 items-center">
-            <div className="relative flex-1 max-w-md">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            {/* Search Bar */}
+            <div className="relative w-full sm:flex-1 sm:max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
                 type="text"
@@ -150,17 +151,17 @@ const Products = React.memo(() => {
                 onKeyDown={handleSearchKeyDown}
               />
             </div>
-            
-            {/* Category Filter - Only show when searching */}
+
+            {/* Category Filter */}
             {searchQuery.trim() && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 w-full sm:w-auto">
                 <Filter className="w-4 h-4 text-gray-500" />
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-48">
+                  <SelectTrigger className="w-36 sm:w-48">
                     <SelectValue placeholder="Filter by category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map(category => (
+                    {categories.map((category) => (
                       <SelectItem key={category} value={category}>
                         {category}
                       </SelectItem>
@@ -171,6 +172,7 @@ const Products = React.memo(() => {
             )}
           </div>
         </div>
+
 
         {/* Results count - Only show when searching */}
         {searchQuery.trim() && filteredProducts.length > 0 && (
