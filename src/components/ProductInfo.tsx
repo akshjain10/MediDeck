@@ -1,109 +1,139 @@
 
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Product } from '@/hooks/useProducts';
-import ProductEnquiry from '@/components/ProductEnquiry';
+import { useToast } from '@/hooks/use-toast';
+import ProductShare from './ProductShare';
 
 interface ProductInfoProps {
   product: Product;
-  quantity: number;
-  setQuantity: (quantity: number) => void;
-  onAddToCart: () => void;
-  onBuyNow: () => void;
-  onEnquiry: () => void;
+  onAddToCart?: (product: Product, quantity: number) => void;
 }
 
-const ProductInfo = ({ product, quantity, setQuantity, onAddToCart, onBuyNow, onEnquiry }: ProductInfoProps) => {
-  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value) || 1;
-    setQuantity(Math.max(1, value));
+const ProductInfo: React.FC<ProductInfoProps> = ({ product, onAddToCart }) => {
+  const [quantity, setQuantity] = useState(1);
+  const { toast } = useToast();
+
+  const handleAddToCart = () => {
+    if (onAddToCart && quantity > 0) {
+      onAddToCart(product, quantity);
+      toast({
+        title: "Added to Cart",
+        description: `${quantity} x ${product.brandName} added to cart`,
+      });
+    }
   };
 
-  const handleQuantityKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      onAddToCart();
+      handleAddToCart();
     }
   };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
-          {product.brandName}
-        </h1>
-        <p className="text-lg text-gray-600 mb-4">{product.company}</p>
-        
-        <div className="flex flex-wrap gap-2 mb-4">
-          <Badge variant="secondary" className="text-sm">
-            {product.category}
-          </Badge>
-          {product.salt && (
-            <Badge variant="outline" className="text-sm">
-              {product.salt}
-            </Badge>
-          )}
-        </div>
-      </div>
-
       <Card>
         <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div>
-              <h3 className="font-semibold text-gray-700 mb-2">Product Details</h3>
-              <div className="space-y-2 text-sm">
-                <p><span className="font-medium">Name:</span> {product.name}</p>
-                <p><span className="font-medium">Company:</span> {product.company}</p>
-                {product.packing && (
-                  <p><span className="font-medium">Packing:</span> {product.packing}</p>
-                )}
-                {product.salt && (
-                  <p><span className="font-medium">Salt:</span> {product.salt}</p>
-                )}
-              </div>
-            </div>
-            
-            <div className="text-right">
-              <h3 className="font-semibold text-gray-700 mb-2">MRP</h3>
-              <div className="text-3xl font-bold text-blue-600 mb-2">
-                ₹{product.mrp}
-              </div>
-            </div>
-          </div>
-
           <div className="space-y-4">
-            <div className="flex items-center space-x-4">
-              <span className="text-sm font-medium">Quantity:</span>
-              <Input
-                type="number"
-                value={quantity}
-                onChange={handleQuantityChange}
-                onKeyDown={handleQuantityKeyDown}
-                min="1"
-                className="w-20 text-center"
-                placeholder="1"
-              />
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                  {product.brandName}
+                </h1>
+                <p className="text-lg text-gray-600 mb-3">{product.name}</p>
+                
+                <div className="flex items-center space-x-4 mb-4">
+                  <Badge variant="secondary" className="text-sm">
+                    {product.company}
+                  </Badge>
+                  {product.category && (
+                    <Badge variant="outline" className="text-sm">
+                      {product.category}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex-shrink-0">
+                <ProductShare product={product} />
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Button
-                onClick={onAddToCart}
-                className="flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700"
-              >
-                <ShoppingCart className="w-4 h-4" />
-                <span>Add to Cart</span>
-              </Button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Product Details</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Company:</span>
+                    <span className="font-medium">{product.company}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Packing:</span>
+                    <span className="font-medium">{product.packing}</span>
+                  </div>
+                  {product.salt && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Salt/Composition:</span>
+                      <span className="font-medium">{product.salt}</span>
+                    </div>
+                  )}
+                  {product.category && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Category:</span>
+                      <span className="font-medium">{product.category}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Pricing</h3>
+                <div className="text-3xl font-bold text-blue-600 mb-4">
+                  MRP ₹{product.mrp}
+                </div>
+                
+                {onAddToCart && (
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-3">
+                      <label htmlFor="quantity" className="text-sm font-medium text-gray-700">
+                        Quantity:
+                      </label>
+                      <Input
+                        id="quantity"
+                        type="number"
+                        min="1"
+                        value={quantity}
+                        onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                        onKeyDown={handleKeyDown}
+                        className="w-24 h-10"
+                      />
+                    </div>
+                    
+                    <Button
+                      onClick={handleAddToCart}
+                      className="w-full h-12 text-base font-medium bg-blue-600 hover:bg-blue-700"
+                      disabled={quantity <= 0}
+                    >
+                      Add to Cart - ₹{(product.mrp * quantity).toFixed(2)}
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className="pt-2">
-              <ProductEnquiry 
-                product={product}
-                onSuccess={onEnquiry}
-              />
-            </div>
+            {product.stockAvailable !== undefined && (
+              <div className="pt-4 border-t">
+                <div className="flex items-center space-x-2">
+                  <div className={`w-3 h-3 rounded-full ${product.stockAvailable ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <span className={`text-sm font-medium ${product.stockAvailable ? 'text-green-700' : 'text-red-700'}`}>
+                    {product.stockAvailable ? 'In Stock' : 'Out of Stock'}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
