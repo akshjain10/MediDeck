@@ -9,33 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      admin_users: {
-        Row: {
-          created_at: string | null
-          email: string
-          id: string
-          is_active: boolean | null
-          name: string
-          password_hash: string
-        }
-        Insert: {
-          created_at?: string | null
-          email: string
-          id?: string
-          is_active?: boolean | null
-          name: string
-          password_hash: string
-        }
-        Update: {
-          created_at?: string | null
-          email?: string
-          id?: string
-          is_active?: boolean | null
-          name?: string
-          password_hash?: string
-        }
-        Relationships: []
-      }
       Product: {
         Row: {
           Category: string | null
@@ -72,71 +45,12 @@ export type Database = {
         }
         Relationships: []
       }
-      product_categories: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          id: string
-          is_active: boolean | null
-          name: string
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          name: string
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          name?: string
-        }
-        Relationships: []
-      }
-      product_visibility: {
-        Row: {
-          created_at: string | null
-          id: string
-          is_visible: boolean | null
-          product_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          is_visible?: boolean | null
-          product_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          is_visible?: boolean | null
-          product_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_visibility_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "Product"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      is_admin: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never
