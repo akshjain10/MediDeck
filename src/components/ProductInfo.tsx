@@ -19,13 +19,14 @@ interface ProductInfoProps {
 
 const ProductInfo = ({ product, quantity, setQuantity, onAddToCart, onBuyNow, onEnquiry }: ProductInfoProps) => {
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value) || 1;
-    setQuantity(Math.max(1, value));
+    const value = parseInt(e.target.value);
+    setQuantity(Math.max(0, value));
   };
 
   const handleQuantityKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       onAddToCart();
+      setQuantity('');
     }
   };
 
@@ -36,7 +37,7 @@ const ProductInfo = ({ product, quantity, setQuantity, onAddToCart, onBuyNow, on
           {product.brandName}
         </h1>
         <p className="text-lg text-gray-600 mb-4">{product.company}</p>
-        
+
         <div className="flex flex-wrap gap-2 mb-4">
           <Badge variant="secondary" className="text-sm">
             {product.category}
@@ -51,11 +52,11 @@ const ProductInfo = ({ product, quantity, setQuantity, onAddToCart, onBuyNow, on
 
       <Card>
         <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-[3fr_1fr] gap-4 mb-6">
             <div>
               <h3 className="font-semibold text-gray-700 mb-2">Product Details</h3>
               <div className="space-y-2 text-sm">
-                <p><span className="font-medium">Name:</span> {product.name}</p>
+                <p><span className="font-medium">Name:</span> {product.brandName}</p>
                 <p><span className="font-medium">Company:</span> {product.company}</p>
                 {product.packing && (
                   <p><span className="font-medium">Packing:</span> {product.packing}</p>
@@ -65,33 +66,33 @@ const ProductInfo = ({ product, quantity, setQuantity, onAddToCart, onBuyNow, on
                 )}
               </div>
             </div>
-            
-            <div className="text-right">
+
+            <div className="flex flex-col space-y-2">
               <h3 className="font-semibold text-gray-700 mb-2">MRP</h3>
               <div className="text-3xl font-bold text-blue-600 mb-2">
                 ₹{product.mrp}
               </div>
+              <div className="flex flex-col space-y-2">
+                            <span className="text-sm font-medium">Quantity</span>
+                            <Input
+                                                        type="number"
+                                                        min="0"
+                                                        placeholder="Qty"
+                                                        value={quantity}
+                                                        onChange={handleQuantityChange}
+                                                        onKeyDown={handleQuantityKeyDown}
+                                                        className="w-16 h-8 no-spinner"
+                                                      />
+                          </div>
             </div>
+
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center space-x-4">
-              <span className="text-sm font-medium">Quantity:</span>
-              <Input
-                type="number"
-                value={quantity}
-                onChange={handleQuantityChange}
-                onKeyDown={handleQuantityKeyDown}
-                min="1"
-                className="w-20 text-center"
-                placeholder="1"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="pt-2">
               <Button
                 onClick={onAddToCart}
-                className="flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700"
+                className="w-full flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700"
               >
                 <ShoppingCart className="w-4 h-4" />
                 <span>Add to Cart</span>
