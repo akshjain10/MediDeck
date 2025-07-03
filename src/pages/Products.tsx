@@ -122,10 +122,7 @@ const Products = React.memo(() => {
     setShowEnquiryForm(false);
   }, [toast]);
 
-  const cartItemsCount = useMemo(() => 
-    cartItems.reduce((sum, item) => sum + item.quantity, 0), 
-    [cartItems]
-  );
+  const cartItemsCount = cartItems.length;
 
   return (
     <div className="min-h-screen bg-gray-50">

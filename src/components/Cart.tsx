@@ -50,7 +50,11 @@ const Cart = ({ items, onUpdateQuantity, onRemoveItem, onPlaceOrder, onClose }: 
     setTempQuantity('');
   };
 
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+  const clearCart = () => {
+    setCartItems([]);
+  };
+
+  const totalItems = items.length;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-2 sm:p-4">
@@ -180,11 +184,29 @@ const Cart = ({ items, onUpdateQuantity, onRemoveItem, onPlaceOrder, onClose }: 
                     </div>
                   ))}
                 </div>
+                {/*clearCart && (
+                <div className="w-full py-4 px-8 flex justify-end">
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                        if (window.confirm("Are you sure you want to clear the cart?")) {
+                        clearCart();
+                        toast({
+                          title: 'Cart Cleared',
+                          description: 'All items removed from cart.',
+                          variant: 'destructive',
+                        });
+                        }
+                    }}
+                  >
+                    Clear Cart
+                  </Button>
+                </div>
+                )*/}
               </ScrollArea>
             </CardContent>
-            
             <div className="border-t bg-gray-50 p-3 sm:p-6 flex-shrink-0">
-              <WhatsAppIntegration 
+              <WhatsAppIntegration
                 cartItems={items}
                 onSuccess={handleWhatsAppSuccess}
               />

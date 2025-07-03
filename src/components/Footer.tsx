@@ -18,7 +18,7 @@ const Footer = () => {
   const handleAddress = () => {
     const address = "Arihant Medigens, Healthcare Solutions, India";
     const encodedAddress = encodeURIComponent(address);
-    window.open(`https://www.google.com/maps/search/?api=1&query=${encodedAddress}`, '_blank');
+    window.open(`https://www.google.com/maps/place/Arihant+MediGens/@24.8116366,93.9331241,17z/data=!3m1!4b1!4m6!3m5!1s0x3749271cb310ffef:0xe16e6236035161b6!8m2!3d24.8116366!4d93.935699!16s%2Fg%2F11wx9vh9mk?entry=ttu&g_ep=EgoyMDI1MDYzMC4wIKXMDSoASAFQAw%3D%3D`, '_blank');
   };
 
   return (

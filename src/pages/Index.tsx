@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 import { Search, ShoppingBag, Phone, Mail } from 'lucide-react';
 
+
 const Index = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
@@ -17,6 +18,7 @@ const Index = () => {
   const [showEnquiryForm, setShowEnquiryForm] = useState(false);
   const [orderNumber, setOrderNumber] = useState('');
   const { toast } = useToast();
+
 
   const handleSetCartItems = (items: CartItem[]) => {
     setCartItems(items);
@@ -55,7 +57,7 @@ const Index = () => {
     setShowEnquiryForm(false);
   };
 
-  const cartItemsCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const cartItemsCount = cartItems.length;
 
   return (
     <div className="min-h-screen bg-gray-50">

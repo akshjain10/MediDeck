@@ -26,11 +26,11 @@ const ProductDetail = () => {
   const { cartItems, setCartItems, clearCart } = useCartPersistence();
 
   const product = products.find(p => p.id === id);
-  
+
   // Get similar products using 80% matching algorithm
-  const similarProducts = products.filter(p => 
-    p.id !== product?.id && 
-    product && 
+  const similarProducts = products.filter(p =>
+    p.id !== product?.id &&
+    product &&
     areProductsSimilar(p.name, product.name, 0.8)
   ).slice(0, 4);
 
@@ -142,7 +142,7 @@ const ProductDetail = () => {
 
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://api.whatsapp.com/send/?phone=918209703661&text=${encodedMessage}`;
-    
+
     window.open(whatsappUrl, '_blank');
     toast({
           title: "Enquiry Sent",
@@ -151,7 +151,7 @@ const ProductDetail = () => {
     setShowEnquiryForm(false);
   };
 
-  const cartItemsCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const cartItemsCount = cartItems.length;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -160,7 +160,7 @@ const ProductDetail = () => {
         onCartClick={() => setShowCart(true)}
         onSetCartItems={setCartItems}
       />
-      
+
       <main className="container mx-auto px-4 py-8">
         <div className="mb-6">
           <Link to="/products" className="flex items-center text-blue-600 hover:text-blue-700 mb-4">
@@ -171,7 +171,7 @@ const ProductDetail = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           <ProductImage product={product} />
-          <ProductInfo 
+          <ProductInfo
             product={product}
             quantity={quantity}
             setQuantity={setQuantity}

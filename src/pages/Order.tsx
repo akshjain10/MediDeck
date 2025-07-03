@@ -1,50 +1,47 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Search, Loader2, ShoppingCart } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 import { useProducts, Product } from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
 import { useCartPersistence } from '@/hooks/useCartPersistence';
 import Header from '@/components/Header';
-import { CartItem } from '@/components/Cart';
 import Cart from '@/components/Cart';
 
 const Order = () => {
+  const quantityInputRef = useRef<HTMLInputElement | null>(null);
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [quantityInput, setQuantityInput] = useState('');
   const [showCart, setShowCart] = useState(false);
   const { products, loading, error } = useProducts();
   const { toast } = useToast();
   const { cartItems, setCartItems, clearCart } = useCartPersistence();
 
-  // Debounced search effect
+  // Debounce search input
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setSearchQuery(searchInput);
-    }, 500);
-
+    }, 300);
     return () => clearTimeout(timeoutId);
   }, [searchInput]);
 
-  // Handle enter key press for immediate search
-  const handleSearchKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      setSearchQuery(searchInput);
-    }
-  }, [searchInput]);
+  const handleSearchKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        setSearchQuery(searchInput);
+      }
+    },
+    [searchInput]
+  );
 
-  // Filter products based on search query
   const filteredProducts = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return [];
-    }
-    
+    if (!searchQuery.trim()) return [];
     const query = searchQuery.toLowerCase();
-    return products.filter(product => 
+    return products.filter(product =>
       product.brandName.toLowerCase().includes(query) ||
       product.company.toLowerCase().includes(query) ||
       product.name.toLowerCase().includes(query) ||
@@ -52,28 +49,13 @@ const Order = () => {
     );
   }, [products, searchQuery]);
 
-  const handleQuantityChange = (productId: string, value: string) => {
-    const quantity = parseInt(value) || 0;
-    setQuantities(prev => ({
-      ...prev,
-      [productId]: Math.max(0, quantity)
-    }));
-  };
-
-  const handleQuantityKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, product: Product) => {
-    if (e.key === 'Enter') {
-      addToCart(product);
-    }
-  };
-
-  const addToCart = (product: Product) => {
-    const quantity = quantities[product.id] || 0;
-    if (quantity <= 0) {
+  const handleAddSelectedToCart = (product: Product) => {
+    const quantity = parseInt(quantityInput || '0');
+    if (!quantity || quantity <= 0) {
       toast({
-        title: "Invalid Quantity",
-        description: "Please enter a valid quantity greater than 0.",
-        variant: "destructive",
-        duration: 1500,
+        title: 'Invalid Quantity',
+        description: 'Please enter a valid quantity.',
+        variant: 'destructive',
       });
       return;
     }
@@ -85,24 +67,26 @@ const Order = () => {
             ? { ...item, quantity: item.quantity + quantity }
             : item
         )
-      : [...cartItems, {
-          id: product.id,
-          name: product.brandName,
-          company: product.company,
-          mrp: product.mrp,
-          quantity: quantity,
-          image: product.image || ''
-        }];
+      : [
+          ...cartItems,
+          {
+            id: product.id,
+            name: product.brandName,
+            company: product.company,
+            mrp: product.mrp,
+            quantity,
+            image: product.image || '',
+          },
+        ];
 
     setCartItems(updatedCartItems);
-
-    setQuantities(prev => ({
-      ...prev,
-      [product.id]: 0
-    }));
+    setQuantityInput('');
+    setSelectedProduct(null);
+    setSearchInput('');
+    setSearchQuery('');
 
     toast({
-      title: "Added to Cart",
+      title: 'Added to Cart',
       description: `${product.brandName} (${quantity} pcs) added to cart.`,
       duration: 1500,
     });
@@ -128,8 +112,8 @@ const Order = () => {
     clearCart();
     setShowCart(false);
     toast({
-      title: "Order Sent",
-      description: "Your order has been sent via WhatsApp!",
+      title: 'Order Sent',
+      description: 'Your order has been sent via WhatsApp!',
     });
   };
 
@@ -137,7 +121,6 @@ const Order = () => {
     handleWhatsAppSuccess();
   };
 
-  // Count distinct products in cart
   const distinctProductCount = cartItems.length;
 
   return (
@@ -147,127 +130,165 @@ const Order = () => {
         onCartClick={() => setShowCart(true)}
         onSetCartItems={setCartItems}
       />
-      
-      <main className="container mx-auto px-4 py-8">
-        <div className="space-y-6">
-          {/* Search Section */}
+
+
+      <main className="container mx-auto px-4 py-8 space-y-6">
+
+        {/* Cart Summary */}
+        {cartItems.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl">Order Products</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="relative max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  type="text"
-                  placeholder="Search products to order..."
-                  className="pl-10"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  onKeyDown={handleSearchKeyDown}
-                />
-              </div>
-              
-              {searchQuery.trim() && filteredProducts.length > 0 && (
-                <div className="mt-4">
-                  <p className="text-sm text-gray-600 mb-2">
-                    Found {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
-                  </p>
+              <CardTitle className="text-xl">
+              <div className="container mx-auto px-4 mt-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-800">Cart Summary</h2>
+
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                        if (window.confirm("Are you sure you want to clear the cart?"))
+                        {clearCart();
+                        toast({
+                        title: 'Cart Cleared',
+                        description: 'All items removed from cart.',
+                        variant: 'destructive',
+                        });
+                        }
+                    }}
+                  >
+                    Clear Cart
+                  </Button>
                 </div>
-              )}
+              </div>
+
+              </CardTitle>
+
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Product Name</TableHead>
+                    <TableHead>Quantity</TableHead>
+                    <TableHead>Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {cartItems.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell>{item.name}</TableCell>
+                      <TableCell>{item.quantity}</TableCell>
+                      <TableCell>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => removeFromCart(item.id)}
+                        >
+                          Remove
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
+        )}
 
-          {/* Products Table */}
-          {loading ? (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
-                <p className="text-gray-500">Loading products...</p>
-              </CardContent>
-            </Card>
-          ) : error ? (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <p className="text-red-500 mb-4">Error loading products: {error}</p>
-                <p className="text-gray-500">Please try again later.</p>
-              </CardContent>
-            </Card>
-          ) : !searchQuery.trim() ? (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <div className="mb-4 text-4xl">🔍</div>
-                <p className="text-gray-500 mb-4 text-lg">Start searching to discover products</p>
-                <p className="text-sm text-gray-400">Type in the search box above to find medicines and healthcare products</p>
-              </CardContent>
-            </Card>
-          ) : filteredProducts.length === 0 ? (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <div className="mb-4 text-4xl">📦</div>
-                <p className="text-gray-500 mb-4 text-lg">No products found</p>
-                <p className="text-sm text-gray-400">Try adjusting your search terms</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Product Name</TableHead>
-                      <TableHead>Company</TableHead>
-                      <TableHead>Salt</TableHead>
-                      <TableHead>MRP</TableHead>
-                      <TableHead>Quantity</TableHead>
-                      <TableHead>Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredProducts.map((product) => (
-                      <TableRow key={product.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{product.brandName}</div>
-                            {product.category && (
-                              <Badge variant="secondary" className="text-xs mt-1">
-                                {product.category}
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>{product.company}</TableCell>
-                        <TableCell>{product.salt || '-'}</TableCell>
-                        <TableCell className="font-semibold">₹{product.mrp}</TableCell>
-                        <TableCell>
-                          <Input
-                            type="number"
-                            min="0"
-                            placeholder="0"
-                            value={quantities[product.id] || ''}
-                            onChange={(e) => handleQuantityChange(product.id, e.target.value)}
-                            onKeyDown={(e) => handleQuantityKeyDown(e, product)}
-                            className="w-20 h-8"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            size="sm"
-                            onClick={() => addToCart(product)}
-                            className="flex items-center space-x-1"
-                          >
-                            <ShoppingCart className="w-3 h-3" />
-                            <span>Add</span>
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        {/* Search and Selection */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl">Order Products</CardTitle>
+          </CardHeader>
+          <CardContent className="relative">
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                type="text"
+                placeholder="Search products to order..."
+                className="pl-10"
+                value={searchInput}
+                onChange={(e) => {
+                  setSearchInput(e.target.value);
+                  setSelectedProduct(null);
+                }}
+                onKeyDown={handleSearchKeyDown}
+              />
+
+              {searchQuery.trim() && filteredProducts.length > 0 && (
+                <ul className="absolute z-10 bg-white border border-gray-300 rounded-md mt-1 w-full max-h-60 overflow-y-auto shadow-lg">
+                  {filteredProducts.map((product) => (
+                    <li
+                      key={product.id}
+                      onClick={() => {
+                        setSelectedProduct(product);
+                        setQuantityInput('');
+                        setSearchQuery('');
+                        setSearchInput('');
+
+                      }}
+                      className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                    >
+                      <div className="font-medium">{product.brandName}</div>
+                      <div className="text-sm text-gray-500">
+                        {product.company} – ₹{product.mrp}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {selectedProduct && (
+             <div className="w-full px-4 py-4">
+               <label className="block text-sm font-medium text-gray-700 mb-2">
+                 Quantity for <span className="font-semibold">{selectedProduct.brandName}</span>
+               </label>
+
+               <div className="flex items-center gap-4">
+                 <Input
+                   autoFocus
+                   type="number"
+                   inputMode="numeric"
+                   placeholder="Enter quantity"
+                   value={quantityInput}
+                   onChange={(e) => setQuantityInput(e.target.value)}
+                   onKeyDown={(e) => {
+                     if (e.key === 'Enter') handleAddSelectedToCart(selectedProduct);
+                   }}
+                   className="w-full sm:w-32 no-spinner "
+                 />
+
+                 <Button
+                   onClick={() => handleAddSelectedToCart(selectedProduct)}
+                   className="whitespace-nowrap"
+                 >
+                   Add to Cart
+                 </Button>
+               </div>
+             </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Loading or Error */}
+        {loading && (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+              <p className="text-gray-500">Loading products...</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {error && (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <p className="text-red-500 mb-4">Error loading products: {error}</p>
+              <p className="text-gray-500">Please try again later.</p>
+            </CardContent>
+          </Card>
+        )}
       </main>
 
       {/* Cart Modal */}
