@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Home, Package, Phone, ShoppingBag, Menu, X } from 'lucide-react';
+import EnquiryForm from '@/components/EnquiryForm';
 import { Button } from '@/components/ui/button';
 import { CartItem } from '@/components/Cart';
 
@@ -15,10 +16,11 @@ const Header = ({ cartItemsCount, onCartClick }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleContactClick = () => {
-    const message = "Hello! I would like to know more about your products and services.";
+    {/*const message = "Hello! I would like to know more about your products and services.";
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://api.whatsapp.com/send/?phone=918209703661&text=${encodedMessage}`;
-    window.open(whatsappUrl, '_blank');
+    window.open(whatsappUrl, '_blank');*/}
+    EnquiryForm;
   };
 
   const toggleMobileMenu = () => {
@@ -90,6 +92,7 @@ const Header = ({ cartItemsCount, onCartClick }: HeaderProps) => {
             </Button>
 
             {/* Mobile Menu Button */}
+
             <Button
               variant="ghost"
               onClick={toggleMobileMenu}
@@ -128,7 +131,14 @@ const Header = ({ cartItemsCount, onCartClick }: HeaderProps) => {
                 <ShoppingBag className="w-4 h-4" />
                 <span>Order</span>
               </Link>
-              <Button
+               <Link
+                to="/EnquiryForm"
+                className="flex items-center space-x-2 p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                onClick={closeMobileMenu}>
+                <Phone className="w-4 h-4" />
+                  <span>Contact</span>
+                </Link>
+              {/*<Button
                 variant="ghost"
                 onClick={() => {
                   handleContactClick();
@@ -138,7 +148,7 @@ const Header = ({ cartItemsCount, onCartClick }: HeaderProps) => {
               >
                 <Phone className="w-4 h-4" />
                 <span>Contact</span>
-              </Button>
+              </Button>*/}
             </div>
           </nav>
         )}

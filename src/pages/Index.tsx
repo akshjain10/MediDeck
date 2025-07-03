@@ -152,7 +152,7 @@ const Index = () => {
         </section>
 
         {/* Contact Section */}
-        <section className="py-16 bg-gray-100">
+        {/*<section className="py-16 bg-gray-100">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl font-bold mb-8">Get In Touch</h2>
             <div className="flex flex-col sm:flex-row justify-center items-center gap-8">
@@ -166,7 +166,7 @@ const Index = () => {
               </div>
             </div>
           </div>
-        </section>
+        </section>*/}
       </main>
 
       {showCart && (
