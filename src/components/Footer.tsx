@@ -76,7 +76,8 @@ const Footer = () => {
               <MapPin className="w-5 h-5 mt-0.5" />
               <div>
                 <p>Arihant Medigens</p>
-                <p>530, Opp. Hotel White Palce, MG Avenue, Thangal Bazar</p>
+                <p>530, Opp. Hotel White Palce</p>
+                <p>MG Avenue, Thangal Bazar</p>
                 <p>Imphal, Manipur</p>
               </div>
             </div>
