@@ -101,6 +101,27 @@ const ProductDetail = () => {
     handleWhatsAppSuccess();
   };
 
+  // Filter similar products (same category, different product)
+  const similarProducts = products.filter(p => 
+    p.category === product.category && p.id !== product.id
+  ).slice(0, 4);
+
+  const handleSimilarProductAddToCart = (prod: any, qty = 1) => {
+    addToCart({
+      id: prod.id,
+      name: prod.brandName,
+      company: prod.company,
+      mrp: prod.mrp,
+      image: prod.image || ''
+    }, qty);
+
+    toast({
+      title: "Added to Cart",
+      description: `${prod.brandName} (${qty} pcs) added to cart.`,
+      duration: 1500,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header 
@@ -122,7 +143,11 @@ const ProductDetail = () => {
           />
         </div>
         
-        <SimilarProducts currentProduct={product} />
+        <SimilarProducts 
+          products={similarProducts}
+          currentProductName={product.brandName}
+          onAddToCart={handleSimilarProductAddToCart}
+        />
       </main>
 
       {showCart && (
