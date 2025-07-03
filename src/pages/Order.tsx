@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,17 +8,24 @@ import { Search, Loader2, ShoppingCart } from 'lucide-react';
 import { useProducts, Product } from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
-import { CartItem } from '@/components/Cart';
 import Cart from '@/components/Cart';
+import { useCartPersistence } from '@/hooks/useCartPersistence';
 
 const Order = () => {
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [showCart, setShowCart] = useState(false);
   const { products, loading, error } = useProducts();
   const { toast } = useToast();
+  
+  const {
+    cartItems,
+    addToCart,
+    updateCartQuantity,
+    removeFromCart,
+    clearCart
+  } = useCartPersistence();
 
   // Debounced search effect
   useEffect(() => {
@@ -62,11 +68,11 @@ const Order = () => {
 
   const handleQuantityKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, product: Product) => {
     if (e.key === 'Enter') {
-      addToCart(product);
+      addToCartHandler(product);
     }
   };
 
-  const addToCart = (product: Product) => {
+  const addToCartHandler = (product: Product) => {
     const quantity = quantities[product.id] || 0;
     if (quantity <= 0) {
       toast({
@@ -78,24 +84,13 @@ const Order = () => {
       return;
     }
 
-    setCartItems(prev => {
-      const existingItem = prev.find(item => item.id === product.id);
-      if (existingItem) {
-        return prev.map(item =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        );
-      }
-      return [...prev, {
-        id: product.id,
-        name: product.brandName,
-        company: product.company,
-        mrp: product.mrp,
-        quantity: quantity,
-        image: product.image || ''
-      }];
-    });
+    addToCart({
+      id: product.id,
+      name: product.brandName,
+      company: product.company,
+      mrp: product.mrp,
+      image: product.image || ''
+    }, quantity);
 
     setQuantities(prev => ({
       ...prev,
@@ -109,24 +104,8 @@ const Order = () => {
     });
   };
 
-  const updateCartQuantity = (id: string, quantity: number) => {
-    if (quantity === 0) {
-      removeFromCart(id);
-      return;
-    }
-    setCartItems(prev =>
-      prev.map(item =>
-        item.id === id ? { ...item, quantity } : item
-      )
-    );
-  };
-
-  const removeFromCart = (productId: string) => {
-    setCartItems(prev => prev.filter(item => item.id !== productId));
-  };
-
   const handleWhatsAppSuccess = () => {
-    setCartItems([]);
+    clearCart();
     setShowCart(false);
     toast({
       title: "Order Sent",
@@ -146,7 +125,7 @@ const Order = () => {
       <Header
         cartItemsCount={distinctProductCount}
         onCartClick={() => setShowCart(true)}
-        onSetCartItems={setCartItems}
+        onSetCartItems={() => {}} // Not needed with persistence hook
       />
       
       <main className="container mx-auto px-4 py-8">
@@ -254,7 +233,7 @@ const Order = () => {
                         <TableCell>
                           <Button
                             size="sm"
-                            onClick={() => addToCart(product)}
+                            onClick={() => addToCartHandler(product)}
                             className="flex items-center space-x-1"
                           >
                             <ShoppingCart className="w-3 h-3" />
