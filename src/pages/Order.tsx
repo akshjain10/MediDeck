@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import WhatsAppIntegration from '@/components/WhatsAppIntegration';
 import { Search, Loader2 } from 'lucide-react';
 import { useProducts, Product } from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
@@ -191,6 +192,12 @@ const Order = () => {
                   ))}
                 </TableBody>
               </Table>
+              <div className="border-t bg-gray-50 p-3 sm:p-6 flex-shrink-0">
+                                    <WhatsAppIntegration
+                                      cartItems={cartItems}
+                                      onSuccess={handleWhatsAppSuccess}
+                                    />
+                                  </div>
             </CardContent>
           </Card>
         )}
@@ -289,6 +296,7 @@ const Order = () => {
             </CardContent>
           </Card>
         )}
+
       </main>
 
       {/* Cart Modal */}
