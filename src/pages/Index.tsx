@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import Header from '@/components/Header';
+import Cart, { CartItem } from '@/components/Cart';
 import OrderSuccess from '@/components/OrderSuccess';
 import EnquiryForm, { EnquiryData } from '@/components/EnquiryForm';
 import { Button } from '@/components/ui/button';
