@@ -5,7 +5,7 @@ import Cart, { CartItem } from '@/components/Cart';
 import OrderSuccess from '@/components/OrderSuccess';
 import EnquiryForm, { EnquiryData } from '@/components/EnquiryForm';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Loader2, Filter } from 'lucide-react';
@@ -134,7 +134,19 @@ const Products = React.memo(() => {
       
       <main className="container mx-auto px-4 py-8">
         {/* Search Section */}
-        <div className="mb-6">
+        <Card>
+                    <CardHeader>
+                      <CardTitle className="text-xl">
+                      <div className="container mx-auto">
+                        <div className="flex justify-center sm:justify-start">
+                          <h2 className="text-lg font-semibold text-gray-800">Explore Products</h2>
+                          </div>
+                      </div>
+                      </CardTitle>
+                    </CardHeader>
+        </Card>
+
+        <div className="mb-6 mt-6">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             {/* Search Bar */}
             <div className="relative w-full sm:flex-1 sm:max-w-md">

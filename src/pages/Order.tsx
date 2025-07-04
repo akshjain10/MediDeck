@@ -165,6 +165,7 @@ const Order = () => {
               </CardTitle>
 
             </CardHeader>
+
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
@@ -192,7 +193,7 @@ const Order = () => {
                   ))}
                 </TableBody>
               </Table>
-              <div className="border-t bg-gray-50 p-3 sm:p-6 flex-shrink-0">
+              <div className="w-full sm:w-72 border-t bg-gray-50 p-3 sm:p-6 flex-shrink-0 ml-auto">
                                     <WhatsAppIntegration
                                       cartItems={cartItems}
                                       onSuccess={handleWhatsAppSuccess}
