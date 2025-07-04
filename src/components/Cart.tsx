@@ -50,10 +50,6 @@ const Cart = ({ items, onUpdateQuantity, onRemoveItem, onPlaceOrder, onClose }: 
     setTempQuantity('');
   };
 
-  const clearCart = () => {
-    setCartItems([]);
-  };
-
   const totalItems = items.length;
 
   return (
@@ -184,25 +180,6 @@ const Cart = ({ items, onUpdateQuantity, onRemoveItem, onPlaceOrder, onClose }: 
                     </div>
                   ))}
                 </div>
-                {/*clearCart && (
-                <div className="w-full py-4 px-8 flex justify-end">
-                  <Button
-                    variant="destructive"
-                    onClick={() => {
-                        if (window.confirm("Are you sure you want to clear the cart?")) {
-                        clearCart();
-                        toast({
-                          title: 'Cart Cleared',
-                          description: 'All items removed from cart.',
-                          variant: 'destructive',
-                        });
-                        }
-                    }}
-                  >
-                    Clear Cart
-                  </Button>
-                </div>
-                )*/}
               </ScrollArea>
             </CardContent>
             <div className="border-t bg-gray-50 p-3 sm:p-6 flex-shrink-0">

@@ -19,14 +19,13 @@ interface ProductInfoProps {
 
 const ProductInfo = ({ product, quantity, setQuantity, onAddToCart, onBuyNow, onEnquiry }: ProductInfoProps) => {
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value);
+    const value = parseInt(e.target.value) || 0;
     setQuantity(Math.max(0, value));
   };
 
   const handleQuantityKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       onAddToCart();
-      setQuantity('');
     }
   };
 
@@ -73,17 +72,17 @@ const ProductInfo = ({ product, quantity, setQuantity, onAddToCart, onBuyNow, on
                 ₹{product.mrp}
               </div>
               <div className="flex flex-col space-y-2">
-                            <span className="text-sm font-medium">Quantity</span>
-                            <Input
-                                                        type="number"
-                                                        min="0"
-                                                        placeholder="Qty"
-                                                        value={quantity}
-                                                        onChange={handleQuantityChange}
-                                                        onKeyDown={handleQuantityKeyDown}
-                                                        className="w-16 h-8 no-spinner"
-                                                      />
-                          </div>
+                <span className="text-sm font-medium">Quantity</span>
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="Qty"
+                  value={quantity}
+                  onChange={handleQuantityChange}
+                  onKeyDown={handleQuantityKeyDown}
+                  className="w-16 h-8 no-spinner"
+                />
+              </div>
             </div>
 
           </div>
