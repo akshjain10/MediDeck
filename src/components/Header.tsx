@@ -61,7 +61,7 @@ const Header = ({ cartItemsCount, onCartClick }: HeaderProps) => {
             <div className="flex items-center space-x-6">
               <Link to="/" className="flex items-center space-x-2" onClick={closeMobileMenu}>
                 <img src="/logo-am.png" alt="arihant Logo" className="h-12 w-auto"/>
-                <h1 className="text-xl sm:text-2xl font-bold text-blue-600">Arihant Medigens</h1>
+                <h1 className="text-[19px] sm:text-2xl font-bold text-blue-600">Arihant Medigens</h1>
               </Link>
               
               {/* Desktop Navigation */}
