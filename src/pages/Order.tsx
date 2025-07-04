@@ -1,10 +1,9 @@
-import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import WhatsAppIntegration from '@/components/WhatsAppIntegration';
-import { Search, Loader2 } from 'lucide-react';
+import { Search, Loader2, MessageCircle } from 'lucide-react'; // Added MessageCircle
 import { useProducts, Product } from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
 import { useCartPersistence } from '@/hooks/useCartPersistence';
@@ -12,17 +11,18 @@ import Header from '@/components/Header';
 import Cart from '@/components/Cart';
 
 const Order = () => {
-  const quantityInputRef = useRef<HTMLInputElement | null>(null);
+  const quantityInputRef = useRef<HTMLInputElement | null>(null); // Kept for potential future use or focusing
   const [searchInput, setSearchInput] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(''); // This state is updated by debounced searchInput
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [quantityInput, setQuantityInput] = useState('');
   const [showCart, setShowCart] = useState(false);
+
   const { products, loading, error } = useProducts();
   const { toast } = useToast();
   const { cartItems, setCartItems, clearCart } = useCartPersistence();
 
-  // Debounce search input
+  // Debounce search input to update searchQuery
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setSearchQuery(searchInput);
@@ -30,15 +30,7 @@ const Order = () => {
     return () => clearTimeout(timeoutId);
   }, [searchInput]);
 
-  const handleSearchKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') {
-        setSearchQuery(searchInput);
-      }
-    },
-    [searchInput]
-  );
-
+  // Filter products based on searchQuery (memoized for performance)
   const filteredProducts = useMemo(() => {
     if (!searchQuery.trim()) return [];
     const query = searchQuery.toLowerCase();
@@ -50,6 +42,27 @@ const Order = () => {
     );
   }, [products, searchQuery]);
 
+  // Handlers for product search and selection
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchInput(e.target.value);
+    setSelectedProduct(null); // Clear selected product on new search input
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      // Trigger search immediately on Enter, otherwise debounce handles it
+      setSearchQuery(searchInput);
+    }
+  };
+
+  const handleProductSelect = (product: Product) => {
+    setSelectedProduct(product);
+    setQuantityInput(''); // Reset quantity input
+    setSearchInput('');   // Clear search input
+    setSearchQuery('');   // Clear search query to hide results
+  };
+
+  // Cart Management Functions
   const handleAddSelectedToCart = (product: Product) => {
     const quantity = parseInt(quantityInput || '0');
     if (!quantity || quantity <= 0) {
@@ -82,9 +95,7 @@ const Order = () => {
 
     setCartItems(updatedCartItems);
     setQuantityInput('');
-    setSelectedProduct(null);
-    setSearchInput('');
-    setSearchQuery('');
+    setSelectedProduct(null); // Clear selected product after adding to cart
 
     toast({
       title: 'Added to Cart',
@@ -111,7 +122,7 @@ const Order = () => {
 
   const handleWhatsAppSuccess = () => {
     clearCart();
-    setShowCart(false);
+    setShowCart(false); // Close cart modal after successful order
     toast({
       title: 'Order Sent',
       description: 'Your order has been sent via WhatsApp!',
@@ -119,7 +130,29 @@ const Order = () => {
   };
 
   const placeOrder = () => {
-    handleWhatsAppSuccess();
+    const WHATSAPP_NUMBER = '918209703661'; // Updated number
+
+    if (cartItems.length === 0) {
+      toast({
+        title: 'Cart is Empty',
+        description: 'Please add items to your cart before placing an order.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    let message = '🛒 New Order Request\n\n';
+    message += '📋Order Details:\n';
+
+    cartItems.forEach((item, index) => {
+      message += `${index + 1}. ${item.name} - ${item.quantity} pc\n`;
+    });
+
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://api.whatsapp.com/send/?phone=${WHATSAPP_NUMBER}&text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
+
+    handleWhatsAppSuccess(); // Call success handler after opening WhatsApp
   };
 
   const distinctProductCount = cartItems.length;
@@ -132,51 +165,41 @@ const Order = () => {
         onSetCartItems={setCartItems}
       />
 
-
       <main className="container mx-auto px-4 py-8 space-y-6">
-
-        {/* Cart Summary */}
+        {/* Cart Summary Card */}
         {cartItems.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl">
-              <div className="container mx-auto px-4 mt-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-gray-800">Cart Summary</h2>
-
-                  <Button
-                    variant="destructive"
-                    onClick={() => {
-                        if (window.confirm("Are you sure you want to clear the cart?"))
-                        {clearCart();
-                        toast({
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xl">Cart Summary</CardTitle>
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    if (window.confirm('Are you sure you want to clear the cart?')) {
+                      clearCart();
+                      toast({
                         title: 'Cart Cleared',
                         description: 'All items removed from cart.',
                         variant: 'destructive',
-                        });
-                        }
-                    }}
-                  >
-                    Clear Cart
-                  </Button>
-                </div>
+                      });
+                    }
+                  }}
+                >
+                  Clear Cart
+                </Button>
               </div>
-
-              </CardTitle>
-
             </CardHeader>
-
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Product Name</TableHead>
-                    <TableHead>Quantity</TableHead>
-                    <TableHead>Action</TableHead>
+                    <TableHead className="w-24">Quantity</TableHead>
+                    <TableHead className="w-24">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {cartItems.map((item) => (
+                  {cartItems.map(item => (
                     <TableRow key={item.id}>
                       <TableCell>{item.name}</TableCell>
                       <TableCell>{item.quantity}</TableCell>
@@ -193,48 +216,43 @@ const Order = () => {
                   ))}
                 </TableBody>
               </Table>
-              <div className="w-full sm:w-72 border-t bg-gray-50 p-3 sm:p-6 flex-shrink-0 ml-auto">
-                                    <WhatsAppIntegration
-                                      cartItems={cartItems}
-                                      onSuccess={handleWhatsAppSuccess}
-                                    />
-                                  </div>
+              <div className="w-full p-3 sm:p-6 flex justify-end">
+                <Button
+                  onClick={placeOrder}
+                  className="w-full sm:w-72 bg-green-600 hover:bg-green-700 flex items-center justify-center space-x-2"
+                  disabled={cartItems.length === 0}
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  <span>Send Order via WhatsApp</span>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Search and Selection */}
+        {/* Product Search and Selection Card */}
         <Card>
           <CardHeader>
             <CardTitle className="text-xl">Order Products</CardTitle>
           </CardHeader>
           <CardContent className="relative">
             <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
                 type="text"
                 placeholder="Search products to order..."
                 className="pl-10"
                 value={searchInput}
-                onChange={(e) => {
-                  setSearchInput(e.target.value);
-                  setSelectedProduct(null);
-                }}
+                onChange={handleSearchInputChange}
                 onKeyDown={handleSearchKeyDown}
               />
 
               {searchQuery.trim() && filteredProducts.length > 0 && (
                 <ul className="absolute z-10 bg-white border border-gray-300 rounded-md mt-1 w-full max-h-60 overflow-y-auto shadow-lg">
-                  {filteredProducts.map((product) => (
+                  {filteredProducts.map(product => (
                     <li
                       key={product.id}
-                      onClick={() => {
-                        setSelectedProduct(product);
-                        setQuantityInput('');
-                        setSearchQuery('');
-                        setSearchInput('');
-
-                      }}
+                      onClick={() => handleProductSelect(product)}
                       className="px-4 py-2 cursor-pointer hover:bg-gray-100"
                     >
                       <div className="font-medium">{product.brandName}</div>
@@ -248,38 +266,37 @@ const Order = () => {
             </div>
 
             {selectedProduct && (
-             <div className="w-full px-4 py-4">
-               <label className="block text-sm font-medium text-gray-700 mb-2">
-                 Quantity for <span className="font-semibold">{selectedProduct.brandName}</span>
-               </label>
-
-               <div className="flex items-center gap-4">
-                 <Input
-                   autoFocus
-                   type="number"
-                   inputMode="numeric"
-                   placeholder="Enter quantity"
-                   value={quantityInput}
-                   onChange={(e) => setQuantityInput(e.target.value)}
-                   onKeyDown={(e) => {
-                     if (e.key === 'Enter') handleAddSelectedToCart(selectedProduct);
-                   }}
-                   className="w-full sm:w-32 no-spinner "
-                 />
-
-                 <Button
-                   onClick={() => handleAddSelectedToCart(selectedProduct)}
-                   className="whitespace-nowrap"
-                 >
-                   Add to Cart
-                 </Button>
-               </div>
-             </div>
+              <div className="w-full px-4 py-4 mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Quantity for <span className="font-semibold">{selectedProduct.brandName}</span>
+                </label>
+                <div className="flex items-center gap-4">
+                  <Input
+                    ref={quantityInputRef} // Assign ref to the input
+                    autoFocus
+                    type="number"
+                    inputMode="numeric"
+                    placeholder="Enter quantity"
+                    value={quantityInput}
+                    onChange={e => setQuantityInput(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') handleAddSelectedToCart(selectedProduct);
+                    }}
+                    className="w-full sm:w-32 no-spinner" // 'no-spinner' class likely hides browser's number input arrows
+                  />
+                  <Button
+                    onClick={() => handleAddSelectedToCart(selectedProduct)}
+                    className="whitespace-nowrap"
+                  >
+                    Add to Cart
+                  </Button>
+                </div>
+              </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Loading or Error */}
+        {/* Loading or Error States */}
         {loading && (
           <Card>
             <CardContent className="p-8 text-center">
@@ -297,7 +314,6 @@ const Order = () => {
             </CardContent>
           </Card>
         )}
-
       </main>
 
       {/* Cart Modal */}

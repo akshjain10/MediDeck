@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import Header from '@/components/Header';
-import Cart, { CartItem } from '@/components/Cart';
 import OrderSuccess from '@/components/OrderSuccess';
 import EnquiryForm, { EnquiryData } from '@/components/EnquiryForm';
 import { Button } from '@/components/ui/button';
@@ -9,15 +8,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 import { Search, ShoppingBag, Phone, Mail } from 'lucide-react';
+import { useCartPersistence } from '@/hooks/useCartPersistence';
 
 
 const Index = () => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
   const [showOrderSuccess, setShowOrderSuccess] = useState(false);
   const [showEnquiryForm, setShowEnquiryForm] = useState(false);
   const [orderNumber, setOrderNumber] = useState('');
   const { toast } = useToast();
+  const { cartItems, setCartItems, clearCart } = useCartPersistence();
+
 
 
   const handleSetCartItems = (items: CartItem[]) => {
