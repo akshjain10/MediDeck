@@ -11,7 +11,6 @@ import { Link } from 'react-router-dom';
 import { Search, ShoppingBag, Phone, Mail } from 'lucide-react';
 import { useCartPersistence } from '@/hooks/useCartPersistence';
 
-
 const Index = () => {
   const [showCart, setShowCart] = useState(false);
   const [showOrderSuccess, setShowOrderSuccess] = useState(false);
@@ -19,8 +18,6 @@ const Index = () => {
   const [orderNumber, setOrderNumber] = useState('');
   const { toast } = useToast();
   const { cartItems, setCartItems, clearCart } = useCartPersistence();
-
-
 
   const handleSetCartItems = (items: CartItem[]) => {
     setCartItems(items);
@@ -31,15 +28,15 @@ const Index = () => {
       removeFromCart(id);
       return;
     }
-    setCartItems(prev =>
-      prev.map(item =>
-        item.id === id ? { ...item, quantity } : item
-      )
+    const updatedItems = cartItems.map(item =>
+      item.id === id ? { ...item, quantity } : item
     );
+    setCartItems(updatedItems);
   };
 
   const removeFromCart = (id: string) => {
-    setCartItems(prev => prev.filter(item => item.id !== id));
+    const filteredItems = cartItems.filter(item => item.id !== id);
+    setCartItems(filteredItems);
   };
 
   const placeOrder = () => {
