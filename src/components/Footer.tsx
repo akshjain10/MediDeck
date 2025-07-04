@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Separator } from '@/components/ui/separator';
 import { Phone, Mail, MapPin, MessageCircle } from 'lucide-react';
 
@@ -92,7 +93,7 @@ const Footer = () => {
           </p>
           <div className="flex space-x-6 text-sm">
             <span className="text-gray-400 hover:text-white cursor-pointer transition-colors">
-              Privacy Policy
+              <Link to="/privacy">Privacy Policy</Link>
             </span>
             <span className="text-gray-400 hover:text-white cursor-pointer transition-colors">
               Terms of Service
