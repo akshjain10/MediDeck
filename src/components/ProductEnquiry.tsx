@@ -5,11 +5,12 @@ import { MessageCircle } from 'lucide-react';
 import { Product } from '@/hooks/useProducts';
 
 interface ProductEnquiryProps {
+  quantity?: number | '';
   product: Product;
   onSuccess?: () => void;
 }
 
-const ProductEnquiry = ({ product, onSuccess }: ProductEnquiryProps) => {
+const ProductEnquiry = ({ product, quantity, onSuccess }: ProductEnquiryProps) => {
   const WHATSAPP_NUMBER = "918209703661";
 
   const sendProductEnquiry = () => {
@@ -25,10 +26,12 @@ const ProductEnquiry = ({ product, onSuccess }: ProductEnquiryProps) => {
     if (product.salt) {
       message += `🧪 Salt: ${product.salt}\n`;
     }
-    message += `\n📱 I am interested in this product. Please provide more details about availability and pricing.\n`;
-    message += `\n🕒 Enquiry Time: ${new Date().toLocaleString()}`;
+    if (quantity && typeof quantity === 'number' && quantity > 0) {
+          message += `Requested Quantity: ${quantity} pcs\n`;
+    }
 
-    // Encode message for WhatsApp URL
+    message += `\n📱 Please provide more details about availability and pricing of this product.\n`;
+
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://api.whatsapp.com/send/?phone=${WHATSAPP_NUMBER}&text=${encodedMessage}`;
 

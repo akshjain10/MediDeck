@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,17 +9,20 @@ import ProductEnquiry from '@/components/ProductEnquiry';
 
 interface ProductInfoProps {
   product: Product;
-  quantity: number;
-  setQuantity: (quantity: number) => void;
+  quantity: number | ''; // Allow quantity to be an empty string
+  setQuantity: (quantity: number | '') => void; // Update setQuantity type
   onAddToCart: () => void;
-  onBuyNow: () => void;
+  onBuyNow: () => void; // This prop is not used in the provided code
   onEnquiry: () => void;
 }
 
 const ProductInfo = ({ product, quantity, setQuantity, onAddToCart, onBuyNow, onEnquiry }: ProductInfoProps) => {
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value) || 0;
-    setQuantity(Math.max(0, value));
+    const value = e.target.value;
+    // Allow empty string or numbers only
+    if (value === '' || /^\d+$/.test(value)) {
+      setQuantity(value === '' ? '' : parseInt(value, 10));
+    }
   };
 
   const handleQuantityKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -77,7 +79,7 @@ const ProductInfo = ({ product, quantity, setQuantity, onAddToCart, onBuyNow, on
                   type="number"
                   min="0"
                   placeholder="Qty"
-                  value={quantity}
+                  value={quantity} // Now can be number or ''
                   onChange={handleQuantityChange}
                   onKeyDown={handleQuantityKeyDown}
                   className="w-16 h-8 no-spinner"
@@ -99,7 +101,8 @@ const ProductInfo = ({ product, quantity, setQuantity, onAddToCart, onBuyNow, on
             </div>
 
             <div className="pt-2">
-              <ProductEnquiry 
+              <ProductEnquiry
+                quantity={quantity}
                 product={product}
                 onSuccess={onEnquiry}
               />
