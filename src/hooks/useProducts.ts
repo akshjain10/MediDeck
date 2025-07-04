@@ -46,7 +46,7 @@ export const useProducts = () => {
     setError(null);
     
     try {
-      console.log('Fetching all products from database...');
+      console.log('Fetching products from database...');
       const { data, error } = await supabase
         .from('Product')
         .select('*');
