@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Loader2, Filter, RefreshCw } from 'lucide-react';
+import { Search, Loader2, Filter } from 'lucide-react';
 import { useProducts, Product } from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
 import { useCartPersistence } from '@/hooks/useCartPersistence';
@@ -22,7 +22,7 @@ const Products = React.memo(() => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const { toast } = useToast();
-  const { products, loading, error, forceRefresh } = useProducts();
+  const { products, loading, error } = useProducts();
   const { cartItems, setCartItems, clearCart } = useCartPersistence();
 
   // Debounced search effect
@@ -40,15 +40,6 @@ const Products = React.memo(() => {
       setSearchQuery(searchInput);
     }
   }, [searchInput]);
-
-  // Handle refresh button click
-  const handleRefresh = useCallback(() => {
-    forceRefresh();
-    toast({
-      title: "Refreshing Products",
-      description: "Fetching latest products from database...",
-    });
-  }, [forceRefresh, toast]);
 
   // Memoize categories to prevent recalculation
   const categories = useMemo(() => {
@@ -144,32 +135,15 @@ const Products = React.memo(() => {
       <main className="container mx-auto px-4 py-8">
         {/* Search Section */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-xl">
-              <div className="container mx-auto">
-                <div className="flex justify-between items-center">
-                  <div className="flex justify-center sm:justify-start">
-                    <h2 className="text-lg font-semibold text-gray-800">Explore Products</h2>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm text-gray-600">
-                      Total: {products.length} products
-                    </span>
-                    <Button
-                      onClick={handleRefresh}
-                      variant="outline"
-                      size="sm"
-                      disabled={loading}
-                      className="flex items-center gap-2"
-                    >
-                      <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                      Refresh
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardTitle>
-          </CardHeader>
+                    <CardHeader>
+                      <CardTitle className="text-xl">
+                      <div className="container mx-auto">
+                        <div className="flex justify-center sm:justify-start">
+                          <h2 className="text-lg font-semibold text-gray-800">Explore Products</h2>
+                          </div>
+                      </div>
+                      </CardTitle>
+                    </CardHeader>
         </Card>
 
         <div className="mb-6 mt-6">
@@ -208,6 +182,7 @@ const Products = React.memo(() => {
           </div>
         </div>
 
+
         {/* Results count - Only show when searching */}
         {searchQuery.trim() && filteredProducts.length > 0 && (
           <div className="mb-4">
@@ -231,9 +206,7 @@ const Products = React.memo(() => {
             <Card className="p-8 text-center">
               <CardContent>
                 <p className="text-red-500 mb-4">Error loading products: {error}</p>
-                <Button onClick={handleRefresh} className="bg-blue-600 hover:bg-blue-700">
-                  Try Again
-                </Button>
+                <p className="text-gray-500">Please try again later.</p>
               </CardContent>
             </Card>
           ) : !searchQuery.trim() ? (
@@ -242,9 +215,6 @@ const Products = React.memo(() => {
                 <div className="mb-4 text-4xl">🔍</div>
                 <p className="text-gray-500 mb-4 text-lg">Start searching to discover products</p>
                 <p className="text-sm text-gray-400">Type in the search box above to find medicines and healthcare products</p>
-                <p className="text-xs text-gray-400 mt-2">
-                  {products.length} products available in database
-                </p>
               </CardContent>
             </Card>
           ) : filteredProducts.length === 0 ? (
