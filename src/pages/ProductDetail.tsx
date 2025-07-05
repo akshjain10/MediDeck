@@ -15,7 +15,7 @@ const ProductDetail = () => {
   const navigate = useNavigate();
   const { products, loading } = useProducts();
   const [product, setProduct] = useState(null);
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState<number | ''>(1);
 
   useEffect(() => {
     if (products.length > 0 && id) {
@@ -24,12 +24,8 @@ const ProductDetail = () => {
     }
   }, [products, id]);
 
-  const handleQuantityChange = (newQuantity: number | string) => {
-    if (typeof newQuantity === 'number') {
-      setQuantity(newQuantity);
-    } else if (newQuantity === '') {
-      setQuantity(1);
-    }
+  const handleQuantityChange = (newQuantity: number | '') => {
+    setQuantity(newQuantity);
   };
 
   if (loading) {
@@ -97,7 +93,11 @@ const ProductDetail = () => {
         </div>
 
         {similarProducts.length > 0 && (
-          <SimilarProducts products={similarProducts} />
+          <SimilarProducts 
+            products={similarProducts} 
+            currentProductName={product.brandName}
+            onAddToCart={() => console.log('Add to cart')}
+          />
         )}
       </div>
     </div>

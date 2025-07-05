@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,26 +10,20 @@ import ProductEnquiry from '@/components/ProductEnquiry';
 
 interface ProductInfoProps {
   product: Product;
-  quantity: number | ''; // Allow quantity to be an empty string
-  setQuantity: (quantity: number | '') => void; // Update setQuantity type
-  onAddToCart: () => void;
-  onBuyNow: () => void; // This prop is not used in the provided code
-  onEnquiry: () => void;
+  quantity: number | '';
+  onQuantityChange: (quantity: number | '') => void;
 }
 
-const ProductInfo = ({ product, quantity, setQuantity, onAddToCart, onBuyNow, onEnquiry }: ProductInfoProps) => {
+const ProductInfo = ({ product, quantity, onQuantityChange }: ProductInfoProps) => {
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Allow empty string or numbers only
     if (value === '' || /^\d+$/.test(value)) {
-      setQuantity(value === '' ? '' : parseInt(value, 10));
+      onQuantityChange(value === '' ? '' : parseInt(value, 10));
     }
   };
 
-  const handleQuantityKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      onAddToCart();
-    }
+  const handleAddToCart = () => {
+    console.log('Add to cart clicked');
   };
 
   return (
@@ -79,20 +74,18 @@ const ProductInfo = ({ product, quantity, setQuantity, onAddToCart, onBuyNow, on
                   type="number"
                   min="0"
                   placeholder="Qty"
-                  value={quantity} // Now can be number or ''
+                  value={quantity}
                   onChange={handleQuantityChange}
-                  onKeyDown={handleQuantityKeyDown}
                   className="w-16 h-8 no-spinner"
                 />
               </div>
             </div>
-
           </div>
 
           <div className="space-y-4">
             <div className="pt-2">
               <Button
-                onClick={onAddToCart}
+                onClick={handleAddToCart}
                 className="w-full flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700"
               >
                 <ShoppingCart className="w-4 h-4" />
@@ -104,7 +97,7 @@ const ProductInfo = ({ product, quantity, setQuantity, onAddToCart, onBuyNow, on
               <ProductEnquiry
                 quantity={quantity}
                 product={product}
-                onSuccess={onEnquiry}
+                onSuccess={() => console.log('Enquiry sent')}
               />
             </div>
           </div>

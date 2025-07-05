@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Header from "@/components/Header";
 import ProductSearchTab from "@/components/ProductSearchTab";
@@ -69,7 +68,7 @@ const Index = () => {
         </div>
 
         <div className="max-w-4xl mx-auto">
-          <ProductSearchTab onAddToCart={addToCart} />
+          <ProductSearchTab />
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 mt-16">
