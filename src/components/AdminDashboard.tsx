@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,14 +46,9 @@ const AdminDashboard = ({ adminName, onLogout }: { adminName: string; onLogout: 
   }, []);
 
   const handleBulkVisibilityToggle = useCallback((makeVisible: boolean) => {
-    selectedProductIds.forEach(id => {
-      const product = products.find(p => p.id === id);
-      if (product) {
-        toggleProductVisibility(id, !makeVisible);
-      }
-    });
+    selectedProductIds.forEach(id => toggleProductVisibility(id, makeVisible));
     setSelectedProductIds([]);
-  }, [selectedProductIds, toggleProductVisibility, products]);
+  }, [selectedProductIds, toggleProductVisibility]);
 
   const handleEditProduct = useCallback((product: Product) => {
     setCurrentProduct(product);
@@ -62,25 +56,13 @@ const AdminDashboard = ({ adminName, onLogout }: { adminName: string; onLogout: 
   }, []);
 
   const handleSaveProduct = useCallback(async (updatedProduct: Product) => {
-    const updates = {
-      Name: updatedProduct.brandName,
-      Salt: updatedProduct.name,
-      Company: updatedProduct.company,
-      Packing: updatedProduct.packing,
-      MRP: updatedProduct.mrp,
-      Category: updatedProduct.category,
-    };
-    await updateProduct(updatedProduct.id, updates);
+    await updateProduct(updatedProduct.id, updatedProduct);
     setIsEditDialogOpen(false);
   }, [updateProduct]);
 
-  const handleVisibilityToggle = useCallback((productId: string, currentVisibility: boolean) => {
-    toggleProductVisibility(productId, currentVisibility);
-  }, [toggleProductVisibility]);
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="flex items-center justify-center h-screen">
         <div className="animate-pulse flex flex-col items-center gap-4">
           <Activity className="h-12 w-12 text-primary animate-spin" />
           <p className="text-lg font-medium">Loading dashboard...</p>
@@ -93,7 +75,7 @@ const AdminDashboard = ({ adminName, onLogout }: { adminName: string; onLogout: 
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex justify-between items-center">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-4">
             <Building className="h-8 w-8 text-primary" />
             <div>
@@ -111,10 +93,10 @@ const AdminDashboard = ({ adminName, onLogout }: { adminName: string; onLogout: 
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs defaultValue="products" className="space-y-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <TabsList className="grid grid-cols-3 w-full sm:w-[400px]">
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        <Tabs defaultValue="products" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <TabsList className="grid grid-cols-3 w-[400px]">
               <TabsTrigger value="products" className="gap-2">
                 <Package className="h-4 w-4" /> Products
               </TabsTrigger>
@@ -126,7 +108,7 @@ const AdminDashboard = ({ adminName, onLogout }: { adminName: string; onLogout: 
               </TabsTrigger>
             </TabsList>
 
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <div className="flex gap-2">
               <Button variant="outline" className="gap-2">
                 <Users className="h-4 w-4" /> Manage Users
               </Button>
@@ -137,9 +119,9 @@ const AdminDashboard = ({ adminName, onLogout }: { adminName: string; onLogout: 
           </div>
 
           {/* Products Tab */}
-          <TabsContent value="products" className="space-y-8">
+          <TabsContent value="products" className="space-y-6">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <StatCard
                 title="Total Products"
                 value={products.length}
@@ -167,9 +149,9 @@ const AdminDashboard = ({ adminName, onLogout }: { adminName: string; onLogout: 
 
             {/* Bulk Actions */}
             {selectedProductIds.length > 0 && (
-              <div className="bg-primary/10 p-6 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <Badge variant="secondary" className="px-3 py-1 text-sm">
+              <div className="bg-primary/10 p-4 rounded-lg flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="px-3 py-1">
                     {selectedProductIds.length} selected
                   </Badge>
                   <span className="text-sm text-gray-600">
@@ -199,31 +181,29 @@ const AdminDashboard = ({ adminName, onLogout }: { adminName: string; onLogout: 
             )}
 
             {/* Products Table */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <AdminProductTable
-                products={products}
-                selectedIds={selectedProductIds}
-                onSelect={handleProductSelection}
-                onToggleVisibility={handleVisibilityToggle}
-                onEdit={handleEditProduct}
-              />
-            </div>
+            <AdminProductTable
+              products={products}
+              selectedIds={selectedProductIds}
+              onSelect={handleProductSelection}
+              onToggleVisibility={toggleProductVisibility}
+              onEdit={handleEditProduct}
+            />
           </TabsContent>
 
           {/* Analytics Tab */}
-          <TabsContent value="analytics" className="space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <Card className="p-6">
-                <CardHeader className="px-0 pt-0">
+          <TabsContent value="analytics">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BarChart3 className="h-5 w-5 text-primary" />
                     Product Distribution
                   </CardTitle>
                   <CardDescription>By company and category</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6 px-0">
+                <CardContent className="space-y-6">
                   {stats?.company_stats?.slice(0, 5).map(company => (
-                    <div key={company.company} className="space-y-2">
+                    <div key={company.company} className="space-y-1">
                       <div className="flex justify-between text-sm">
                         <span className="font-medium">{company.company}</span>
                         <span className="text-gray-500">{company.count} products</span>
@@ -233,20 +213,8 @@ const AdminDashboard = ({ adminName, onLogout }: { adminName: string; onLogout: 
                   ))}
                 </CardContent>
               </Card>
+              {/* Additional analytics cards... */}
             </div>
-          </TabsContent>
-
-          {/* Settings Tab */}
-          <TabsContent value="settings" className="space-y-8">
-            <Card className="p-6">
-              <CardHeader className="px-0 pt-0">
-                <CardTitle>Settings</CardTitle>
-                <CardDescription>Manage your admin preferences</CardDescription>
-              </CardHeader>
-              <CardContent className="px-0">
-                <p className="text-gray-600">Settings panel coming soon...</p>
-              </CardContent>
-            </Card>
           </TabsContent>
         </Tabs>
       </main>
@@ -277,12 +245,12 @@ const StatCard = ({ title, value, icon, variant = 'default', trend }: {
   };
 
   return (
-    <Card className={`${variantClasses[variant]} p-6`}>
-      <CardHeader className="flex flex-row items-center justify-between pb-3 px-0 pt-0">
+    <Card className={variantClasses[variant]}>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-sm font-medium text-gray-600">{title}</CardTitle>
         <div className="p-2 rounded-lg bg-white shadow-sm">{icon}</div>
       </CardHeader>
-      <CardContent className="px-0 pb-0">
+      <CardContent>
         <div className="text-2xl font-bold">{value}</div>
         {trend && (
           <p className="text-xs text-gray-500 mt-1 flex items-center">
@@ -325,14 +293,14 @@ const ProductEditDialog = ({ open, onOpenChange, product, onSave }: {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-        <DialogHeader className="pb-4">
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
           <DialogTitle>Edit Product Details</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-6 py-4">
+        <div className="grid gap-4 py-4">
           {/* Product ID Field */}
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="id" className="text-right font-medium">
+            <Label htmlFor="id" className="text-right">
               Product Code
             </Label>
             <Input
@@ -346,7 +314,7 @@ const ProductEditDialog = ({ open, onOpenChange, product, onSave }: {
 
           {/* Brand Name Field */}
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="brandName" className="text-right font-medium">
+            <Label htmlFor="brandName" className="text-right">
               Brand Name
             </Label>
             <Input
@@ -360,7 +328,7 @@ const ProductEditDialog = ({ open, onOpenChange, product, onSave }: {
 
           {/* Generic Name Field */}
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right font-medium">
+            <Label htmlFor="name" className="text-right">
               Generic Name
             </Label>
             <Input
@@ -372,9 +340,9 @@ const ProductEditDialog = ({ open, onOpenChange, product, onSave }: {
             />
           </div>
 
-          {/* Company Field */}
+          {/* Company Field - Removed Badge styling */}
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="company" className="text-right font-medium">
+            <Label htmlFor="company" className="text-right">
               Company
             </Label>
             <Input
@@ -388,7 +356,7 @@ const ProductEditDialog = ({ open, onOpenChange, product, onSave }: {
 
           {/* Packing Field */}
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="packing" className="text-right font-medium">
+            <Label htmlFor="packing" className="text-right">
               Packing
             </Label>
             <Input
@@ -402,7 +370,7 @@ const ProductEditDialog = ({ open, onOpenChange, product, onSave }: {
 
           {/* MRP Field */}
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="mrp" className="text-right font-medium">
+            <Label htmlFor="mrp" className="text-right">
               MRP (₹)
             </Label>
             <Input
@@ -417,7 +385,7 @@ const ProductEditDialog = ({ open, onOpenChange, product, onSave }: {
 
           {/* Category Field */}
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="category" className="text-right font-medium">
+            <Label htmlFor="category" className="text-right">
               Category
             </Label>
             <Input
@@ -431,7 +399,7 @@ const ProductEditDialog = ({ open, onOpenChange, product, onSave }: {
 
           {/* Visibility Toggle */}
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="isVisible" className="text-right font-medium">
+            <Label htmlFor="isVisible" className="text-right">
               Visibility
             </Label>
             <div className="col-span-3 flex items-center space-x-2">
@@ -448,7 +416,7 @@ const ProductEditDialog = ({ open, onOpenChange, product, onSave }: {
             </div>
           </div>
         </div>
-        <DialogFooter className="pt-4">
+        <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
