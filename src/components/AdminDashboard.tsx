@@ -20,7 +20,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 import {
-  LogOut, Package, Eye, EyeOff, Building, BarChart3, PlusCircle,
+  Download, LogOut, Package, Eye, EyeOff, Building, BarChart3, PlusCircle,
   Settings, Users, Activity, Filter, Lock, User as UserIcon
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -48,80 +48,109 @@ const StatCard = ({ title, value, icon, variant }: { title: string; value: numbe
 );
 
 const ProductFormDialog = ({ open, onOpenChange, product, onSave, onAdd }: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  product: Product | null;
-  onSave: (product: Partial<Product>) => void;
-  onAdd: (product: Partial<Product>) => void;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    product: Product | null;
+    onSave: (product: Partial<Product>) => void;
+    onAdd: (product: Partial<Product>) => void;
 }) => {
-  const [formData, setFormData] = useState<Partial<Product>>({});
+    const [formData, setFormData] = useState<Partial<Product>>({});
 
-  useEffect(() => {
-    if (product) {
-      setFormData(product);
-    } else {
-      setFormData({
-        Name: '', Salt: '', Company: '', Packing: '', MRP: 0, Category: '', visibility: true
-      });
-    }
-  }, [product, open]);
+    useEffect(() => {
+        if (product) {
+            setFormData(product);
+        } else {
+            setFormData({
+                id: '', // Add ID field
+                Name: '',
+                Salt: '',
+                Company: '',
+                Packing: '',
+                MRP: 0,
+                Category: '',
+                visibility: true
+            });
+        }
+    }, [product, open]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type } = e.target;
-    setFormData(prev => ({ ...prev, [name]: type === 'number' ? parseFloat(value) : value }));
-  };
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value, type } = e.target;
+        setFormData(prev => ({ ...prev, [name]: type === 'number' ? parseFloat(value) : value }));
+    };
 
-  const handleSave = () => {
-    if (product) {
-      onSave(formData);
-    } else {
-      onAdd(formData);
-    }
-    onOpenChange(false);
-  };
+    const handleSave = () => {
+        if (product) {
+            onSave(formData);
+        } else {
+            onAdd(formData);
+        }
+        onOpenChange(false);
+    };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>{product ? 'Edit Product' : 'Add New Product'}</DialogTitle>
-          <DialogDescription>
-            {product ? 'Update the product details below' : 'Fill in the details for the new product'}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="Name" className="text-right">Name</Label>
-            <Input id="Name" name="Name" value={formData.Name} onChange={handleChange} className="col-span-3" />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="Salt" className="text-right">Salt</Label>
-            <Input id="Salt" name="Salt" value={formData.Salt} onChange={handleChange} className="col-span-3 h-20" />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="Company" className="text-right">Company</Label>
-            <Input id="Company" name="Company" value={formData.Company} onChange={handleChange} className="col-span-3" />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="Packing" className="text-right">Packing</Label>
-            <Input id="Packing" name="Packing" value={formData.Packing} onChange={handleChange} className="col-span-3" />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="MRP" className="text-right">MRP</Label>
-            <Input id="MRP" name="MRP" type="number" value={formData.MRP} onChange={handleChange} className="col-span-3" />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="Category" className="text-right">Category</Label>
-            <Input id="Category" name="Category" value={formData.Category} onChange={handleChange} className="col-span-3" />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSave}>{product ? 'Save' : 'Add Product'}</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-[600px]">
+                <DialogHeader>
+                    <DialogTitle>{product ? 'Edit Product' : 'Add New Product'}</DialogTitle>
+                    <DialogDescription>
+                        {product ? 'Update the product details below' : 'Fill in the details for the new product'}
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    {product && (
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="id" className="text-right">ID</Label>
+                            <Input
+                                id="id"
+                                name="id"
+                                value={formData.id}
+                                onChange={handleChange}
+                                className="col-span-3"
+                                disabled={!!product}
+                            />
+                        </div>
+                    )}
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="Name" className="text-right">Name</Label>
+                        <Input id="Name" name="Name" value={formData.Name} onChange={handleChange} className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-start gap-4"> {/* Changed to items-start */}
+                      <Label htmlFor="Salt" className="text-right mt-2">Salt</Label>
+                      <div className="col-span-3">
+                        <textarea
+                          id="Salt"
+                          name="Salt"
+                          value={formData.Salt}
+                          onChange={(e) => setFormData(prev => ({ ...prev, Salt: e.target.value }))}
+                          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          rows={4}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="Company" className="text-right">Company</Label>
+                        <Input id="Company" name="Company" value={formData.Company} onChange={handleChange} className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="Packing" className="text-right">Packing</Label>
+                        <Input id="Packing" name="Packing" value={formData.Packing} onChange={handleChange} className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="MRP" className="text-right">MRP</Label>
+                        <Input id="MRP" name="MRP" type="number" value={formData.MRP} onChange={handleChange} className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="Category" className="text-right">Category</Label>
+                        <Input id="Category" name="Category" value={formData.Category} onChange={handleChange} className="col-span-3" />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+                    <Button onClick={handleSave}>{product ? 'Save' : 'Add Product'}</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
 };
 
 const AnalyticsTab = () => (
@@ -155,31 +184,39 @@ const AnalyticsTab = () => (
   </div>
 );
 
-const SettingsTab = () => (
-  <div className="space-y-6">
-    <Card>
-      <CardHeader>
-        <CardTitle>Account Settings</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-          <Label>Two-Factor Authentication</Label>
-          <div className="flex items-center gap-2">
-            <Lock className="h-4 w-4" />
-            <span>Enabled</span>
+const SettingsTab = () => {
+  const handleDownloadTemplate = () => {
+    const headers = ['id', 'Name', 'Salt', 'Company', 'Packing', 'MRP', 'Category'];
+    const data = [{
+      id: 'optional',
+      Name: 'required',
+      Salt: 'optional',
+      Company: 'optional',
+      Packing: 'optional',
+      MRP: '0.00',
+      Category: 'optional'
+    }];
+    downloadCSV(data, headers, 'product_template.csv');
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Import/Export Settings</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+            <Label>CSV Template</Label>
+            <div className="text-sm text-muted-foreground">
+              Download template for bulk imports
+            </div>
+            <Button variant="outline" onClick={handleDownloadTemplate} className="gap-1">
+              <Download className="w-4 h-4" /> Download Template
+            </Button>
           </div>
-          <Button variant="outline" size="sm">Change</Button>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-          <Label>Email Notifications</Label>
-          <div className="flex items-center gap-2">
-            <UserIcon className="h-4 w-4" />
-            <span>admin@example.com</span>
-          </div>
-          <Button variant="outline" size="sm">Update</Button>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
     <Card>
       <CardHeader>
         <CardTitle>System Preferences</CardTitle>
@@ -203,6 +240,7 @@ const SettingsTab = () => (
     </Card>
   </div>
 );
+}
 
 const UsersTab = () => (
   <Card>
