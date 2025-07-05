@@ -13,6 +13,8 @@ import {
   SelectItem,
   SelectValue,
 } from '@/components/ui/select';
+import {admin} from '@/integrations/supabase/admin';
+import { downloadCSV, readCSV } from '@/utils/csvUtils';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
@@ -260,6 +262,86 @@ const AdminDashboardTAB = () => {
     setAppliedProducts(products);
   }, [products]);
 
+  const handleExport = async () => {
+      try {
+          const headers = ['id', 'Name', 'Salt', 'Company', 'Packing', 'MRP', 'Category'];
+          const data = appliedProducts.map(p => ({
+              id: p.id,
+              Name: p.Name,
+              Salt: p.Salt,
+              Company: p.Company,
+              Packing: p.Packing,
+              MRP: p.MRP,
+              Category: p.Category || ''
+          }));
+          downloadCSV(data, headers, 'products_export.csv');
+          toast({ title: "Success", description: "Export started" });
+      } catch (error) {
+          toast({
+              title: "Export Failed",
+              description: error instanceof Error ? error.message : "Unknown error occurred",
+              variant: "destructive"
+          });
+      }
+  };
+
+  const handleImport = async (file: File) => {
+      try {
+          const { data: csvData, errors } = await readCSV(file);
+          if (errors.length > 0) {
+              throw new Error(errors.join('\n'));
+          }
+
+          // Validate data
+          const validationErrors: string[] = [];
+          const existingIds = new Set(products.map(p => p.id));
+          const newIds = new Set<string>();
+
+          csvData.forEach((row, index) => {
+              if (!row.Name) {
+                  validationErrors.push(`Row ${index + 1}: Name is required`);
+              }
+              if (row.id) {
+                  if (existingIds.has(row.id)) {
+                      validationErrors.push(`Row ${index + 1}: ID ${row.id} already exists`);
+                  }
+                  if (newIds.has(row.id)) {
+                      validationErrors.push(`Row ${index + 1}: Duplicate ID ${row.id} in import file`);
+                  }
+                  newIds.add(row.id);
+              }
+          });
+
+          if (validationErrors.length > 0) {
+              throw new Error(validationErrors.join('\n'));
+          }
+
+          // Prepare data for insert
+          const productsToInsert = csvData.map(row => ({
+              id: row.id || undefined, // Let Supabase generate ID if not provided
+              Name: row.Name,
+              Salt: row.Salt || '',
+              Company: row.Company || '',
+              Packing: row.Packing || '',
+              MRP: parseFloat(row.MRP) || 0,
+              Category: row.Category || '',
+              visibility: true // Default value
+          }));
+
+          // Bypass RLS
+          const { error } = await admin
+              .from('products')
+              .insert(productsToInsert)
+              .select();
+
+          if (error) throw error;
+
+          toast({ title: "Success", description: `${productsToInsert.length} products imported` });
+      } catch (error) {
+          throw error;
+      }
+  };
+
   const handleVisibilityToggle = useCallback((productId: string, isVisible: boolean) => {
     setLocalProducts(current => {
       const index = current.findIndex(p => p.id === productId);
@@ -381,12 +463,14 @@ const AdminDashboardTAB = () => {
             </div>
 
             <AdminProductTable
-              products={localProducts}
-              onToggleVisibility={handleVisibilityToggle}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              selectedIds={selectedIds}
-              onSelect={handleSelect}
+                products={localProducts}
+                onToggleVisibility={handleVisibilityToggle}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                selectedIds={selectedIds}
+                onSelect={handleSelect}
+                onExport={handleExport}
+                onImport={handleImport}
             />
           </TabsContent>
 

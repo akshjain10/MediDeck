@@ -1,8 +1,16 @@
-import { createClient } from '@supabase/supabase-js'
+// In your supabase client file
+import { createClient } from '@supabase/supabase-js';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // Never expose this in client-side code
-)
+const supabaseUrl = import.meta.env.VITE_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY!;
 
-export { supabaseAdmin }
+if (!supabaseUrl || !supabaseServiceKey) {
+  throw new Error('Missing Supabase environment variables');
+}
+
+export const admin = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+});

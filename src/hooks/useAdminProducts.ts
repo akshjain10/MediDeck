@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { admin } from '@/integrations/supabase/admin';
 import { useToast } from '@/hooks/use-toast';
 import { Product } from '@/hooks/useProducts';
 
@@ -22,7 +22,7 @@ const [products, setProducts] = useState<Product[]>([]);
     const fetchProducts = useCallback(async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase.from('Product').select('*');
+            const { data, error } = await admin.from('Product').select('*');
             if (error) throw error;
             const sanitizedProducts = (data || []).map(p => ({
                 ...p,
@@ -43,7 +43,7 @@ const [products, setProducts] = useState<Product[]>([]);
     const applyVisibilityChanges = async (changes: Record<string, boolean>) => {
         try {
             const updates = Object.entries(changes).map(([id, visibility]) =>
-                supabase.from('Product').update({ visibility }).eq('id', id)
+                admin.from('Product').update({ visibility }).eq('id', id)
             );
             const results = await Promise.all(updates);
             const error = results.find(res => res.error);
@@ -58,7 +58,7 @@ const [products, setProducts] = useState<Product[]>([]);
 
     const updateProduct = async (product: Product) => {
         try {
-            const { error } = await supabase.from('Product').update(product).eq('id', product.id);
+            const { error } = await admin.from('Product').update(product).eq('id', product.id);
             if (error) throw error;
             await fetchProducts();
             toast({ title: "Product Updated", description: "Product details saved successfully." });
@@ -74,7 +74,7 @@ const [products, setProducts] = useState<Product[]>([]);
                 id: Math.random().toString(36).substr(2, 9),
                 visibility: true,
             };
-            const { error } = await supabase.from('Product').insert([productWithDefaults]);
+            const { error } = await admin.from('Product').insert([productWithDefaults]);
             if (error) throw error;
             await fetchProducts();
             toast({ title: "Product Added", description: "New product has been added successfully." });

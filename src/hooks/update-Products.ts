@@ -1,4 +1,4 @@
-import { supabaseAdmin } from '@/integrations/supabase-admin'
+import { admin } from '@/integrations/supabase/admin'
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,7 +15,7 @@ export default async function handler(
   }
 
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await admin
       .from('product_visibility')
       .upsert(req.body)
       .select()

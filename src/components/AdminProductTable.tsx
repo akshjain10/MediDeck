@@ -6,11 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
-import { Search, Edit, Eye, EyeOff, Trash2 } from 'lucide-react';
+import { Search, Edit, Eye, EyeOff, Trash2, Download, Upload } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Select, SelectTrigger, SelectContent, SelectItem, SelectValue
 } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
 
 interface Product {
     id: string;
@@ -30,6 +31,8 @@ interface Props {
     onDelete: (ids: string[]) => void;
     selectedIds: string[];
     onSelect: (id: string, checked: boolean) => void;
+    onExport: () => void;
+    onImport: (file: File) => Promise<void>;
 }
 
 const AdminProductTable: React.FC<Props> = ({
@@ -38,13 +41,17 @@ const AdminProductTable: React.FC<Props> = ({
     onEdit,
     onDelete,
     selectedIds,
-    onSelect
+    onSelect,
+    onExport,
+    onImport
 }) => {
     const [searchTerm, setSearchTerm] = React.useState('');
     const [sortKey, setSortKey] = React.useState<keyof Product>('Name');
     const [sortDir, setSortDir] = React.useState<'asc' | 'desc'>('asc');
     const [currentPage, setCurrentPage] = React.useState(1);
     const [perPage, setPerPage] = React.useState(25);
+    const [importFile, setImportFile] = React.useState<File | null>(null);
+    const { toast } = useToast();
 
     const filteredProducts = useMemo(() => {
         return products.filter((p) =>
@@ -110,6 +117,27 @@ const AdminProductTable: React.FC<Props> = ({
         onDelete(selectedIds);
     };
 
+    const handleImport = async () => {
+        if (!importFile) {
+            toast({
+                title: "Error",
+                description: "Please select a file first",
+                variant: "destructive"
+            });
+            return;
+        }
+        try {
+            await onImport(importFile);
+            setImportFile(null);
+        } catch (error) {
+            toast({
+                title: "Import Failed",
+                description: error instanceof Error ? error.message : "Unknown error occurred",
+                variant: "destructive"
+            });
+        }
+    };
+
     return (
         <Card>
             <CardHeader>
@@ -144,36 +172,63 @@ const AdminProductTable: React.FC<Props> = ({
                     </div>
                 </div>
 
-                {selectedIds.length > 0 && (
-                    <div className="flex gap-2 mt-4">
-                        <Button
-                            variant="outline"
-                            onClick={() => handleBulkVisibility(true)}
-                            className="gap-1"
-                        >
-                            <Eye className="w-4 h-4" /> Show
-                        </Button>
-                        <Button
-                            variant="outline"
-                            onClick={() => handleBulkVisibility(false)}
-                            className="gap-1"
-                        >
-                            <EyeOff className="w-4 h-4" /> Hide
-                        </Button>
-                        <Button
-                            variant="destructive"
-                            onClick={handleBulkDelete}
-                            className="gap-1"
-                        >
-                            <Trash2 className="w-4 h-4" /> Delete
-                        </Button>
-                        <span className="ml-2 text-sm text-muted-foreground self-center">
-                            {selectedIds.length} selected
-                        </span>
-                    </div>
-                )}
-            </CardHeader>
+                <div className="flex flex-wrap justify-between items-center gap-4 mt-4">
+                    {selectedIds.length > 0 && (
+                        <div className="flex gap-2">
+                            <Button
+                                variant="outline"
+                                onClick={() => handleBulkVisibility(true)}
+                                className="gap-1"
+                            >
+                                <Eye className="w-4 h-4" /> Show
+                            </Button>
+                            <Button
+                                variant="outline"
+                                onClick={() => handleBulkVisibility(false)}
+                                className="gap-1"
+                            >
+                                <EyeOff className="w-4 h-4" /> Hide
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                onClick={handleBulkDelete}
+                                className="gap-1"
+                            >
+                                <Trash2 className="w-4 h-4" /> Delete
+                            </Button>
+                            <span className="ml-2 text-sm text-muted-foreground self-center">
+                                {selectedIds.length} selected
+                            </span>
+                        </div>
+                    )}
 
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            onClick={onExport}
+                            className="gap-1"
+                        >
+                            <Download className="w-4 h-4" /> Export
+                        </Button>
+                        <div className="flex gap-2">
+                            <Input
+                                type="file"
+                                accept=".csv"
+                                onChange={(e) => setImportFile(e.target.files?.[0] || null)}
+                                className="w-48"
+                            />
+                            <Button
+                                variant="outline"
+                                onClick={handleImport}
+                                className="gap-1"
+                                disabled={!importFile}
+                            >
+                                <Upload className="w-4 h-4" /> Import
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </CardHeader>
             <CardContent>
                 <Table>
                     <TableHeader>
