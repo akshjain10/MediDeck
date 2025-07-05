@@ -144,7 +144,7 @@ const AdminProductTable: React.FC<Props> = ({
                 <div className="flex flex-wrap justify-between items-center gap-4">
                     <CardTitle>Product Inventory</CardTitle>
                     <div className="flex gap-2 items-center">
-                        <div className="relative w-64">
+                        <div className="relative md:w-96">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                             <Input
                                 placeholder="Search products..."
@@ -215,7 +215,7 @@ const AdminProductTable: React.FC<Props> = ({
                                 type="file"
                                 accept=".csv"
                                 onChange={(e) => setImportFile(e.target.files?.[0] || null)}
-                                className="w-48"
+                                className="w-full min-w-[300px] text-right"
                             />
                             <Button
                                 variant="outline"

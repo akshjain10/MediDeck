@@ -69,14 +69,7 @@ const AdminLogin = ({ onLogin, loading }: AdminLoginProps) => {
               {loading ? 'Logging in...' : 'Login'}
             </Button>
           </form>
-          <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-            <p className="text-sm text-blue-700">
-              <strong>Default Credentials:</strong><br />
-              Email: admin@example.com<br />
-              Password: admin123
-            </p>
-          </div>
-        </CardContent>
+          </CardContent>
       </Card>
     </div>
   );

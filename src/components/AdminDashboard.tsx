@@ -48,72 +48,113 @@ const StatCard = ({ title, value, icon, variant }: { title: string; value: numbe
 );
 
 const ProductFormDialog = ({ open, onOpenChange, product, onSave, onAdd }: {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    product: Product | null;
-    onSave: (product: Partial<Product>) => void;
-    onAdd: (product: Partial<Product>) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  product: Product | null;
+  onSave: (product: Partial<Product>) => void;
+  onAdd: (product: Partial<Product>) => void;
 }) => {
-    const [formData, setFormData] = useState<Partial<Product>>({});
+  const [formData, setFormData] = useState<Partial<Product>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const { toast } = useToast();
 
-    useEffect(() => {
-        if (product) {
-            setFormData(product);
-        } else {
-            setFormData({
-                id: '', // Add ID field
-                Name: '',
-                Salt: '',
-                Company: '',
-                Packing: '',
-                MRP: 0,
-                Category: '',
-                visibility: true
-            });
-        }
-    }, [product, open]);
+  useEffect(() => {
+    if (product) {
+      setFormData(product);
+    } else {
+      setFormData({
+        id: '',
+        Name: '',
+        Salt: '',
+        Company: '',
+        Packing: '',
+        MRP: 0,
+        Category: '',
+        visibility: true
+      });
+    }
+    setErrors({});
+  }, [product, open]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value, type } = e.target;
-        setFormData(prev => ({ ...prev, [name]: type === 'number' ? parseFloat(value) : value }));
-    };
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'number' ? parseFloat(value) : value
+    }));
+    // Clear error when field is edited
+    if (errors[name]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
 
-    const handleSave = () => {
-        if (product) {
-            onSave(formData);
-        } else {
-            onAdd(formData);
-        }
-        onOpenChange(false);
-    };
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    if (!formData.Name) {
+      newErrors.Name = 'Product name is required';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[600px]">
-                <DialogHeader>
-                    <DialogTitle>{product ? 'Edit Product' : 'Add New Product'}</DialogTitle>
-                    <DialogDescription>
-                        {product ? 'Update the product details below' : 'Fill in the details for the new product'}
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    {product && (
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="id" className="text-right">ID</Label>
-                            <Input
-                                id="id"
-                                name="id"
-                                value={formData.id}
-                                onChange={handleChange}
-                                className="col-span-3"
-                                disabled={!!product}
-                            />
-                        </div>
-                    )}
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="Name" className="text-right">Name</Label>
-                        <Input id="Name" name="Name" value={formData.Name} onChange={handleChange} className="col-span-3" />
-                    </div>
+  const handleSave = () => {
+    if (!validateForm()) {
+      toast({
+        title: "Validation Error",
+        description: "Please fix the errors in the form",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (product) {
+      onSave(formData);
+    } else {
+      onAdd(formData);
+    }
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
+          <DialogTitle>{product ? 'Edit Product' : 'Add New Product'}</DialogTitle>
+          <DialogDescription>
+            {product ? 'Update the product details below' : 'Fill in the details for the new product'}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="id" className="text-right">ID</Label>
+            <div className="col-span-3">
+              <Input
+                id="id"
+                name="id"
+                value={formData.id}
+                onChange={handleChange}
+                className={errors.id ? 'border-destructive' : ''}
+              />
+              {errors.id && <p className="text-sm text-destructive mt-1">{errors.id}</p>}
+            </div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="Name" className="text-right">Name*</Label>
+            <div className="col-span-3">
+              <Input
+                id="Name"
+                name="Name"
+                value={formData.Name}
+                onChange={handleChange}
+                className={errors.Name ? 'border-destructive' : ''}
+              />
+              {errors.Name && <p className="text-sm text-destructive mt-1">{errors.Name}</p>}
+            </div>
+          </div>
                     <div className="grid grid-cols-4 items-start gap-4"> {/* Changed to items-start */}
                       <Label htmlFor="Salt" className="text-right mt-2">Salt</Label>
                       <div className="col-span-3">
@@ -336,7 +377,7 @@ const AdminDashboardTAB = () => {
           const newIds = new Set<string>();
 
           csvData.forEach((row, index) => {
-              if (!row.Name) {
+              if (!row.Name || row.Name==="required") {
                   validationErrors.push(`Row ${index + 1}: Name is required`);
               }
               if (row.id) {
@@ -564,7 +605,7 @@ const AdminDashboard = ({ adminName, onLogout }: { adminName: string; onLogout: 
           <div className="flex items-center gap-4">
             <Building className="h-8 w-8 text-primary" />
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">PharmaAdmin</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Arihant Medigens</h1>
               <p className="text-sm text-gray-600">
                 Welcome back, <span className="font-medium text-primary">{adminName}</span>
               </p>
