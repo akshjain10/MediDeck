@@ -82,3 +82,4 @@ const Cart = ({ items, onClose, onUpdateQuantity, onRemoveItem }: CartProps) => 
 };
 
 export default Cart;
+export { type CartItem };

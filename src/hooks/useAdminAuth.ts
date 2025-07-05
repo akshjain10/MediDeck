@@ -41,7 +41,7 @@ export const useAdminAuth = () => {
         throw error;
       }
 
-      const authData = data as AuthResponse;
+      const authData = data as unknown as AuthResponse;
 
       if (authData.success) {
         const adminUser = {

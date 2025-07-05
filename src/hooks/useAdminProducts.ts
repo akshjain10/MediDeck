@@ -2,7 +2,20 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Product } from '@/hooks/useProducts';
+
+export interface Product {
+  id: string;
+  brandName: string;
+  name: string;
+  company: string;
+  packing: string;
+  mrp: number;
+  image: string;
+  category: string;
+  salt?: string;
+  stockAvailable?: boolean;
+  isVisible: boolean; // Added isVisible property
+}
 
 interface ProductStats {
   total_products: number;
@@ -11,9 +24,6 @@ interface ProductStats {
   company_stats: Array<{ company: string; count: number }>;
   category_stats: Array<{ category: string; count: number }>;
 }
-
-// Export Product type for use in other components
-export type { Product };
 
 export const useAdminProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -65,7 +75,7 @@ export const useAdminProducts = () => {
     try {
       const { data, error } = await supabase.rpc('get_product_statistics');
       if (error) throw error;
-      setStats(data as ProductStats);
+      setStats(data as unknown as ProductStats);
     } catch (error: any) {
       toast({
         title: "Error fetching statistics",

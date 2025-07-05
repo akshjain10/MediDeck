@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { CartItem } from '@/components/Cart';
+import { CartItem } from '@/types/cart';
 
 const CART_STORAGE_KEY = 'arihant_cart_items';
 
