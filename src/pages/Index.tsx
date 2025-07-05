@@ -1,198 +1,157 @@
 
 import React, { useState } from 'react';
 import Header from '@/components/Header';
-import OrderSuccess from '@/components/OrderSuccess';
-import EnquiryForm, { EnquiryData } from '@/components/EnquiryForm';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { Link } from 'react-router-dom';
-import { Search, ShoppingBag, Phone, Mail } from 'lucide-react';
-import { useCartPersistence } from '@/hooks/useCartPersistence';
-
+import Footer from '@/components/Footer';
+import ProductSearchTab from '@/components/ProductSearchTab';
+import Cart from '@/components/Cart';
+import { CartItem } from '@/types/cart';
+import { Product } from '@/hooks/useProducts';
 
 const Index = () => {
-  const [showCart, setShowCart] = useState(false);
-  const [showOrderSuccess, setShowOrderSuccess] = useState(false);
-  const [showEnquiryForm, setShowEnquiryForm] = useState(false);
-  const [orderNumber, setOrderNumber] = useState('');
-  const { toast } = useToast();
-  const { cartItems, setCartItems, clearCart } = useCartPersistence();
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
-
+  const handleAddToCart = (product: Product) => {
+    setCartItems(prev => {
+      const existingItem = prev.find(item => item.id === product.id);
+      if (existingItem) {
+        return prev.map(item =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      } else {
+        return [...prev, {
+          id: product.id,
+          name: product.name,
+          brandName: product.brandName,
+          company: product.company,
+          mrp: product.mrp,
+          quantity: 1,
+          image: product.image
+        }];
+      }
+    });
+  };
 
   const handleSetCartItems = (items: CartItem[]) => {
     setCartItems(items);
   };
 
-  const updateQuantity = (id: string, quantity: number) => {
-    if (quantity === 0) {
-      removeFromCart(id);
-      return;
-    }
-    setCartItems(prev =>
-      prev.map(item =>
-        item.id === id ? { ...item, quantity } : item
-      )
-    );
+  const handleCartClick = () => {
+    setIsCartOpen(true);
   };
 
-  const removeFromCart = (id: string) => {
+  const handleUpdateQuantity = (id: string, quantity: number) => {
+    if (quantity === 0) {
+      setCartItems(prev => prev.filter(item => item.id !== id));
+    } else {
+      setCartItems(prev =>
+        prev.map(item =>
+          item.id === id ? { ...item, quantity } : item
+        )
+      );
+    }
+  };
+
+  const handleRemoveItem = (id: string) => {
     setCartItems(prev => prev.filter(item => item.id !== id));
   };
 
-  const placeOrder = () => {
-    const orderNum = Math.random().toString(36).substr(2, 9).toUpperCase();
-    setOrderNumber(orderNum);
-    setCartItems([]);
-    setShowCart(false);
-    setShowOrderSuccess(true);
-  };
-
-  const handleEnquirySubmit = (enquiry: EnquiryData) => {
-    console.log('Enquiry submitted:', enquiry);
-    toast({
-      title: "Enquiry Submitted",
-      description: "We have received your enquiry and will contact you soon.",
-    });
-    setShowEnquiryForm(false);
-  };
-
-  const cartItemsCount = cartItems.length;
+  const cartItemsCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      <Header 
         cartItemsCount={cartItemsCount}
-        onCartClick={() => setShowCart(true)}
+        onCartClick={handleCartClick}
         onSetCartItems={handleSetCartItems}
       />
       
-      <main>
-        {/* Hero Section with Background */}
-        <section 
-          className="relative bg-cover bg-center bg-no-repeat min-h-[80vh] flex items-center"
-          style={{
-            backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url("https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1920&h=1080&fit=crop")'
-          }}
-        >
-          <div className="container mx-auto px-4 text-white">
-            <div className="max-w-3xl">
-              <h1 className="text-5xl md:text-6xl font-bold mb-6">
-                Your Trusted Medical Supplies Partner
-              </h1>
-              <p className="text-xl md:text-2xl mb-8 opacity-90">
-                Quality medical equipment and supplies delivered to your doorstep with care and reliability
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/products">
-                  <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-4">
-                    <ShoppingBag className="mr-2" />
-                    Browse Products
-                  </Button>
-                </Link>
-                <Button
-                  onClick={() => setShowEnquiryForm(true)}
-                  variant="outline"
-                  size="lg"
-                  className="bg-white/10 border-white text-white hover:bg-white/20 text-lg px-8 py-4"
-                >
-                  Request Enquiry
-                </Button>
-              </div>
-            </div>
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Hero Section */}
+        <div className="text-center mb-12 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16 px-8 rounded-3xl shadow-xl">
+          <h1 className="text-4xl md:text-6xl font-bold mb-4">
+            Welcome to <span className="text-yellow-300">Arihant Medigens</span>
+          </h1>
+          <p className="text-xl md:text-2xl mb-8 opacity-90">
+            Your trusted partner for quality pharmaceutical products
+          </p>
+          <div className="max-w-2xl mx-auto">
+            <p className="text-lg opacity-80 mb-6">
+              Discover a wide range of medicines and healthcare products at competitive prices. 
+              We ensure quality, authenticity, and timely delivery for all your medical needs.
+            </p>
           </div>
-        </section>
+        </div>
+
+        {/* Product Search Section */}
+        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
+          <ProductSearchTab onAddToCart={handleAddToCart} />
+        </div>
 
         {/* Features Section */}
-        <section className="py-20 bg-white">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold mb-4">Why Choose Us?</h2>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                We provide comprehensive medical solutions with a commitment to quality and service excellence
-              </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+          <div className="bg-white p-8 rounded-2xl shadow-lg text-center hover:shadow-xl transition-shadow">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">🏆</span>
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <Card className="text-center p-8 hover:shadow-lg transition-shadow">
-                <CardContent>
-                  <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <span className="text-3xl">🚚</span>
-                  </div>
-                  <h3 className="text-2xl font-semibold mb-4">Fast Delivery</h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    Quick and reliable delivery to your location with real-time tracking and updates
-                  </p>
-                </CardContent>
-              </Card>
-              
-              <Card className="text-center p-8 hover:shadow-lg transition-shadow">
-                <CardContent>
-                  <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <span className="text-3xl">✅</span>
-                  </div>
-                  <h3 className="text-2xl font-semibold mb-4">Quality Products</h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    Certified and genuine medical supplies from trusted manufacturers worldwide
-                  </p>
-                </CardContent>
-              </Card>
-              
-              <Card className="text-center p-8 hover:shadow-lg transition-shadow">
-                <CardContent>
-                  <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <span className="text-3xl">💬</span>
-                  </div>
-                  <h3 className="text-2xl font-semibold mb-4">24/7 Support</h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    Always available to help with your queries and provide expert guidance
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
+            <h3 className="text-xl font-semibold mb-3 text-gray-800">Quality Assured</h3>
+            <p className="text-gray-600">All products are sourced from certified manufacturers and undergo strict quality checks.</p>
           </div>
-        </section>
+          
+          <div className="bg-white p-8 rounded-2xl shadow-lg text-center hover:shadow-xl transition-shadow">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">🚚</span>
+            </div>
+            <h3 className="text-xl font-semibold mb-3 text-gray-800">Fast Delivery</h3>
+            <p className="text-gray-600">Quick and reliable delivery service to ensure you get your medicines on time.</p>
+          </div>
+          
+          <div className="bg-white p-8 rounded-2xl shadow-lg text-center hover:shadow-xl transition-shadow">
+            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">💰</span>
+            </div>
+            <h3 className="text-xl font-semibold mb-3 text-gray-800">Best Prices</h3>
+            <p className="text-gray-600">Competitive pricing with regular offers and discounts on all pharmaceutical products.</p>
+          </div>
+        </div>
 
-        {/* Contact Section */}
-        {/*<section className="py-16 bg-gray-100">
-          <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold mb-8">Get In Touch</h2>
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-8">
-              <div className="flex items-center gap-3">
-                <Phone className="text-blue-600" />
-                <span className="text-lg">+91 98765 43210</span>
+        {/* About Section */}
+        <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-2xl p-8 mb-8">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl font-bold mb-6">About Arihant Medigens</h2>
+            <p className="text-lg leading-relaxed mb-6 opacity-90">
+              With years of experience in the pharmaceutical industry, Arihant Medigens has been a trusted name 
+              in providing quality medicines and healthcare products. We are committed to improving healthcare 
+              accessibility and ensuring that our customers receive only the best pharmaceutical solutions.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-yellow-400">500+</div>
+                <div className="text-sm opacity-80">Products Available</div>
               </div>
-              <div className="flex items-center gap-3">
-                <Mail className="text-blue-600" />
-                <span className="text-lg">info@medicareplus.com</span>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-yellow-400">10,000+</div>
+                <div className="text-sm opacity-80">Happy Customers</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-yellow-400">5+</div>
+                <div className="text-sm opacity-80">Years of Excellence</div>
               </div>
             </div>
           </div>
-        </section>*/}
+        </div>
       </main>
 
-      {showCart && (
+      <Footer />
+      
+      {isCartOpen && (
         <Cart
           items={cartItems}
-          onUpdateQuantity={updateQuantity}
-          onRemoveItem={removeFromCart}
-          onPlaceOrder={placeOrder}
-          onClose={() => setShowCart(false)}
-        />
-      )}
-
-      {showOrderSuccess && (
-        <OrderSuccess
-          orderNumber={orderNumber}
-          onClose={() => setShowOrderSuccess(false)}
-        />
-      )}
-
-      {showEnquiryForm && (
-        <EnquiryForm
-          onClose={() => setShowEnquiryForm(false)}
-          onSubmit={handleEnquirySubmit}
+          onClose={() => setIsCartOpen(false)}
+          onUpdateQuantity={handleUpdateQuantity}
+          onRemoveItem={handleRemoveItem}
         />
       )}
     </div>

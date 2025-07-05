@@ -12,6 +12,9 @@ interface ProductStats {
   category_stats: Array<{ category: string; count: number }>;
 }
 
+// Export Product type for use in other components
+export type { Product };
+
 export const useAdminProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [stats, setStats] = useState<ProductStats | null>(null);
@@ -62,7 +65,7 @@ export const useAdminProducts = () => {
     try {
       const { data, error } = await supabase.rpc('get_product_statistics');
       if (error) throw error;
-      setStats(data);
+      setStats(data as ProductStats);
     } catch (error: any) {
       toast({
         title: "Error fetching statistics",
