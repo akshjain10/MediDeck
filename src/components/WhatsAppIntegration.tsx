@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { MessageCircle } from 'lucide-react';
-import { CartItem } from '@/types/cart';
+import { CartItem } from '@/components/Cart';
 
 interface WhatsAppIntegrationProps {
   cartItems: CartItem[];

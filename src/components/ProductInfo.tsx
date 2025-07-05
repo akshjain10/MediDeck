@@ -9,15 +9,14 @@ import { Product } from '@/hooks/useProducts';
 interface ProductInfoProps {
   product: Product;
   quantity: number;
-  onQuantityChange: (quantity: number) => void;
-  onAddToCart: (product: Product) => void;
+  onQuantityChange: (quantity: number | "") => void;
 }
 
-const ProductInfo = ({ product, quantity, onQuantityChange, onAddToCart }: ProductInfoProps) => {
+const ProductInfo = ({ product, quantity, onQuantityChange }: ProductInfoProps) => {
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (value === "") {
-      onQuantityChange(1);
+      onQuantityChange("");
     } else {
       const numValue = parseInt(value);
       if (!isNaN(numValue) && numValue >= 1) {
@@ -68,7 +67,7 @@ const ProductInfo = ({ product, quantity, onQuantityChange, onAddToCart }: Produ
         </div>
 
         <div className="flex gap-3">
-          <Button className="flex-1 gap-2" size="lg" onClick={() => onAddToCart(product)}>
+          <Button className="flex-1 gap-2" size="lg">
             <ShoppingCart className="h-5 w-5" />
             Add to Cart
           </Button>
