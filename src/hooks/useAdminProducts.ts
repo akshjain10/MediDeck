@@ -62,7 +62,7 @@ export const useAdminProducts = () => {
     try {
       const { data, error } = await supabase.rpc('get_product_statistics');
       if (error) throw error;
-      setStats(data as ProductStats);
+      setStats(data);
     } catch (error: any) {
       toast({
         title: "Error fetching statistics",

@@ -9,14 +9,6 @@ interface AdminUser {
   email: string;
 }
 
-interface AuthResponse {
-  success: boolean;
-  admin_id?: string;
-  name?: string;
-  email?: string;
-  message?: string;
-}
-
 export const useAdminAuth = () => {
   const [admin, setAdmin] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(false);
@@ -41,28 +33,26 @@ export const useAdminAuth = () => {
         throw error;
       }
 
-      const response = data as AuthResponse;
-
-      if (response.success) {
+      if (data.success) {
         const adminUser = {
-          admin_id: response.admin_id!,
-          name: response.name!,
-          email: response.email!
+          admin_id: data.admin_id,
+          name: data.name,
+          email: data.email
         };
         setAdmin(adminUser);
         localStorage.setItem('admin_user', JSON.stringify(adminUser));
         toast({
           title: "Login Successful",
-          description: `Welcome, ${response.name}!`,
+          description: `Welcome, ${data.name}!`,
         });
         return { success: true };
       } else {
         toast({
           title: "Login Failed",
-          description: response.message || 'Invalid credentials',
+          description: data.message,
           variant: "destructive",
         });
-        return { success: false, error: response.message };
+        return { success: false, error: data.message };
       }
     } catch (error: any) {
       toast({

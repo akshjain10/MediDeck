@@ -1,43 +1,54 @@
-
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useProducts } from '@/hooks/useProducts';
+import { useParams, Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import ProductImage from '@/components/ProductImage';
 import ProductInfo from '@/components/ProductInfo';
 import SimilarProducts from '@/components/SimilarProducts';
-import ProductEnquiry from '@/components/ProductEnquiry';
+import Cart, { CartItem } from '@/components/Cart';
+import OrderSuccess from '@/components/OrderSuccess';
+import EnquiryForm, { EnquiryData } from '@/components/EnquiryForm';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
+import { useProducts, Product } from '@/hooks/useProducts';
+import { useToast } from '@/hooks/use-toast';
+import { useCartPersistence } from '@/hooks/useCartPersistence';
+import { areProductsSimilar } from '@/utils/stringUtils';
 
 const ProductDetail = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const { products, loading } = useProducts();
-  const [product, setProduct] = useState(null);
+  const [showCart, setShowCart] = useState(false);
+  const [showOrderSuccess, setShowOrderSuccess] = useState(false);
+  const [showEnquiryForm, setShowEnquiryForm] = useState(false);
+  const [orderNumber, setOrderNumber] = useState('');
   const [quantity, setQuantity] = useState(1);
+  const { toast } = useToast();
+  const { products, loading } = useProducts();
+  const { cartItems, setCartItems, clearCart } = useCartPersistence();
+
+  const product = products.find(p => p.id === id);
+
+  // Get similar products using 80% matching algorithm
+  const similarProducts = products.filter(p =>
+    p.id !== product?.id &&
+    product &&
+    areProductsSimilar(p.name, product.name, 0.8)
+  ).slice(0, 4);
 
   useEffect(() => {
-    if (products.length > 0 && id) {
-      const foundProduct = products.find(p => p.id === id);
-      setProduct(foundProduct || null);
-    }
-  }, [products, id]);
-
-  const handleQuantityChange = (newQuantity: number | string) => {
-    if (typeof newQuantity === 'number') {
-      setQuantity(newQuantity);
-    } else if (newQuantity === '') {
-      setQuantity(1);
-    }
-  };
+    window.scrollTo(0, 0);
+  }, [id]);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <Header
+          cartItemsCount={0}
+          onCartClick={() => {}}
+          onSetCartItems={() => {}}
+        />
+        <div className="container mx-auto px-4 py-8 text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-500">Loading product...</p>
         </div>
       </div>
     );
@@ -46,60 +57,160 @@ const ProductDetail = () => {
   if (!product) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
-        <div className="container mx-auto px-4 py-8">
-          <Button 
-            onClick={() => navigate(-1)} 
-            variant="outline" 
-            className="mb-6"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Go Back
-          </Button>
-          <div className="text-center py-12">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h1>
-            <p className="text-gray-600">The product you're looking for doesn't exist.</p>
-          </div>
+        <Header
+          cartItemsCount={0}
+          onCartClick={() => {}}
+          onSetCartItems={() => {}}
+        />
+        <div className="container mx-auto px-4 py-8 text-center">
+          <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
+          <Link to="/products">
+            <Button>Back to Products</Button>
+          </Link>
         </div>
       </div>
     );
   }
 
-  const similarProducts = products
-    .filter(p => p.id !== product.id && (p.company === product.company || p.category === product.category))
-    .slice(0, 4);
+  const addToCart = (productToAdd: Product, qty: number = 1) => {
+    const existingItem = cartItems.find(item => item.id === productToAdd.id);
+    const updatedCartItems = existingItem
+      ? cartItems.map(item =>
+          item.id === productToAdd.id
+            ? { ...item, quantity: item.quantity + qty }
+            : item
+        )
+      : [...cartItems, {
+          id: productToAdd.id,
+          name: productToAdd.brandName,
+          company: productToAdd.company,
+          mrp: productToAdd.mrp,
+          quantity: qty,
+          image: productToAdd.image
+        }];
+
+    setCartItems(updatedCartItems);
+    toast({
+      title: "Added to Cart",
+      description: `${productToAdd.brandName} has been added to your cart.`,
+      duration: 1500,
+    });
+  };
+
+  const handleAddToCart = () => {
+    addToCart(product, quantity);
+  };
+
+  const handleBuyNow = () => {
+    handleAddToCart();
+    setShowCart(true);
+  };
+
+  const updateQuantity = (id: string, quantity: number) => {
+    if (quantity === 0) {
+      removeFromCart(id);
+      return;
+    }
+    const updatedCartItems = cartItems.map(item =>
+      item.id === id ? { ...item, quantity } : item
+    );
+    setCartItems(updatedCartItems);
+  };
+
+  const removeFromCart = (id: string) => {
+    const updatedCartItems = cartItems.filter(item => item.id !== id);
+    setCartItems(updatedCartItems);
+  };
+
+  const placeOrder = () => {
+    const orderNum = Math.random().toString(36).substr(2, 9).toUpperCase();
+    setOrderNumber(orderNum);
+    clearCart();
+    setShowCart(false);
+    setShowOrderSuccess(true);
+  };
+
+  const handleEnquirySubmit = (enquiry: EnquiryData) => {
+    let message = "🔍 Product Enquiry\n\n";
+    message += `Name: ${enquiry.name}\n`;
+    message += `Email: ${enquiry.email}\n`;
+    message += `Phone: ${enquiry.phone}\n`;
+    message += `Product: ${enquiry.productName}\n`;
+    if (enquiry.description) {
+      message += `Description: ${enquiry.description}\n`;
+    }
+
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://api.whatsapp.com/send/?phone=918209703661&text=${encodedMessage}`;
+
+    window.open(whatsappUrl, '_blank');
+    toast({
+          title: "Enquiry Sent",
+          description: "Your enquiry has been sent via WhatsApp!",
+        });
+    setShowEnquiryForm(false);
+  };
+
+  const cartItemsCount = cartItems.length;
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-      
-      <div className="container mx-auto px-4 py-8">
-        <Button 
-          onClick={() => navigate(-1)} 
-          variant="outline" 
-          className="mb-6"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Go Back
-        </Button>
+      <Header
+        cartItemsCount={cartItemsCount}
+        onCartClick={() => setShowCart(true)}
+        onSetCartItems={setCartItems}
+      />
 
-        <div className="grid lg:grid-cols-2 gap-12 mb-12">
+      <main className="container mx-auto px-4 py-8">
+        <div className="mb-6">
+          <Link to="/products" className="flex items-center text-blue-600 hover:text-blue-700 mb-4">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Products
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           <ProductImage product={product} />
-          <ProductInfo 
-            product={product} 
+          <ProductInfo
+            product={product}
             quantity={quantity}
-            onQuantityChange={handleQuantityChange}
+            setQuantity={setQuantity}
+            onAddToCart={handleAddToCart}
+            onBuyNow={handleBuyNow}
+            onEnquiry={() => setShowEnquiryForm(true)}
           />
         </div>
 
-        <div className="mb-12">
-          <ProductEnquiry product={product} />
-        </div>
+        <SimilarProducts 
+          products={similarProducts}
+          currentProductName={product.name}
+          onAddToCart={addToCart}
+        />
+      </main>
 
-        {similarProducts.length > 0 && (
-          <SimilarProducts products={similarProducts} />
-        )}
-      </div>
+      {showCart && (
+        <Cart
+          items={cartItems}
+          onUpdateQuantity={updateQuantity}
+          onRemoveItem={removeFromCart}
+          onPlaceOrder={placeOrder}
+          onClose={() => setShowCart(false)}
+        />
+      )}
+
+      {showOrderSuccess && (
+        <OrderSuccess
+          orderNumber={orderNumber}
+          onClose={() => setShowOrderSuccess(false)}
+        />
+      )}
+
+      {showEnquiryForm && (
+        <EnquiryForm
+          onClose={() => setShowEnquiryForm(false)}
+          onSubmit={handleEnquirySubmit}
+        />
+      )}
     </div>
   );
 };
