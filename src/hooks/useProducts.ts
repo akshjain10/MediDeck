@@ -14,6 +14,7 @@ export interface Product {
   category: string;
   salt?: string; // Adding salt property
   stockAvailable?: boolean; // Adding stockAvailable property
+  isVisible: boolean; // Using visibility column from Product table
 }
 
 // Simple cache implementation
@@ -42,7 +43,8 @@ export const useProducts = () => {
     try {
       const { data, error } = await supabase
         .from('Product')
-        .select('*');
+        .select('*')
+        .eq('visibility', true); // Only fetch visible products
 
       if (error) {
         throw error;
@@ -59,7 +61,8 @@ export const useProducts = () => {
         image: 'photo-1581091226825-a6a2a5aee158', // Default image
         category: item.Category || 'General',
         salt: item.Salt || '', // Adding salt field
-        stockAvailable: item['Stock Available'] || false // Adding stock availability
+        stockAvailable: item['Stock Available'] || false, // Adding stock availability
+        isVisible: item.visibility || false // Map visibility column to isVisible
       }));
 
       setProducts(transformedProducts);

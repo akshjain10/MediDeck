@@ -40,99 +40,48 @@ export type Database = {
         Row: {
           Category: string | null
           Company: string | null
-          created_at: string
           id: string
           MRP: number | null
           Name: string | null
           Packing: string | null
           Salt: string | null
-          "Stock Available": boolean | null
+          visibility: boolean
         }
         Insert: {
           Category?: string | null
           Company?: string | null
-          created_at?: string
           id: string
           MRP?: number | null
           Name?: string | null
           Packing?: string | null
           Salt?: string | null
-          "Stock Available"?: boolean | null
+          visibility?: boolean
         }
         Update: {
           Category?: string | null
           Company?: string | null
-          created_at?: string
           id?: string
           MRP?: number | null
           Name?: string | null
           Packing?: string | null
           Salt?: string | null
-          "Stock Available"?: boolean | null
+          visibility?: boolean
         }
         Relationships: []
-      }
-      product_categories: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          id: string
-          is_active: boolean | null
-          name: string
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          name: string
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          id?: string
-          is_active?: boolean | null
-          name?: string
-        }
-        Relationships: []
-      }
-      product_visibility: {
-        Row: {
-          created_at: string | null
-          id: string
-          is_visible: boolean | null
-          product_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          is_visible?: boolean | null
-          product_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          is_visible?: boolean | null
-          product_id?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_visibility_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "Product"
-            referencedColumns: ["id"]
-          },
-        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      authenticate_admin: {
+        Args: { admin_email: string; admin_password: string }
+        Returns: Json
+      }
+      get_product_statistics: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       is_admin: {
         Args: { user_id: string }
         Returns: boolean

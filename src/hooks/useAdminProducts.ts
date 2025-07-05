@@ -23,12 +23,7 @@ export const useAdminProducts = () => {
     try {
       const { data, error } = await supabase
         .from('Product')
-        .select(`
-          *,
-          product_visibility (
-            is_visible
-          )
-        `);
+        .select('*'); // Fetch all products for admin
 
       if (error) throw error;
 
@@ -43,7 +38,7 @@ export const useAdminProducts = () => {
         category: item.Category || 'General',
         salt: item.Salt || '',
         stockAvailable: item['Stock Available'] || false,
-        isVisible: item.product_visibility?.[0]?.is_visible ?? true
+        isVisible: item.visibility || false // Use visibility column directly
       }));
 
       setProducts(transformedProducts);
@@ -60,9 +55,47 @@ export const useAdminProducts = () => {
 
   const fetchStats = useCallback(async () => {
     try {
-      const { data, error } = await supabase.rpc('get_product_statistics');
-      if (error) throw error;
-      setStats(data);
+      // Calculate stats directly from Product table
+      const { data: allProducts, error: productsError } = await supabase
+        .from('Product')
+        .select('*');
+
+      if (productsError) throw productsError;
+
+      const totalProducts = allProducts?.length || 0;
+      const visibleProducts = allProducts?.filter(p => p.visibility === true).length || 0;
+      const hiddenProducts = totalProducts - visibleProducts;
+
+      // Get company stats
+      const companyStats = allProducts?.reduce((acc: any, product: any) => {
+        const company = product.Company || 'Unknown';
+        acc[company] = (acc[company] || 0) + 1;
+        return acc;
+      }, {}) || {};
+
+      const companyStatsArray = Object.entries(companyStats)
+        .map(([company, count]) => ({ company, count: count as number }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
+
+      // Get category stats
+      const categoryStats = allProducts?.reduce((acc: any, product: any) => {
+        const category = product.Category || 'Unknown';
+        acc[category] = (acc[category] || 0) + 1;
+        return acc;
+      }, {}) || {};
+
+      const categoryStatsArray = Object.entries(categoryStats)
+        .map(([category, count]) => ({ category, count: count as number }))
+        .sort((a, b) => b.count - a.count);
+
+      setStats({
+        total_products: totalProducts,
+        visible_products: visibleProducts,
+        hidden_products: hiddenProducts,
+        company_stats: companyStatsArray,
+        category_stats: categoryStatsArray
+      });
     } catch (error: any) {
       toast({
         title: "Error fetching statistics",
@@ -75,12 +108,9 @@ export const useAdminProducts = () => {
   const toggleProductVisibility = async (productId: string, isVisible: boolean) => {
     try {
       const { error } = await supabase
-        .from('product_visibility')
-        .upsert({
-          product_id: productId,
-          is_visible: !isVisible,
-          updated_at: new Date().toISOString()
-        });
+        .from('Product')
+        .update({ visibility: !isVisible }) // Toggle the visibility column
+        .eq('id', productId);
 
       if (error) throw error;
 
@@ -102,9 +132,20 @@ export const useAdminProducts = () => {
 
   const updateProduct = async (productId: string, updates: Partial<any>) => {
     try {
+      // Map the Product interface fields back to database columns
+      const dbUpdates: any = {};
+      
+      if (updates.brandName !== undefined) dbUpdates.Name = updates.brandName;
+      if (updates.name !== undefined) dbUpdates.Salt = updates.name;
+      if (updates.company !== undefined) dbUpdates.Company = updates.company;
+      if (updates.packing !== undefined) dbUpdates.Packing = updates.packing;
+      if (updates.mrp !== undefined) dbUpdates.MRP = updates.mrp;
+      if (updates.category !== undefined) dbUpdates.Category = updates.category;
+      if (updates.isVisible !== undefined) dbUpdates.visibility = updates.isVisible;
+
       const { error } = await supabase
         .from('Product')
-        .update(updates)
+        .update(dbUpdates)
         .eq('id', productId);
 
       if (error) throw error;
