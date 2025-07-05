@@ -3,22 +3,16 @@ import React from 'react';
 import { X, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CartItem } from '@/types/cart';
-import WhatsAppIntegration from '@/components/WhatsAppIntegration';
 
 interface CartProps {
   items: CartItem[];
   onClose: () => void;
   onUpdateQuantity: (id: string, quantity: number) => void;
   onRemoveItem: (id: string) => void;
-  onPlaceOrder?: () => void; // Made optional since some places might not use it
 }
 
-const Cart = ({ items, onClose, onUpdateQuantity, onRemoveItem, onPlaceOrder }: CartProps) => {
+const Cart = ({ items, onClose, onUpdateQuantity, onRemoveItem }: CartProps) => {
   const total = items.reduce((sum, item) => sum + (item.mrp * item.quantity), 0);
-
-  const handleOrderSuccess = () => {
-    onClose();
-  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-end">
@@ -72,20 +66,12 @@ const Cart = ({ items, onClose, onUpdateQuantity, onRemoveItem, onPlaceOrder }: 
               ))}
               
               <div className="mt-4 pt-4 border-t">
-                <div className="flex justify-between items-center text-lg font-semibold mb-3">
+                <div className="flex justify-between items-center text-lg font-semibold">
                   <span>Total: ₹{total.toFixed(2)}</span>
                 </div>
-                
-                {onPlaceOrder ? (
-                  <Button className="w-full mb-3" onClick={onPlaceOrder}>
-                    Proceed to Checkout
-                  </Button>
-                ) : (
-                  <WhatsAppIntegration 
-                    cartItems={items} 
-                    onSuccess={handleOrderSuccess}
-                  />
-                )}
+                <Button className="w-full mt-3">
+                  Proceed to Checkout
+                </Button>
               </div>
             </>
           )}
@@ -96,3 +82,4 @@ const Cart = ({ items, onClose, onUpdateQuantity, onRemoveItem, onPlaceOrder }: 
 };
 
 export default Cart;
+export { type CartItem };

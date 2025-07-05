@@ -86,7 +86,6 @@ const Order = () => {
           {
             id: product.id,
             name: product.brandName,
-            brandName: product.brandName, // Added missing brandName property
             company: product.company,
             mrp: product.mrp,
             quantity,

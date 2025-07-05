@@ -74,7 +74,6 @@ const Products = React.memo(() => {
       : [...cartItems, {
           id: product.id,
           name: product.brandName,
-          brandName: product.brandName,
           company: product.company,
           mrp: product.mrp,
           quantity: quantity,
