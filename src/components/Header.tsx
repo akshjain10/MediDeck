@@ -8,12 +8,12 @@ import { CartItem } from '@/components/Cart';
 import { useToast } from '@/hooks/use-toast';
 
 interface HeaderProps {
-  cartItemsCount?: number;
-  onCartClick?: () => void;
-  onSetCartItems?: (items: CartItem[]) => void;
+  cartItemsCount: number;
+  onCartClick: () => void;
+  onSetCartItems: (items: CartItem[]) => void;
 }
 
-const Header = ({ cartItemsCount = 0, onCartClick = () => {} }: HeaderProps) => {
+const Header = ({ cartItemsCount, onCartClick }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showEnquiryForm, setShowEnquiryForm] = useState(false);
   const { toast } = useToast();
