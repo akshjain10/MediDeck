@@ -1,71 +1,114 @@
 import React, { useState, useMemo } from 'react';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { Search, Edit, Filter } from 'lucide-react';
-import { Product } from '@/hooks/useAdminProducts';
+import { Search, Edit, Eye, EyeOff, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select, SelectTrigger, SelectContent, SelectItem, SelectValue
+} from '@/components/ui/select';
 
-interface AdminProductTableProps {
-  products: Product[];
-  selectedIds: string[];
-  onSelect: (productId: string, isSelected: boolean) => void;
-  onToggleVisibility: (productId: string, isVisible: boolean) => void;
-  onEdit: (product: Product) => void;
+interface Product {
+  id: string;
+  Name: string;
+  Salt: string;
+  Company: string;
+  Packing: string;
+  MRP: number;
+  visibility: boolean;
 }
 
-const AdminProductTable = ({
+interface Props {
+  products: Product[];
+  onToggleVisibility: (id: string, value: boolean) => void;
+  onEdit: (product: Product) => void;
+  onDelete: (ids: string[]) => void;
+  updateProduct: (product: Product) => void;
+  selectedIds: string[];
+  onSelect: (id: string, checked: boolean) => void;
+}
+
+const AdminProductTable: React.FC<Props> = ({
   products,
-  selectedIds,
-  onSelect,
   onToggleVisibility,
-  onEdit
-}: AdminProductTableProps) => {
+  onEdit,
+  onDelete,
+  updateProduct,
+  selectedIds,
+  onSelect
+}) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterVisible, setFilterVisible] = useState<'all' | 'visible' | 'hidden'>('all');
+  const [sortKey, setSortKey] = useState<keyof Product>('Name');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [perPage, setPerPage] = useState(25);
 
-  // Filter and search products
   const filteredProducts = useMemo(() => {
-    return products.filter(product => {
-      const matchesSearch =
-        product.brandName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.company.toLowerCase().includes(searchTerm.toLowerCase());
+    return products.filter((p) =>
+      `${p.Name} ${p.Salt} ${p.Company}`.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [products, searchTerm]);
 
-      const matchesVisibility =
-        filterVisible === 'all' ||
-        (filterVisible === 'visible' && product.isVisible) ||
-        (filterVisible === 'hidden' && !product.isVisible);
-
-      return matchesSearch && matchesVisibility;
+  const sortedProducts = useMemo(() => {
+    return [...filteredProducts].sort((a, b) => {
+      const aVal = a[sortKey];
+      const bVal = b[sortKey];
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        return sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      }
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortDir === 'asc' ? aVal - bVal : bVal - aVal;
+      }
+      return 0;
     });
-  }, [products, searchTerm, filterVisible]);
+  }, [filteredProducts, sortKey, sortDir]);
 
-  const isAllSelected = useMemo(() => {
-    if (filteredProducts.length === 0) return false;
-    return filteredProducts.every(p => selectedIds.includes(p.id));
-  }, [filteredProducts, selectedIds]);
+  const pageCount = Math.ceil(sortedProducts.length / perPage);
 
-  const handleSelectAll = (checked: boolean) => {
-    filteredProducts.forEach(product => onSelect(product.id, checked));
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * perPage;
+    return sortedProducts.slice(start, start + perPage);
+  }, [sortedProducts, currentPage, perPage]);
+
+  const isAllSelected = paginatedProducts.every((p) => selectedIds.includes(p.id)) && paginatedProducts.length > 0;
+
+  const toggleSort = (key: keyof Product) => {
+    if (sortKey === key) {
+      setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  };
+
+  const toggleSelectAll = (checked: boolean) => {
+    const ids = paginatedProducts.map(p => p.id);
+    if (checked) {
+      const newSelected = Array.from(new Set([...selectedIds, ...ids]));
+      ids.forEach(id => onSelect(id, true));
+    } else {
+      ids.forEach(id => onSelect(id, false));
+    }
+  };
+
+  const handleBulkVisibility = (value: boolean) => {
+    selectedIds.forEach(id => onToggleVisibility(id, value));
+  };
+
+  const handleBulkDelete = () => {
+    onDelete(selectedIds);
   };
 
   return (
-    <Card className="border-none shadow-sm">
-      <CardHeader className="px-0 pt-0">
-        <div className="flex items-center justify-between">
+    <Card>
+      <CardHeader>
+        <div className="flex flex-wrap justify-between items-center gap-4">
           <CardTitle>Product Inventory</CardTitle>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             <div className="relative w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
@@ -75,83 +118,117 @@ const AdminProductTable = ({
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Filter className="h-4 w-4" />
-              Filter
-            </Button>
+            <Select value={String(perPage)} onValueChange={(v) => { setPerPage(Number(v)); setCurrentPage(1); }}>
+              <SelectTrigger className="w-28">
+                <SelectValue placeholder="Items per page" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="25">25 / page</SelectItem>
+                <SelectItem value="50">50 / page</SelectItem>
+                <SelectItem value="100">100 / page</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
+
+        {selectedIds.length > 0 && (
+          <div className="flex gap-2 mt-4">
+            <Button onClick={() => handleBulkVisibility(true)}><Eye className="w-4 h-4 mr-1" /> Show</Button>
+            <Button onClick={() => handleBulkVisibility(false)} variant="outline"><EyeOff className="w-4 h-4 mr-1" /> Hide</Button>
+            <Button onClick={handleBulkDelete} variant="destructive"><Trash2 className="w-4 h-4 mr-1" /> Delete</Button>
+          </div>
+        )}
       </CardHeader>
-      <CardContent className="px-0">
+
+      <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[40px]">
+              <TableHead>
                 <Checkbox
                   checked={isAllSelected}
-                  onCheckedChange={handleSelectAll}
-                  aria-label="Select all"
+                  onCheckedChange={(checked) => toggleSelectAll(!!checked)}
                 />
               </TableHead>
-              <TableHead>Brand Name</TableHead>
-              <TableHead>Generic Name</TableHead>
-              <TableHead>Company</TableHead>
-              <TableHead>Packing</TableHead>
-              <TableHead className="text-right">MRP</TableHead>
+              {['Name', 'Salt', 'Company', 'Packing', 'MRP'].map((key) => (
+                <TableHead key={key} onClick={() => toggleSort(key as keyof Product)} className="cursor-pointer">
+                  {key} {sortKey === key ? (sortDir === 'asc' ? '▲' : '▼') : ''}
+                </TableHead>
+              ))}
               <TableHead>Status</TableHead>
-              <TableHead className="w-[100px]">Actions</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
+
           <TableBody>
-            {filteredProducts.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center">
-                  No products found
+            {paginatedProducts.map((product) => (
+              <TableRow key={product.id}>
+                <TableCell>
+                  <Checkbox
+                    checked={selectedIds.includes(product.id)}
+                    onCheckedChange={(checked) => onSelect(product.id, !!checked)}
+                  />
+                </TableCell>
+                <TableCell>{product.Name}</TableCell>
+                <TableCell>{product.Salt}</TableCell>
+                <TableCell>{product.Company}</TableCell>
+                <TableCell>{product.Packing}</TableCell>
+                <TableCell>₹{Number(product.MRP ?? 0).toFixed(2)}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={product.visibility}
+                      onCheckedChange={(checked) => onToggleVisibility(product.id, checked)}
+                    />
+                    <span className="text-sm">
+                      {product.visibility ? 'Visible' : 'Hidden'}
+                    </span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Button variant="ghost" size="sm" onClick={() => onEdit(product)}>
+                    <Edit className="h-4 w-4" />
+                  </Button>
                 </TableCell>
               </TableRow>
-            ) : (
-              filteredProducts.map((product) => (
-                <TableRow key={product.id} className="hover:bg-gray-50/50">
-                  <TableCell>
-                    <Checkbox
-                      checked={selectedIds.includes(product.id)}
-                      onCheckedChange={(checked) => onSelect(product.id, !!checked)}
-                    />
-                  </TableCell>
-                  <TableCell className="font-medium">{product.brandName}</TableCell>
-                  <TableCell>{product.name}</TableCell>
-                  <TableCell>
-                    <TableCell>
-                      <span className="text-sm font-medium">{product.company}</span>
-                    </TableCell>
-                  </TableCell>
-                  <TableCell>{product.packing}</TableCell>
-                  <TableCell className="text-right">₹{product.mrp.toFixed(2)}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={product.isVisible}
-                        onCheckedChange={(checked) => onToggleVisibility(product.id, checked)}
-                      />
-                      <span className="text-sm">
-                        {product.isVisible ? 'Visible' : 'Hidden'}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onEdit(product)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
+            ))}
           </TableBody>
         </Table>
+
+        {/* Pagination */}
+        <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">
+          <div className="text-sm text-muted-foreground">
+            Showing {Math.min((currentPage - 1) * perPage + 1, sortedProducts.length)} to {Math.min(currentPage * perPage, sortedProducts.length)} of {sortedProducts.length} products
+          </div>
+          <div className="flex items-center gap-2">
+            <Button disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)} size="sm">
+              Previous
+            </Button>
+
+            {Array.from({ length: pageCount }, (_, i) => i + 1)
+              .filter((page) => {
+                if (page === 1 || page === pageCount) return true;
+                if (page >= currentPage - 2 && page <= currentPage + 2) return true;
+                return false;
+              })
+              .map((page, index, array) => (
+                <React.Fragment key={page}>
+                  {(index > 0 && page !== array[index - 1] + 1) && <span className="px-1">...</span>}
+                  <Button
+                    variant={page === currentPage ? 'default' : 'outline'}
+                    onClick={() => setCurrentPage(page)}
+                    size="sm"
+                  >
+                    {page}
+                  </Button>
+                </React.Fragment>
+              ))}
+
+            <Button disabled={currentPage === pageCount} onClick={() => setCurrentPage(currentPage + 1)} size="sm">
+              Next
+            </Button>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

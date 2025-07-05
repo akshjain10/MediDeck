@@ -1,432 +1,348 @@
-import React, { useState, useCallback, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 import {
-  LogOut,
-  Package,
-  Eye,
-  EyeOff,
-  Building,
-  BarChart3,
-  PlusCircle,
-  Settings,
-  Users,
-  Activity
+    Card, CardContent, CardHeader, CardTitle, CardDescription
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import {
+    Tabs, TabsList, TabsTrigger, TabsContent
+} from '@/components/ui/tabs';
+import {
+    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
+} from '@/components/ui/alert-dialog';
+import {
+    LogOut, Package, Eye, EyeOff, Building, BarChart3, PlusCircle, Settings, Users, Activity, Search, Edit, Filter, Lock, User as UserIcon
 } from 'lucide-react';
-import AdminProductTable from './AdminProductTable';
-import { useAdminProducts, Product } from '@/hooks/useAdminProducts';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
+import {
+    Table, TableBody, TableCell, TableHead, TableHeader, TableRow
+} from '@/components/ui/table';
+import {
+    Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogTrigger
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
+import { useToast } from '@/hooks/use-toast';
+import AdminProductTable from '@/components/AdminProductTable';
+import { useAdminProducts, Product } from '@/hooks/useAdminProducts';
 
-const AdminDashboard = ({ adminName, onLogout }: { adminName: string; onLogout: () => void }) => {
-  const { products, stats, loading, toggleProductVisibility, updateProduct } = useAdminProducts();
-  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
+interface AdminUser {
+    id: string;
+    name: string;
+    email: string;
+}
 
-  // Memoized data
-  const visibleProductsCount = useMemo(() =>
-    products.filter(p => p.isVisible).length, [products]);
+// --- Hooks ---
 
-  const hiddenProductsCount = useMemo(() =>
-    products.length - visibleProductsCount, [products, visibleProductsCount]);
+// Merged and optimized hook for handling all admin product logic
 
-  // Handlers
-  const handleProductSelection = useCallback((productId: string, isSelected: boolean) => {
-    setSelectedProductIds(prev =>
-      isSelected ? [...prev, productId] : prev.filter(id => id !== productId)
-    );
-  }, []);
 
-  const handleBulkVisibilityToggle = useCallback((makeVisible: boolean) => {
-    selectedProductIds.forEach(id => toggleProductVisibility(id, makeVisible));
-    setSelectedProductIds([]);
-  }, [selectedProductIds, toggleProductVisibility]);
+const useAdminAuth = () => {
+    const [admin, setAdmin] = useState<AdminUser | null>(null);
+    const [loading, setLoading] = useState(false);
+    const { toast } = useToast();
 
-  const handleEditProduct = useCallback((product: Product) => {
-    setCurrentProduct(product);
-    setIsEditDialogOpen(true);
-  }, []);
+    useEffect(() => {
+        const checkUser = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                // In a real app, you would fetch the admin's name from your 'admin_users' table
+                setAdmin({ id: session.user.id, email: session.user.email || '', name: 'Admin' });
+            }
+        };
+        checkUser();
+    }, []);
 
-  const handleSaveProduct = useCallback(async (updatedProduct: Product) => {
-    await updateProduct(updatedProduct.id, updatedProduct);
-    setIsEditDialogOpen(false);
-  }, [updateProduct]);
 
-  if (loading) {
+    const login = async (email: string, password: string) => {
+        setLoading(true);
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+            if (data.user) {
+                setAdmin({ id: data.user.id, email: data.user.email || '', name: 'Admin' }); // Fetch name from DB
+                toast({ title: "Login Successful", description: `Welcome back!` });
+            }
+        } catch (error: any) {
+            toast({ title: "Login Error", description: error.message, variant: "destructive" });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const logout = async () => {
+        await supabase.auth.signOut();
+        setAdmin(null);
+        toast({ title: "Logged Out" });
+    };
+
+    return { admin, login, logout, loading };
+};
+
+
+// --- Components ---
+
+const ProductFormDialog = ({ open, onOpenChange, product, onSave, onAdd }: any) => {
+    const [formData, setFormData] = useState<Partial<Product>>({});
+
+    useEffect(() => {
+        if (product) {
+            setFormData(product);
+        } else {
+            // Reset for new product
+            setFormData({
+                Name: '', Salt: '', Company: '', Packing: '', MRP: 0, Category: '', visibility: true
+            });
+        }
+    }, [product, open]);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value, type } = e.target;
+        setFormData(prev => ({ ...prev, [name]: type === 'number' ? parseFloat(value) : value }));
+    };
+
+    const handleSave = () => {
+        if (product) {
+            onSave(formData);
+        } else {
+            onAdd(formData);
+        }
+        onOpenChange(false);
+    };
+
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-pulse flex flex-col items-center gap-4">
-          <Activity className="h-12 w-12 text-primary animate-spin" />
-          <p className="text-lg font-medium">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Building className="h-8 w-8 text-primary" />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">PharmaAdmin</h1>
-              <p className="text-sm text-gray-600">
-                Welcome back, <span className="font-medium text-primary">{adminName}</span>
-              </p>
-            </div>
-          </div>
-          <Button variant="ghost" onClick={onLogout} className="gap-2">
-            <LogOut className="h-4 w-4" />
-            Sign out
-          </Button>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        <Tabs defaultValue="products" className="space-y-6">
-          <div className="flex justify-between items-center">
-            <TabsList className="grid grid-cols-3 w-[400px]">
-              <TabsTrigger value="products" className="gap-2">
-                <Package className="h-4 w-4" /> Products
-              </TabsTrigger>
-              <TabsTrigger value="analytics" className="gap-2">
-                <BarChart3 className="h-4 w-4" /> Analytics
-              </TabsTrigger>
-              <TabsTrigger value="settings" className="gap-2">
-                <Settings className="h-4 w-4" /> Settings
-              </TabsTrigger>
-            </TabsList>
-
-            <div className="flex gap-2">
-              <Button variant="outline" className="gap-2">
-                <Users className="h-4 w-4" /> Manage Users
-              </Button>
-              <Button className="gap-2">
-                <PlusCircle className="h-4 w-4" /> Add Product
-              </Button>
-            </div>
-          </div>
-
-          {/* Products Tab */}
-          <TabsContent value="products" className="space-y-6">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <StatCard
-                title="Total Products"
-                value={products.length}
-                icon={<Package className="h-5 w-5" />}
-                trend="up"
-              />
-              <StatCard
-                title="Visible"
-                value={visibleProductsCount}
-                icon={<Eye className="h-5 w-5 text-green-500" />}
-                variant="success"
-              />
-              <StatCard
-                title="Hidden"
-                value={hiddenProductsCount}
-                icon={<EyeOff className="h-5 w-5 text-orange-500" />}
-                variant="warning"
-              />
-              <StatCard
-                title="Companies"
-                value={stats?.company_stats?.length || 0}
-                icon={<Building className="h-5 w-5 text-blue-500" />}
-              />
-            </div>
-
-            {/* Bulk Actions */}
-            {selectedProductIds.length > 0 && (
-              <div className="bg-primary/10 p-4 rounded-lg flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="px-3 py-1">
-                    {selectedProductIds.length} selected
-                  </Badge>
-                  <span className="text-sm text-gray-600">
-                    {selectedProductIds.length === products.length ? 'All products' : 'Selected products'}
-                  </span>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleBulkVisibilityToggle(false)}
-                  >
-                    <EyeOff className="h-4 w-4 mr-2" /> Hide
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleBulkVisibilityToggle(true)}
-                  >
-                    <Eye className="h-4 w-4 mr-2" /> Show
-                  </Button>
-                  <Button variant="destructive" size="sm">
-                    Delete
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Products Table */}
-            <AdminProductTable
-              products={products}
-              selectedIds={selectedProductIds}
-              onSelect={handleProductSelection}
-              onToggleVisibility={toggleProductVisibility}
-              onEdit={handleEditProduct}
-            />
-          </TabsContent>
-
-          {/* Analytics Tab */}
-          <TabsContent value="analytics">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5 text-primary" />
-                    Product Distribution
-                  </CardTitle>
-                  <CardDescription>By company and category</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {stats?.company_stats?.slice(0, 5).map(company => (
-                    <div key={company.company} className="space-y-1">
-                      <div className="flex justify-between text-sm">
-                        <span className="font-medium">{company.company}</span>
-                        <span className="text-gray-500">{company.count} products</span>
-                      </div>
-                      <Progress value={(company.count / products.length) * 100} />
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{product ? 'Edit Product' : 'Add New Product'}</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="Name" className="text-right">Name</Label>
+                        <Input id="Name" name="Name" value={formData.Name} onChange={handleChange} className="col-span-3" />
                     </div>
-                  ))}
-                </CardContent>
-              </Card>
-              {/* Additional analytics cards... */}
-            </div>
-          </TabsContent>
-        </Tabs>
-      </main>
-
-      {/* Edit Product Dialog */}
-      <ProductEditDialog
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        product={currentProduct}
-        onSave={handleSaveProduct}
-      />
-    </div>
-  );
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="Salt" className="text-right">Salt</Label>
+                        <Input id="Salt" name="Salt" value={formData.Salt} onChange={handleChange} className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="Company" className="text-right">Company</Label>
+                        <Input id="Company" name="Company" value={formData.Company} onChange={handleChange} className="col-span-3" />
+                    </div>
+                     <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="Packing" className="text-right">Packing</Label>
+                        <Input id="Packing" name="Packing" value={formData.Packing} onChange={handleChange} className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="MRP" className="text-right">MRP</Label>
+                        <Input id="MRP" name="MRP" type="number" value={formData.MRP} onChange={handleChange} className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="Category" className="text-right">Category</Label>
+                        <Input id="Category" name="Category" value={formData.Category} onChange={handleChange} className="col-span-3" />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+                    <Button onClick={handleSave}>Save</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
 };
 
-// Helper Components
-const StatCard = ({ title, value, icon, variant = 'default', trend }: {
-  title: string;
-  value: number;
-  icon: React.ReactNode;
-  variant?: 'default' | 'success' | 'warning';
-  trend?: 'up' | 'down';
-}) => {
-  const variantClasses = {
-    default: 'bg-white',
-    success: 'bg-green-50',
-    warning: 'bg-orange-50'
-  };
 
-  return (
-    <Card className={variantClasses[variant]}>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-gray-600">{title}</CardTitle>
-        <div className="p-2 rounded-lg bg-white shadow-sm">{icon}</div>
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        {trend && (
-          <p className="text-xs text-gray-500 mt-1 flex items-center">
-            {trend === 'up' ? '↑ 12% from last month' : '↓ 8% from last month'}
-          </p>
-        )}
-      </CardContent>
+const AdminDashboardTAB = () => {
+    const { products, loading, applyVisibilityChanges, updateProduct, addProduct } = useAdminProducts();
+        const [localProducts, setLocalProducts] = useState<Product[]>([]);
+        const [pendingVisChanges, setPendingVisChanges] = useState<Record<string, boolean>>({});
+        const [isFormOpen, setIsFormOpen] = useState(false);
+        const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
+        const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+
+        useEffect(() => {
+            setLocalProducts(products);
+        }, [products]);
+
+       const handleVisibilityToggle = useCallback((productId: string, isVisible: boolean) => {
+         setLocalProducts(current => {
+           const index = current.findIndex(p => p.id === productId);
+           if (index === -1) return current;
+
+           const updated = [...current];
+           updated[index] = { ...updated[index], visibility: isVisible };
+           return updated;
+         });
+
+         setPendingVisChanges(prev => {
+           const updated = { ...prev };
+           updated[productId] = isVisible;
+           return updated;
+         });
+       }, []);
+
+
+        const handleApplyChanges = async () => {
+            await applyVisibilityChanges(pendingVisChanges);
+            setPendingVisChanges({});
+            setIsConfirmOpen(false);
+        };
+
+        const handleDiscardChanges = () => {
+            setLocalProducts(products); // Revert to original state from hook
+            setPendingVisChanges({});
+        };
+
+        const handleEdit = (product: Product) => {
+            setCurrentProduct(product);
+            setIsFormOpen(true);
+        };
+
+        const handleAddNew = () => {
+            setCurrentProduct(null);
+            setIsFormOpen(true);
+        };
+
+        if (loading) return <div>Loading...</div>;
+
+        const pendingChangeCount = Object.keys(pendingVisChanges).length;
+
+        return (
+            <div className="min-h-screen bg-gray-50 pb-20">
+                <main className="max-w-7xl mx-auto px-6 py-8">
+                 <Tabs defaultValue="products" className="space-y-6">
+                          <div className="flex justify-between items-center">
+                            <TabsList className="grid grid-cols-3 w-[400px]">
+                              <TabsTrigger value="products" className="gap-2">
+                                <Package className="h-4 w-4" /> Products
+                              </TabsTrigger>
+                              <TabsTrigger value="analytics" className="gap-2">
+                                <BarChart3 className="h-4 w-4" /> Analytics
+                              </TabsTrigger>
+                              <TabsTrigger value="settings" className="gap-2">
+                                <Settings className="h-4 w-4" /> Settings
+                              </TabsTrigger>
+                            </TabsList>
+
+                            <div className="flex gap-2">
+                              <Button variant="outline" className="gap-2">
+                                <Users className="h-4 w-4" /> Manage Users
+                              </Button>
+                              <Button className="gap-2">
+                                <PlusCircle className="h-4 w-4" /> Add Product
+                              </Button>
+                            </div>
+                          </div>
+                    <TabsContent value="products" className="space-y-6">
+
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                  <StatCard
+                                    title="Total Products"
+                                    value={products.length}
+                                    icon={<Package className="h-5 w-5" />}
+                                    trend="up"
+                                  />
+                                  <StatCard
+                                    title="Visible"
+                                    value="0"
+                                    icon={<Eye className="h-5 w-5 text-green-500" />}
+                                    variant="success"
+                                  />
+                                  <StatCard
+                                    title="Hidden"
+                                    value="0"
+                                    icon={<EyeOff className="h-5 w-5 text-orange-500" />}
+                                    variant="warning"
+                                  />
+                                  <StatCard
+                                    title="Companies"
+                                    value="0"
+                                    icon={<Building className="h-5 w-5 text-blue-500" />}
+                                  />
+                                </div>
+                                </TabsContent>
+
+
+</Tabs>
+                    <AdminProductTable products={localProducts} onToggleVisibility={handleVisibilityToggle} onEdit={handleEdit} selectedIds={[]} onSelect={() => {}} />
+                </main>
+
+                {pendingChangeCount > 0 && (
+                    <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-lg flex justify-center items-center gap-4">
+                        <p className="font-semibold text-gray-700">{pendingChangeCount} pending change{pendingChangeCount > 1 ? 's' : ''}</p>
+                        <Button variant="outline" onClick={handleDiscardChanges}>Discard</Button>
+                        <Button onClick={() => setIsConfirmOpen(true)}>Apply Changes</Button>
+                    </div>
+                )}
+
+                <ProductFormDialog open={isFormOpen} onOpenChange={setIsFormOpen} product={currentProduct} onSave={updateProduct} onAdd={addProduct} />
+
+                <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Confirm Changes</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                You are about to update the visibility for {pendingChangeCount} product(s). This action cannot be undone.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleApplyChanges}>Apply</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            </div>
+        );
+};
+
+const StatCard = ({ title, value, icon }: { title: string, value: number, icon: React.ReactNode }) => (
+    <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">{title}</CardTitle>
+            {icon}
+        </CardHeader>
+        <CardContent>
+            <div className="text-2xl font-bold">{value}</div>
+        </CardContent>
     </Card>
-  );
-};
+);
 
-const ProductEditDialog = ({ open, onOpenChange, product, onSave }: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  product: Product | null;
-  onSave: (product: Product) => void;
-}) => {
-  const [editedProduct, setEditedProduct] = useState<Product | null>(null);
+// --- Main App Component ---
+const AdminDashboard = ({ adminName, onLogout }: { adminName: string; onLogout: () => void }) => {
+//     const { admin, login, logout, loading } = useAdminAuth();
+//
+//     if (!admin) {
+//         return <AdminLogin onLogin={login} loading={loading} />;
+//     }
 
-  React.useEffect(() => {
-    setEditedProduct(product ? { ...product } : null);
-  }, [product]);
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
-    setEditedProduct(prev => ({
-      ...prev!,
-      [name]: type === 'number' ? parseFloat(value) : value
-    }));
-  };
+              <header className="bg-white shadow-sm border-b">
+                <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+                  <div className="flex items-center gap-4">
+                    <Building className="h-8 w-8 text-primary" />
+                    <div>
+                      <h1 className="text-2xl font-bold text-gray-900">PharmaAdmin</h1>
+                      <p className="text-sm text-gray-600">
+                        Welcome back, <span className="font-medium text-primary">{adminName}</span>
+                      </p>
+                    </div>
+                  </div>
+                  <Button variant="ghost" onClick={onLogout} className="gap-2">
+                    <LogOut className="h-4 w-4" />
+                    Sign out
+                  </Button>
+                </div>
+              </header>
 
-  const handleCheckboxChange = (checked: boolean, field: string) => {
-    setEditedProduct(prev => ({
-      ...prev!,
-      [field]: checked
-    }));
-  };
-
-  if (!editedProduct) return null;
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Edit Product Details</DialogTitle>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          {/* Product ID Field */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="id" className="text-right">
-              Product Code
-            </Label>
-            <Input
-              id="id"
-              name="id"
-              value={editedProduct.id}
-              onChange={handleChange}
-              className="col-span-3"
-            />
-          </div>
-
-          {/* Brand Name Field */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="brandName" className="text-right">
-              Brand Name
-            </Label>
-            <Input
-              id="brandName"
-              name="brandName"
-              value={editedProduct.brandName}
-              onChange={handleChange}
-              className="col-span-3"
-            />
-          </div>
-
-          {/* Generic Name Field */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
-              Generic Name
-            </Label>
-            <Input
-              id="name"
-              name="name"
-              value={editedProduct.name}
-              onChange={handleChange}
-              className="col-span-3"
-            />
-          </div>
-
-          {/* Company Field - Removed Badge styling */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="company" className="text-right">
-              Company
-            </Label>
-            <Input
-              id="company"
-              name="company"
-              value={editedProduct.company}
-              onChange={handleChange}
-              className="col-span-3"
-            />
-          </div>
-
-          {/* Packing Field */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="packing" className="text-right">
-              Packing
-            </Label>
-            <Input
-              id="packing"
-              name="packing"
-              value={editedProduct.packing}
-              onChange={handleChange}
-              className="col-span-3"
-            />
-          </div>
-
-          {/* MRP Field */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="mrp" className="text-right">
-              MRP (₹)
-            </Label>
-            <Input
-              id="mrp"
-              name="mrp"
-              type="number"
-              value={editedProduct.mrp}
-              onChange={handleChange}
-              className="col-span-3"
-            />
-          </div>
-
-          {/* Category Field */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="category" className="text-right">
-              Category
-            </Label>
-            <Input
-              id="category"
-              name="category"
-              value={editedProduct.category}
-              onChange={handleChange}
-              className="col-span-3"
-            />
-          </div>
-
-          {/* Visibility Toggle */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="isVisible" className="text-right">
-              Visibility
-            </Label>
-            <div className="col-span-3 flex items-center space-x-2">
-              <Checkbox
-                id="isVisible"
-                checked={editedProduct.isVisible}
-                onCheckedChange={(checked) =>
-                  handleCheckboxChange(checked as boolean, 'isVisible')
-                }
-              />
-              <label htmlFor="isVisible" className="text-sm font-medium leading-none">
-                {editedProduct.isVisible ? 'Visible to customers' : 'Hidden from customers'}
-              </label>
-            </div>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={() => onSave(editedProduct)}>
-            Save Changes
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
+   <AdminDashboardTAB />;
+   </div>
+   );
 };
 
 export default AdminDashboard;
