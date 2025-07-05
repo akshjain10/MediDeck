@@ -40,7 +40,6 @@ export type Database = {
         Row: {
           Category: string | null
           Company: string | null
-          created_at: string
           id: string
           MRP: number | null
           Name: string | null
@@ -51,7 +50,6 @@ export type Database = {
         Insert: {
           Category?: string | null
           Company?: string | null
-          created_at?: string
           id: string
           MRP?: number | null
           Name?: string | null
@@ -62,7 +60,6 @@ export type Database = {
         Update: {
           Category?: string | null
           Company?: string | null
-          created_at?: string
           id?: string
           MRP?: number | null
           Name?: string | null
@@ -133,6 +130,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      authenticate_admin: {
+        Args: { admin_email: string; admin_password: string }
+        Returns: Json
+      }
+      get_product_statistics: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       is_admin: {
         Args: { user_id: string }
         Returns: boolean
