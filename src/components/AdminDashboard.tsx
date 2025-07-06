@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback, useEffect } from 'react';
+import React, { useRef, useMemo, useState, useCallback, useEffect } from 'react';
 import {
   Card, CardContent, CardHeader, CardTitle, CardDescription
 } from '@/components/ui/card';
@@ -22,7 +22,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 import {
-  Trash2, CheckCircle, Download, LogOut, Package, Eye, EyeOff, Building, BarChart3, PlusCircle,
+  Upload, Trash2, CheckCircle, Download, LogOut, Package, Eye, EyeOff, Building, BarChart3, PlusCircle,
   Settings, Users, Activity, Filter, Lock, User as UserIcon
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -95,19 +95,129 @@ const AnalyticsTab = () => (
 );
 
 const SettingsTab = () => {
-  const handleDownloadTemplate = () => {
-    const headers = ['id', 'Name', 'Salt', 'Company', 'Packing', 'MRP', 'Category'];
-    const data = [{
-      id: 'optional',
-      Name: 'required',
-      Salt: 'optional',
-      Company: 'optional',
-      Packing: 'optional',
-      MRP: '0.00',
-      Category: 'optional'
-    }];
-    downloadCSV(data, headers, 'product_template.csv');
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const MAX_FILES = 50;
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB per file
+
+  const handleBulkImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    // Validate files
+    const validFiles = Array.from(files).filter(file =>
+      file.type.startsWith('image/') && file.size <= MAX_FILE_SIZE
+    );
+
+
+  const cleanFileName = (fileName: string) => {
+    return fileName
+      .replace(/\.[^/.]+$/, "") // Remove extension
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, "-") // Replace special chars with hyphens
+      .replace(/-+/g, "-") // Collapse multiple hyphens
+      .replace(/^-+|-+$/g, "") // Trim hyphens from ends
+      .substring(0, 50); // Limit length
+  }
+
+    if (validFiles.length === 0) {
+      toast({
+        title: "No Valid Files",
+        description: "No valid image files found for upload",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const uploadToast = toast({
+      title: "Starting Upload",
+      description: `Preparing to upload ${validFiles.length} images...`,
+      duration: Infinity // Keep toast open during upload
+    });
+
+    try {
+      const results = await Promise.allSettled(
+        validFiles.map(file => {
+          const imageName = cleanFileName(file.name);
+          return uploadImageToGithub({
+            image: file,
+            imageName,
+            repo: import.meta.env.VITE_GITHUB_REPO,
+            owner: import.meta.env.VITE_GITHUB_OWNER,
+            branch: 'main'
+          });
+        })
+      );
+
+      const successfulUploads = results.filter(r => r.status === 'fulfilled').length;
+      const failedUploads = results.filter(r => r.status === 'rejected');
+
+      uploadToast.update({
+        id: uploadToast.id,
+        title: "Upload Complete",
+        description: `Successfully uploaded ${successfulUploads}/${validFiles.length} images`,
+        variant: failedUploads.length > 0 ? "destructive" : "default",
+        duration: 5000
+      });
+
+      if (failedUploads.length > 0) {
+        console.error("Failed uploads:", failedUploads);
+        toast({
+          title: "Some Uploads Failed",
+          description: `${failedUploads.length} images failed to upload. Please reupload.`,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      uploadToast.update({
+        id: uploadToast.id,
+        title: "Upload Failed",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+        variant: "destructive",
+        duration: 5000
+      });
+    } finally {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   };
+
+  const uploadSingleImage = async (file: File): Promise<void> => {
+    try {
+      const imageName = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
+      const cleanId = imageName
+        .toLowerCase()
+        .replace(/[^a-z0-9-]/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .substring(0, 50);
+
+      await uploadImageToGithub({
+        image: file,
+        imageName: cleanId,
+        repo: import.meta.env.VITE_GITHUB_REPO,
+        owner: import.meta.env.VITE_GITHUB_OWNER,
+        branch: 'main'
+      });
+
+    } catch (error) {
+      throw new Error(`Failed to upload ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+  const handleDownloadTemplate = () => {
+      const headers = ['id', 'Name', 'Salt', 'Company', 'Packing', 'MRP', 'Category'];
+      const data = [{
+        id: 'optional',
+        Name: 'required',
+        Salt: 'optional',
+        Company: 'optional',
+        Packing: 'optional',
+        MRP: '0.00',
+        Category: 'optional'
+      }];
+      downloadCSV(data, headers, 'product_template.csv');
+    };
 
   return (
     <div className="space-y-6">
@@ -125,32 +235,58 @@ const SettingsTab = () => {
               <Download className="w-4 h-4" /> Download Template
             </Button>
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                      <Label>Bulk Image Upload</Label>
+                      <div className="text-sm text-muted-foreground">
+                        Upload multiple product images (max {MAX_FILES}, 5MB each)
+                      </div>
+                      <div className="flex gap-1">
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          onChange={handleBulkImageUpload}
+                          multiple
+                          accept="image/*"
+                          className="hidden"
+                          id="bulk-image-upload"
+                        />
+                        <Button
+                          variant="outline"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="gap-1"
+                        >
+                          <Upload className="w-4 h-4" /> Upload Images
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>System Preferences</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+            <Label>Default Items Per Page</Label>
+            <Select defaultValue="25">
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="25">25 items</SelectItem>
+                <SelectItem value="50">50 items</SelectItem>
+                <SelectItem value="100">100 items</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button size="sm">Save</Button>
+          </div>
         </CardContent>
       </Card>
-    <Card>
-      <CardHeader>
-        <CardTitle>System Preferences</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-          <Label>Default Items Per Page</Label>
-          <Select defaultValue="25">
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="25">25 items</SelectItem>
-              <SelectItem value="50">50 items</SelectItem>
-              <SelectItem value="100">100 items</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button size="sm">Save</Button>
-        </div>
-      </CardContent>
-    </Card>
-  </div>
-);
-}
+    </div>
+  );
+};
 
 const UsersTab = () => (
   <Card>
