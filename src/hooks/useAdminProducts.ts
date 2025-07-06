@@ -40,6 +40,13 @@ const [products, setProducts] = useState<Product[]>([]);
         fetchProducts();
     }, [fetchProducts]);
 
+    const handleVisibilityToggle = (productId: string, isVisible: boolean) => {
+      setLocalProducts(prev =>
+        prev.map(p => p.id === productId ? { ...p, visibility: isVisible } : p)
+      );
+      setPendingVisChanges(prev => ({ ...prev, [productId]: isVisible }));
+    };
+
     const applyVisibilityChanges = async (changes: Record<string, boolean>) => {
         try {
             const updates = Object.entries(changes).map(([id, visibility]) =>

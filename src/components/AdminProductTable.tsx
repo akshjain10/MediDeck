@@ -26,6 +26,7 @@ interface Product {
 
 interface Props {
     products: Product[];
+    pendingChanges: Record<string, boolean>;
     onToggleVisibility: (id: string, value: boolean) => void;
     onEdit: (product: Product) => void;
     onDelete: (ids: string[]) => void;
@@ -37,6 +38,7 @@ interface Props {
 
 const AdminProductTable: React.FC<Props> = ({
     products,
+    pendingChanges,
     onToggleVisibility,
     onEdit,
     onDelete,
@@ -275,15 +277,33 @@ const AdminProductTable: React.FC<Props> = ({
                                 <TableCell>{product.Packing}</TableCell>
                                 <TableCell>₹{product.MRP?.toFixed(2)}</TableCell>
                                 <TableCell>
-                                    <div className="flex items-center gap-2">
-                                        <Switch
-                                            checked={product.visibility}
-                                            onCheckedChange={(checked) => onToggleVisibility(product.id, checked)}
-                                        />
-                                        <span className="text-sm">
-                                            {product.visibility ? 'Visible' : 'Hidden'}
+                                  <div className="flex items-center gap-2">
+                                    <Switch
+                                      checked={product.visibility}
+                                      onCheckedChange={(checked) => onToggleVisibility(product.id, checked)}
+                                      className={`data-[state=checked]:bg-green-500 ${
+                                        product.id in pendingChanges ? 'ring-2 ring-yellow-400' : ''
+                                      }`}
+                                      disabled={product.id in pendingChanges}
+                                    />
+                                    <span className={`text-sm font-medium ${
+                                      product.visibility ? 'text-green-600' : 'text-gray-500'
+                                    } ${
+                                      product.id in pendingChanges ? 'font-bold' : ''
+                                    }`}>
+                                      {product.visibility ? (
+                                        <span className="flex items-center gap-1">
+                                          <Eye className="h-4 w-4" /> Visible
+                                          {product.id in pendingChanges && ' (Pending)'}
                                         </span>
-                                    </div>
+                                      ) : (
+                                        <span className="flex items-center gap-1">
+                                          <EyeOff className="h-4 w-4" /> Hidden
+                                          {product.id in pendingChanges && ' (Pending)'}
+                                        </span>
+                                      )}
+                                    </span>
+                                  </div>
                                 </TableCell>
                                 <TableCell>
                                     <Button

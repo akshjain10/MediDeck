@@ -35,8 +35,20 @@ import { useToast } from '@/hooks/use-toast';
 import AdminProductTable from '@/components/AdminProductTable';
 import { useAdminProducts, Product } from '@/hooks/useAdminProducts';
 
-const StatCard = ({ title, value, icon, variant }: { title: string; value: number | string; icon: React.ReactNode; variant?: 'default' | 'success' | 'warning' }) => (
-  <Card className="h-full">
+const StatCard = ({
+  title,
+  value,
+  icon,
+  variant,
+  active = false
+}: {
+  title: string;
+  value: number | string;
+  icon: React.ReactNode;
+  variant?: 'default' | 'success' | 'warning';
+  active?: boolean;
+}) => (
+  <Card className={`h-full ${active ? 'border-2 border-primary' : ''}`}>
     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
       <CardTitle className="text-sm font-medium">{title}</CardTitle>
       <div className={variant === 'success' ? 'text-green-500' : variant === 'warning' ? 'text-orange-500' : 'text-primary'}>
@@ -192,11 +204,13 @@ const AdminDashboardTAB = () => {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [filter, setFilter] = useState<'all' | 'visible' | 'hidden'>('all');
+
   const filteredProducts = useMemo(() => {
-    if (filter === 'visible') return localProducts.filter(p => p.visibility);
-    if (filter === 'hidden') return localProducts.filter(p => !p.visibility);
-    return localProducts;
-  }, [localProducts, filter]);
+      if (filter === 'visible') return appliedProducts.filter(p => p.visibility);
+      if (filter === 'hidden') return appliedProducts.filter(p => !p.visibility);
+      return appliedProducts; // Use appliedProducts instead of localProducts
+    }, [appliedProducts, filter]); // Depend on appliedProducts
+
    const selectedProducts = useMemo(() => {
       return localProducts.filter(product => selectedIds.includes(product.id));
     }, [localProducts, selectedIds]);
@@ -292,21 +306,20 @@ const AdminDashboardTAB = () => {
   };
 
   const handleVisibilityToggle = useCallback((productId: string, isVisible: boolean) => {
-    setLocalProducts(current => {
-      const index = current.findIndex(p => p.id === productId);
-      if (index === -1) return current;
+      setLocalProducts(current => {
+        const index = current.findIndex(p => p.id === productId);
+        if (index === -1) return current;
 
-      const updated = [...current];
-      updated[index] = { ...updated[index], visibility: isVisible };
-      return updated;
-    });
+        const updated = [...current];
+        updated[index] = { ...updated[index], visibility: isVisible };
+        return updated;
+      });
 
-    setPendingVisChanges(prev => {
-      const updated = { ...prev };
-      updated[productId] = isVisible;
-      return updated;
-    });
-  }, []);
+      setPendingVisChanges(prev => ({
+        ...prev,
+        [productId]: isVisible
+      }));
+    }, []);
 
   const handleSelect = useCallback((id: string, checked: boolean) => {
     setSelectedIds(prev =>
@@ -397,36 +410,74 @@ const AdminDashboardTAB = () => {
 
           <TabsContent value="products" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <StatCard
-                title="Total Products"
-                value={appliedProducts.length}
-                icon={<Package className="h-5 w-5" />}
-              />
-              <StatCard
-                title="Visible"
-                value={visibleCount}
-                icon={<Eye className="h-5 w-5" />}
-                variant="success"
-              />
-              <StatCard
-                title="Hidden"
-                value={hiddenCount}
-                icon={<EyeOff className="h-5 w-5" />}
-                variant="warning"
-              />
-              <StatCard
-                title="Companies"
-                value={companyCount}
-                icon={<Building className="h-5 w-5" />}
-              />
+              {/* Total Products Button */}
+              <Button
+                variant="ghost"
+                className="h-full p-0"
+                onClick={() => setFilter('all')}
+              >
+                <StatCard
+                  title="Total Products"
+                  value={appliedProducts.length}
+                  icon={<Package className="h-5 w-5" />}
+                  active={filter === 'all'}  // Highlight if active
+                />
+              </Button>
+
+              {/* Visible Button */}
+              <Button
+                variant="ghost"
+                className="h-full p-0"
+                onClick={() => setFilter('visible')}
+              >
+                <StatCard
+                  title="Visible"
+                  value={visibleCount}
+                  icon={<Eye className="h-5 w-5" />}
+                  variant="success"
+                  active={filter === 'visible'}  // Highlight if active
+                />
+              </Button>
+
+              {/* Hidden Button */}
+              <Button
+                variant="ghost"
+                className="h-full p-0"
+                onClick={() => setFilter('hidden')}
+              >
+                <StatCard
+                  title="Hidden"
+                  value={hiddenCount}
+                  icon={<EyeOff className="h-5 w-5" />}
+                  variant="warning"
+                  active={filter === 'hidden'}  // Highlight if active
+                />
+              </Button>
+
+              {/* Companies Button (optional) */}
+              <Button
+                variant="ghost"
+                className="h-full p-0"
+                onClick={() => {
+                  // Optional: Add company filter logic later
+                  toast({ title: "Feature coming soon", description: "Company filtering will be added soon!" });
+                }}
+              >
+                <StatCard
+                  title="Companies"
+                  value={companyCount}
+                  icon={<Building className="h-5 w-5" />}
+                />
+              </Button>
             </div>
             <AdminProductTable
-                products={localProducts}
+                products={filteredProducts}
                 onToggleVisibility={handleVisibilityToggle}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 selectedIds={selectedIds}
                 onSelect={handleSelect}
+                pendingChanges={pendingVisChanges}
                 onExport={handleExport}
                 onImport={handleImport}
                 onSave={async ({ originalId, changes }) => {
