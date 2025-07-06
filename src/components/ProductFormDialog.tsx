@@ -223,7 +223,7 @@ const ProductFormDialog = ({ open, onOpenChange, product, onAdd, onSave }: {
 
    return (
      <Dialog open={open} onOpenChange={onOpenChange}>
-       <DialogContent className="sm:max-w-[700px]">
+       <DialogContent className="w-full max-w-5xl">
          <DialogHeader>
            <DialogTitle>{product ? 'Edit Product' : 'Add New Product'}</DialogTitle>
          </DialogHeader>
@@ -243,7 +243,7 @@ const ProductFormDialog = ({ open, onOpenChange, product, onAdd, onSave }: {
                  />
                </div>
                <p className="text-sm text-muted-foreground">
-                 Uploading a new image will automatically update the Product ID unless manually changed
+                Upload a high-quality product image (WEBP recommended)
                </p>
              </div>
 
@@ -284,11 +284,6 @@ const ProductFormDialog = ({ open, onOpenChange, product, onAdd, onSave }: {
                    className={errors.id ? 'border-destructive' : ''}
                  />
                  {errors.id && <p className="text-sm text-destructive mt-1">{errors.id}</p>}
-                 <p className="text-xs text-muted-foreground mt-1">
-                   {isManualId ?
-                     "ID is manually edited" :
-                     "ID will update automatically with image filename"}
-                 </p>
                </div>
              </div>
 
