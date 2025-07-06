@@ -1,98 +1,3 @@
-// utils/imageUpload.ts
-{/*import { Octokit } from "octokit";
-import { Buffer } from 'buffer';
-
-// Polyfill Buffer if needed
-if (typeof window !== 'undefined' && !window.Buffer) {
-  window.Buffer = Buffer;
-}
-
-interface UploadImageParams {
-  image: File;
-  imageName: string;  // Changed from productId to imageName
-  repo: string;
-  owner: string;
-  path?: string;
-  branch?: string;
-}
-
-export const uploadImageToGithub = async ({
-  image,
-  imageName,
-  repo,
-  owner,
-  path = '/images/products',
-  branch = 'main'
-}: UploadImageParams): Promise<string> => {
-  try {
-    // Validate inputs
-    if (!image || !(image instanceof File)) {
-      throw new Error('Invalid image file');
-    }
-    if (!imageName || !repo || !owner) {
-      throw new Error('Missing required parameters');
-    }
-
-    const token = import.meta.env.VITE_GITHUB_TOKEN;
-    if (!token) {
-      throw new Error('GitHub token is not configured');
-    }
-
-    const octokit = new Octokit({ auth: token });
-    const filePath = `${path}/${imageName}.webp`;
-
-    // Check if file exists to get its SHA
-    let sha: string | undefined;
-    try {
-      const { data } = await octokit.rest.repos.getContent({
-        owner,
-        repo,
-        path: filePath,
-        branch,
-      });
-
-      if (!Array.isArray(data) && 'sha' in data) {
-        sha = data.sha;
-      }
-    } catch (error) {
-      // File doesn't exist yet (expected for new uploads)
-      if ((error as any).status !== 404) {
-        throw error;
-      }
-    }
-
-    // Read file content
-    const content = await new Promise<ArrayBuffer>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as ArrayBuffer);
-      reader.onerror = () => reject(new Error('Failed to read file'));
-      reader.readAsArrayBuffer(image);
-    });
-
-    const contentEncoded = Buffer.from(content).toString('base64');
-
-    // Upload or update file
-    const { data } = await octokit.rest.repos.createOrUpdateFileContents({
-      owner,
-      repo,
-      path: filePath,
-      message: `Upload product image ${imageName}`,
-      content: contentEncoded,
-      branch,
-      sha, // Include SHA if updating existing file
-    });
-
-    return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filePath}`;
-  } catch (error) {
-    console.error('GitHub upload error:', error);
-    throw new Error(
-      error instanceof Error
-        ? error.message
-        : 'Failed to upload image to GitHub'
-    );
-  }
-};
-*/}
 import { Octokit } from "octokit";
 import { Buffer } from 'buffer';
 
@@ -109,6 +14,14 @@ interface UploadImageParams {
   branch?: string;
 }
 
+interface BulkUploadParams {
+  images: { file: File; name: string }[];
+  repo: string;
+  owner: string;
+  path?: string;
+  branch?: string;
+}
+
 export const uploadImageToGithub = async ({
   image,
   imageName,
@@ -117,12 +30,22 @@ export const uploadImageToGithub = async ({
   path = 'images/products',
   branch = 'main'
 }: UploadImageParams): Promise<string> => {
+  // ... existing single image upload implementation ...
+};
+
+export const bulkUploadImagesToGithub = async ({
+  images,
+  repo,
+  owner,
+  path = 'images/products',
+  branch = 'main'
+}: BulkUploadParams): Promise<{ success: string[]; failures: { name: string; error: string }[] }> => {
   try {
     // Validate inputs
-    if (!image || !(image instanceof File)) {
-      throw new Error('Invalid image file');
+    if (!images || !Array.isArray(images) || images.length === 0) {
+      throw new Error('No valid images provided');
     }
-    if (!imageName || !repo || !owner) {
+    if (!repo || !owner) {
       throw new Error('Missing required parameters');
     }
 
@@ -146,55 +69,139 @@ export const uploadImageToGithub = async ({
       throw new Error(`Repository not found or access denied: ${owner}/${repo}`);
     }
 
-    const filePath = `${path}/${imageName}.webp`;
-    let sha: string | undefined;
-
-    // Check if file exists to get its SHA
+    // Get the current tree to find existing files
+    let currentTree;
     try {
-      const { data } = await octokit.rest.repos.getContent({
+      const { data: branchData } = await octokit.rest.repos.getBranch({
         owner,
         repo,
-        path: filePath,
         branch,
       });
 
-      if (!Array.isArray(data) && 'sha' in data) {
-        sha = data.sha;
-      }
+      const { data: treeData } = await octokit.rest.git.getTree({
+        owner,
+        repo,
+        tree_sha: branchData.commit.commit.tree.sha,
+        recursive: 'true',
+      });
+
+      currentTree = treeData.tree;
     } catch (error) {
-      if ((error as any).status !== 404) {
-        throw error;
-      }
+      throw new Error(`Failed to get current tree: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 
-    // Read file content
-    const content = await new Promise<ArrayBuffer>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as ArrayBuffer);
-      reader.onerror = () => reject(new Error('Failed to read file'));
-      reader.readAsArrayBuffer(image);
+    // Prepare all blobs
+    const blobs = await Promise.allSettled(
+      images.map(async ({ file, name }) => {
+        try {
+          const content = await new Promise<ArrayBuffer>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as ArrayBuffer);
+            reader.onerror = () => reject(new Error('Failed to read file'));
+            reader.readAsArrayBuffer(file);
+          });
+
+          const contentEncoded = Buffer.from(content).toString('base64');
+          const filePath = `${path}/${name}.webp`;
+
+          // Check if file exists in current tree
+          const existingFile = currentTree.find(
+            (item: any) => item.path === filePath && item.type === 'blob'
+          );
+
+          // Create blob
+          const { data: blobData } = await octokit.rest.git.createBlob({
+            owner,
+            repo,
+            content: contentEncoded,
+            encoding: 'base64',
+          });
+
+          return {
+            path: filePath,
+            mode: '100644',
+            type: 'blob',
+            sha: blobData.sha,
+            originalSha: existingFile?.sha,
+          };
+        } catch (error) {
+          throw new Error(`Failed to process ${name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      })
+    );
+
+    // Separate successful and failed blobs
+    const successfulBlobs: any[] = [];
+    const failures: { name: string; error: string }[] = [];
+
+    blobs.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        successfulBlobs.push(result.value);
+      } else {
+        failures.push({
+          name: images[index].name,
+          error: result.reason instanceof Error ? result.reason.message : 'Unknown error',
+        });
+      }
     });
 
-    const contentEncoded = Buffer.from(content).toString('base64');
+    if (successfulBlobs.length === 0) {
+      throw new Error('All image uploads failed');
+    }
 
-    // Upload or update file
-    const { data } = await octokit.rest.repos.createOrUpdateFileContents({
+    // Get the latest commit
+    const { data: refData } = await octokit.rest.git.getRef({
       owner,
       repo,
-      path: filePath,
-      message: `Upload product image ${imageName}`,
-      content: contentEncoded,
-      branch,
-      sha,
+      ref: `heads/${branch}`,
     });
 
-    return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filePath}`;
+    const { data: commitData } = await octokit.rest.git.getCommit({
+      owner,
+      repo,
+      commit_sha: refData.object.sha,
+    });
+
+    // Create new tree with all blobs
+    const { data: newTreeData } = await octokit.rest.git.createTree({
+      owner,
+      repo,
+      tree: successfulBlobs,
+      base_tree: commitData.tree.sha,
+    });
+
+    // Create new commit
+    const { data: newCommitData } = await octokit.rest.git.createCommit({
+      owner,
+      repo,
+      message: `Bulk upload of ${successfulBlobs.length} product images`,
+      tree: newTreeData.sha,
+      parents: [commitData.sha],
+    });
+
+    // Update reference
+    await octokit.rest.git.updateRef({
+      owner,
+      repo,
+      ref: `heads/${branch}`,
+      sha: newCommitData.sha,
+    });
+
+    // Return URLs for successful uploads
+    const successUrls = successfulBlobs.map(blob =>
+      `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${blob.path}`
+    );
+
+    return {
+      success: successUrls,
+      failures,
+    };
   } catch (error) {
-    console.error('GitHub upload error:', error);
+    console.error('Bulk GitHub upload error:', error);
     throw new Error(
       error instanceof Error
         ? error.message
-        : 'Failed to upload image to GitHub'
+        : 'Failed to bulk upload images to GitHub'
     );
   }
 };

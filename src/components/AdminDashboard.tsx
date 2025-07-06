@@ -7,7 +7,7 @@ import {
   Tabs, TabsList, TabsTrigger, TabsContent
 } from '@/components/ui/tabs';
 import ProductFormDialog from '@/components/ProductFormDialog'
-import { uploadImageToGithub } from '@/utils/imageUpload';
+import { bulkUploadImagesToGithub } from '@/utils/imageUpload';
 import {
   Select,
   SelectTrigger,
@@ -94,94 +94,90 @@ const AnalyticsTab = () => (
   </div>
 );
 
-const SettingsTab = () => {
-  const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const MAX_FILES = 50;
-  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB per file
+  const SettingsTab = () => {
+    const { toast } = useToast();
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const MAX_FILES = 50;
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB per file
 
-  const handleBulkImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+    const cleanFileName = (fileName: string) => {
+      return fileName
+        .replace(/\.[^/.]+$/, "") // Remove extension
+        .toLowerCase()
+        .replace(/[^a-z0-9-]/g, "-") // Replace special chars with hyphens
+        .replace(/-+/g, "-") // Collapse multiple hyphens
+        .replace(/^-+|-+$/g, "") // Trim hyphens from ends
+        .substring(0, 50); // Limit length
+    };
 
-    // Validate files
-    const validFiles = Array.from(files).filter(file =>
-      file.type.startsWith('image/') && file.size <= MAX_FILE_SIZE
-    );
+    const handleBulkImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
 
-
-  const cleanFileName = (fileName: string) => {
-    return fileName
-      .replace(/\.[^/.]+$/, "") // Remove extension
-      .toLowerCase()
-      .replace(/[^a-z0-9-]/g, "-") // Replace special chars with hyphens
-      .replace(/-+/g, "-") // Collapse multiple hyphens
-      .replace(/^-+|-+$/g, "") // Trim hyphens from ends
-      .substring(0, 50); // Limit length
-  }
-
-    if (validFiles.length === 0) {
-      toast({
-        title: "No Valid Files",
-        description: "No valid image files found for upload",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const uploadToast = toast({
-      title: "Starting Upload",
-      description: `Preparing to upload ${validFiles.length} images...`,
-      duration: Infinity // Keep toast open during upload
-    });
-
-    try {
-      const results = await Promise.allSettled(
-        validFiles.map(file => {
-          const imageName = cleanFileName(file.name);
-          return uploadImageToGithub({
-            image: file,
-            imageName,
-            repo: import.meta.env.VITE_GITHUB_REPO,
-            owner: import.meta.env.VITE_GITHUB_OWNER,
-            branch: 'main'
-          });
-        })
+      // Validate files
+      const validFiles = Array.from(files).filter(file =>
+        file.type.startsWith('image/') && file.size <= MAX_FILE_SIZE
       );
 
-      const successfulUploads = results.filter(r => r.status === 'fulfilled').length;
-      const failedUploads = results.filter(r => r.status === 'rejected');
-
-      uploadToast.update({
-        id: uploadToast.id,
-        title: "Upload Complete",
-        description: `Successfully uploaded ${successfulUploads}/${validFiles.length} images`,
-        variant: failedUploads.length > 0 ? "destructive" : "default",
-        duration: 5000
-      });
-
-      if (failedUploads.length > 0) {
-        console.error("Failed uploads:", failedUploads);
+      if (validFiles.length === 0) {
         toast({
-          title: "Some Uploads Failed",
-          description: `${failedUploads.length} images failed to upload. Please reupload.`,
+          title: "No Valid Files",
+          description: "No valid image files found for upload",
           variant: "destructive"
         });
+        return;
       }
-    } catch (error) {
-      uploadToast.update({
-        id: uploadToast.id,
-        title: "Upload Failed",
-        description: error instanceof Error ? error.message : "Unknown error occurred",
-        variant: "destructive",
-        duration: 5000
+
+      const uploadToast = toast({
+        title: "Starting Bulk Upload",
+        description: `Preparing to upload ${validFiles.length} images`,
+        duration: Infinity // Keep toast open during upload
       });
-    } finally {
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+
+      try {
+        const imagesToUpload = validFiles.map(file => ({
+          file,
+          name: cleanFileName(file.name)
+        }));
+
+        const { success, failures } = await bulkUploadImagesToGithub({
+          images: imagesToUpload,
+          repo: import.meta.env.VITE_GITHUB_REPO,
+          owner: import.meta.env.VITE_GITHUB_OWNER,
+          branch: 'main'
+        });
+
+        uploadToast.update({
+          id: uploadToast.id,
+          title: "Bulk Upload Complete",
+          description: `Successfully uploaded ${success.length}/${validFiles.length} images`,
+          variant: failures.length > 0 ? "destructive" : "default",
+          duration: 5000
+        });
+
+        if (failures.length > 0) {
+          console.error("Failed uploads:", failures);
+          toast({
+            title: "Some Uploads Failed",
+            description: `${failures.length} images failed to upload. Please check the console for details.`,
+            variant: "destructive"
+          });
+        }
+      } catch (error) {
+        uploadToast.update({
+          id: uploadToast.id,
+          title: "Bulk Upload Failed",
+          description: error instanceof Error ? error.message : "Unknown error occurred",
+          variant: "destructive",
+          duration: 5000
+        });
+      } finally {
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
       }
-    }
-  };
+    };
+
 
   const uploadSingleImage = async (file: File): Promise<void> => {
     try {
