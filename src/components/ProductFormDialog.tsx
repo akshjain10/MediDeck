@@ -256,7 +256,7 @@ const ProductFormDialog = ({ open, onOpenChange, product, onAdd, onSave }: {
                  />
                ) : formData.id ? (
                  <img
-                   src={`public/images/products/${formData.id}.webp`}
+                   src={`images/products/${formData.id}.webp`}
                    alt="Current Product"
                    className="object-contain h-full w-full p-4"
                    onError={(e) => {
