@@ -499,6 +499,7 @@ const AdminDashboardTAB = () => {
                                 onDelete={handleDelete}
                                 selectedIds={selectedIds}
                                 onSelect={handleSelect}
+                                pendingChanges={pendingVisChanges}
                                 onExport={() => {
                                                    // Optional: Export only selected products
                                                    const headers = ['id', 'Name', 'Salt', 'Company', 'Packing', 'MRP', 'Category'];
