@@ -237,7 +237,6 @@ const AdminProductTable: React.FC<Props> = ({
                         <TableRow>
                             <TableHead className="w-12">
                                 <Checkbox
-                                    checked={isAllSelected}
                                     onCheckedChange={toggleSelectAll}
                                 />
                             </TableHead>
@@ -284,7 +283,6 @@ const AdminProductTable: React.FC<Props> = ({
                                       className={`data-[state=checked]:bg-green-500 ${
                                         product.id in pendingChanges ? 'ring-2 ring-yellow-400' : ''
                                       }`}
-                                      disabled={product.id in pendingChanges}
                                     />
                                     <span className={`text-sm font-medium ${
                                       product.visibility ? 'text-green-600' : 'text-gray-500'

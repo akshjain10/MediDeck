@@ -198,18 +198,29 @@ const AdminDashboardTAB = () => {
   const { products, loading, applyVisibilityChanges, updateProduct, addProduct, deleteProducts } = useAdminProducts();
   const [localProducts, setLocalProducts] = useState<Product[]>([]);
   const [appliedProducts, setAppliedProducts] = useState<Product[]>([]);
-  const [pendingVisChanges, setPendingVisChanges] = useState<Record<string, boolean>>({});
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [filter, setFilter] = useState<'all' | 'visible' | 'hidden'>('all');
 
+  const [filter, setFilter] = useState<'all' | 'visible' | 'hidden'>('all');
+  const [pendingVisChanges, setPendingVisChanges] = useState<Record<string, boolean>>({});
+
+  // Update filteredProducts to account for pending changes
   const filteredProducts = useMemo(() => {
-      if (filter === 'visible') return appliedProducts.filter(p => p.visibility);
-      if (filter === 'hidden') return appliedProducts.filter(p => !p.visibility);
-      return appliedProducts; // Use appliedProducts instead of localProducts
-    }, [appliedProducts, filter]); // Depend on appliedProducts
+    let products = appliedProducts;
+
+    if (filter === 'visible') products = appliedProducts.filter(p => p.visibility);
+    if (filter === 'hidden') products = appliedProducts.filter(p => !p.visibility);
+
+    // Apply pending changes to the view
+    return products.map(product => {
+      if (product.id in pendingVisChanges) {
+        return { ...product, visibility: pendingVisChanges[product.id] };
+      }
+      return product;
+    });
+  }, [appliedProducts, filter, pendingVisChanges]);
 
    const selectedProducts = useMemo(() => {
       return localProducts.filter(product => selectedIds.includes(product.id));
