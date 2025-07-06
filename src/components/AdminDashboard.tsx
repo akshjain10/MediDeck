@@ -55,6 +55,7 @@ const ProductFormDialog = ({ open, onOpenChange, product, onSave, onAdd }: {
   onAdd: (product: Partial<Product>) => void;
 }) => {
   const [formData, setFormData] = useState<Partial<Product>>({});
+  const [isUpdating, setIsUpdating] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
@@ -94,30 +95,55 @@ const ProductFormDialog = ({ open, onOpenChange, product, onSave, onAdd }: {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
+
     if (!formData.Name) {
       newErrors.Name = 'Product name is required';
     }
+
+    if (formData.id) {
+      if (!/^[a-z0-9\-_]+$/i.test(formData.id)) {
+        newErrors.id = 'ID can only contain letters, numbers, hyphens, and underscores';
+      }
+      if (formData.id.length > 50) {
+        newErrors.id = 'ID must be 50 characters or less';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = () => {
-    if (!validateForm()) {
-      toast({
-        title: "Validation Error",
-        description: "Please fix the errors in the form",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (product) {
-      onSave(formData);
-    } else {
-      onAdd(formData);
-    }
-    onOpenChange(false);
-  };
+ const handleSave = async () => {
+   if (!validateForm()) {
+     toast({
+       title: "Validation Error",
+       description: "Please fix the errors in the form",
+       variant: "destructive"
+     });
+     return;
+   }
+   setIsUpdating(true);
+   try {
+     if (product) {
+       // Pass the parameters in the correct structure
+       await onSave({
+         originalId: product.id,
+         changes: formData
+       });
+     } else {
+       await onAdd(formData);
+     }
+     onOpenChange(false);
+   } catch (error) {
+     toast({
+       title: "Error",
+       description: error instanceof Error ? error.message : "Failed to save product",
+       variant: "destructive"
+     });
+   }finally {
+           setIsUpdating(false);
+         }
+ };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -178,7 +204,7 @@ const ProductFormDialog = ({ open, onOpenChange, product, onSave, onAdd }: {
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="MRP" className="text-right">MRP</Label>
-                        <Input id="MRP" name="MRP" type="number" value={formData.MRP} onChange={handleChange} className="col-span-3" />
+                        <Input id="MRP" name="MRP" type="number" value={formData.MRP} onChange={handleChange} className="col-span-3 no-spinner" />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="Category" className="text-right">Category</Label>
@@ -187,7 +213,9 @@ const ProductFormDialog = ({ open, onOpenChange, product, onSave, onAdd }: {
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-                    <Button onClick={handleSave}>{product ? 'Save' : 'Add Product'}</Button>
+                    <Button onClick={handleSave} disabled={isUpdating}>
+                      {isUpdating ? "Saving..." : (product ? 'Save' : 'Add Product')}
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -381,6 +409,9 @@ const AdminDashboardTAB = () => {
                   validationErrors.push(`Row ${index + 1}: Name is required`);
               }
               if (row.id) {
+                  if (!/^[a-zA-Z0-9\-_]+$/.test(row.id)) {
+                            validationErrors.push(`Row ${index + 1}: ID must contain only letters, numbers, hyphens, or underscores`);
+                          }
                   if (existingIds.has(row.id)) {
                       validationErrors.push(`Row ${index + 1}: ID ${row.id} already exists`);
                   }
@@ -550,6 +581,9 @@ const AdminDashboardTAB = () => {
                 onSelect={handleSelect}
                 onExport={handleExport}
                 onImport={handleImport}
+                onSave={async ({ originalId, changes }) => {
+                    await updateProduct({ originalId, changes });
+                  }}
             />
           </TabsContent>
 

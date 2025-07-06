@@ -56,15 +56,65 @@ const [products, setProducts] = useState<Product[]>([]);
         }
     };
 
-    const updateProduct = async (product: Product) => {
-        try {
-            const { error } = await admin.from('Product').update(product).eq('id', product.id);
-            if (error) throw error;
-            await fetchProducts();
-            toast({ title: "Product Updated", description: "Product details saved successfully." });
-        } catch (error: any) {
-            toast({ title: "Error updating product", description: error.message, variant: "destructive" });
+    // Update the updateProduct function signature
+    const updateProduct = async (params: {
+      originalId: string;
+      changes: Partial<Product>;
+    }) => {
+      const { originalId, changes } = params;
+
+      try {
+        // If ID is being changed
+        if (changes.id && changes.id !== originalId) {
+          // 1. Check if new ID already exists
+          const { data: existing } = await admin
+            .from('Product') // Changed from 'products' to 'Product' to match your table name
+            .select('id')
+            .eq('id', changes.id)
+            .maybeSingle();
+
+          if (existing) {
+            throw new Error(`Product with ID ${changes.id} already exists`);
+          }
+
+          // 2. Create new record with updated ID
+          const { error: createError } = await admin
+            .from('Product')
+            .insert({
+              ...changes,
+              id: changes.id
+            });
+
+          if (createError) throw createError;
+
+          // 3. Delete old record
+          const { error: deleteError } = await admin
+            .from('Product')
+            .delete()
+            .eq('id', originalId);
+
+          if (deleteError) throw deleteError;
+        } else {
+          // Normal update if ID isn't changing
+          const { error: updateError } = await admin
+            .from('Product')
+            .update(changes)
+            .eq('id', originalId);
+
+          if (updateError) throw updateError;
         }
+
+        await fetchProducts();
+        toast({ title: "Success", description: "Product updated successfully" });
+        return true;
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: error instanceof Error ? error.message : "Failed to update product",
+          variant: "destructive"
+        });
+        throw error;
+      }
     };
 
     const addProduct = async (newProduct: Omit<Product, 'id' | 'visibility'>) => {
