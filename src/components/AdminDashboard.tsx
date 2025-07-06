@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import {
   Card, CardContent, CardHeader, CardTitle, CardDescription
 } from '@/components/ui/card';
@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import {
   Tabs, TabsList, TabsTrigger, TabsContent
 } from '@/components/ui/tabs';
+import ProductFormDialog from '@/components/ProductFormDialog'
+import { uploadImageToGithub } from '@/utils/imageUpload';
 import {
   Select,
   SelectTrigger,
@@ -20,7 +22,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 import {
-  Download, LogOut, Package, Eye, EyeOff, Building, BarChart3, PlusCircle,
+  Trash2, CheckCircle, Download, LogOut, Package, Eye, EyeOff, Building, BarChart3, PlusCircle,
   Settings, Users, Activity, Filter, Lock, User as UserIcon
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -47,180 +49,7 @@ const StatCard = ({ title, value, icon, variant }: { title: string; value: numbe
   </Card>
 );
 
-const ProductFormDialog = ({ open, onOpenChange, product, onSave, onAdd }: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  product: Product | null;
-  onSave: (product: Partial<Product>) => void;
-  onAdd: (product: Partial<Product>) => void;
-}) => {
-  const [formData, setFormData] = useState<Partial<Product>>({});
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const { toast } = useToast();
 
-  useEffect(() => {
-    if (product) {
-      setFormData(product);
-    } else {
-      setFormData({
-        id: '',
-        Name: '',
-        Salt: '',
-        Company: '',
-        Packing: '',
-        MRP: 0,
-        Category: '',
-        visibility: true
-      });
-    }
-    setErrors({});
-  }, [product, open]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'number' ? parseFloat(value) : value
-    }));
-    // Clear error when field is edited
-    if (errors[name]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.Name) {
-      newErrors.Name = 'Product name is required';
-    }
-
-    if (formData.id) {
-      if (!/^[a-z0-9\-_]+$/i.test(formData.id)) {
-        newErrors.id = 'ID can only contain letters, numbers, hyphens, and underscores';
-      }
-      if (formData.id.length > 50) {
-        newErrors.id = 'ID must be 50 characters or less';
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
- const handleSave = async () => {
-   if (!validateForm()) {
-     toast({
-       title: "Validation Error",
-       description: "Please fix the errors in the form",
-       variant: "destructive"
-     });
-     return;
-   }
-   setIsUpdating(true);
-   try {
-     if (product) {
-       // Pass the parameters in the correct structure
-       await onSave({
-         originalId: product.id,
-         changes: formData
-       });
-     } else {
-       await onAdd(formData);
-     }
-     onOpenChange(false);
-   } catch (error) {
-     toast({
-       title: "Error",
-       description: error instanceof Error ? error.message : "Failed to save product",
-       variant: "destructive"
-     });
-   }finally {
-           setIsUpdating(false);
-         }
- };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>{product ? 'Edit Product' : 'Add New Product'}</DialogTitle>
-          <DialogDescription>
-            {product ? 'Update the product details below' : 'Fill in the details for the new product'}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="id" className="text-right">ID</Label>
-            <div className="col-span-3">
-              <Input
-                id="id"
-                name="id"
-                value={formData.id}
-                onChange={handleChange}
-                className={errors.id ? 'border-destructive' : ''}
-              />
-              {errors.id && <p className="text-sm text-destructive mt-1">{errors.id}</p>}
-            </div>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="Name" className="text-right">Name*</Label>
-            <div className="col-span-3">
-              <Input
-                id="Name"
-                name="Name"
-                value={formData.Name}
-                onChange={handleChange}
-                className={errors.Name ? 'border-destructive' : ''}
-              />
-              {errors.Name && <p className="text-sm text-destructive mt-1">{errors.Name}</p>}
-            </div>
-          </div>
-                    <div className="grid grid-cols-4 items-start gap-4"> {/* Changed to items-start */}
-                      <Label htmlFor="Salt" className="text-right mt-2">Salt</Label>
-                      <div className="col-span-3">
-                        <textarea
-                          id="Salt"
-                          name="Salt"
-                          value={formData.Salt}
-                          onChange={(e) => setFormData(prev => ({ ...prev, Salt: e.target.value }))}
-                          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                          rows={4}
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="Company" className="text-right">Company</Label>
-                        <Input id="Company" name="Company" value={formData.Company} onChange={handleChange} className="col-span-3" />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="Packing" className="text-right">Packing</Label>
-                        <Input id="Packing" name="Packing" value={formData.Packing} onChange={handleChange} className="col-span-3" />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="MRP" className="text-right">MRP</Label>
-                        <Input id="MRP" name="MRP" type="number" value={formData.MRP} onChange={handleChange} className="col-span-3 no-spinner" />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="Category" className="text-right">Category</Label>
-                        <Input id="Category" name="Category" value={formData.Category} onChange={handleChange} className="col-span-3" />
-                    </div>
-                </div>
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-                    <Button onClick={handleSave} disabled={isUpdating}>
-                      {isUpdating ? "Saving..." : (product ? 'Save' : 'Add Product')}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
-};
 
 const AnalyticsTab = () => (
   <div className="space-y-6">
@@ -362,6 +191,16 @@ const AdminDashboardTAB = () => {
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [filter, setFilter] = useState<'all' | 'visible' | 'hidden'>('all');
+  const filteredProducts = useMemo(() => {
+    if (filter === 'visible') return localProducts.filter(p => p.visibility);
+    if (filter === 'hidden') return localProducts.filter(p => !p.visibility);
+    return localProducts;
+  }, [localProducts, filter]);
+   const selectedProducts = useMemo(() => {
+      return localProducts.filter(product => selectedIds.includes(product.id));
+    }, [localProducts, selectedIds]);
+
   const { toast } = useToast();
 
   useEffect(() => {
@@ -476,12 +315,19 @@ const AdminDashboardTAB = () => {
   }, []);
 
   const handleDelete = useCallback(async (ids: string[]) => {
+    console.log('DELETE INITIATED - IDs:', ids); // Add this line
     try {
       await deleteProducts(ids);
+      console.log('DELETE SUCCESSFUL'); // Add this line
       setSelectedIds(prev => prev.filter(id => !ids.includes(id)));
       toast({ title: "Success", description: "Products deleted successfully" });
     } catch (error) {
-      toast({ title: "Error", description: "Failed to delete products", variant: "destructive" });
+      console.error('DELETE ERROR:', error); // Add this line
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete products",
+        variant: "destructive"
+      });
     }
   }, [deleteProducts, toast]);
 
@@ -524,9 +370,12 @@ const AdminDashboardTAB = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="products" className="space-y-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <TabsList className="grid grid-cols-3 w-full sm:w-[400px]">
+            <TabsList className="grid grid-cols-4 w-full sm:w-[400px]">
               <TabsTrigger value="products" className="gap-2">
                 <Package className="h-4 w-4" /> Products
+              </TabsTrigger>
+              <TabsTrigger value="selected" className="gap-2" disabled={selectedIds.length === 0}>
+                <CheckCircle className="h-4 w-4" /> Selected ({selectedIds.length})
               </TabsTrigger>
               <TabsTrigger value="analytics" className="gap-2">
                 <BarChart3 className="h-4 w-4" /> Analytics
@@ -571,7 +420,6 @@ const AdminDashboardTAB = () => {
                 icon={<Building className="h-5 w-5" />}
               />
             </div>
-
             <AdminProductTable
                 products={localProducts}
                 onToggleVisibility={handleVisibilityToggle}
@@ -585,6 +433,44 @@ const AdminDashboardTAB = () => {
                     await updateProduct({ originalId, changes });
                   }}
             />
+          </TabsContent>
+          <TabsContent value="selected">
+            <Card>
+              <CardHeader>
+                <CardTitle>Selected Products ({selectedIds.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                <AdminProductTable
+                                products={selectedProducts}
+                                onToggleVisibility={handleVisibilityToggle}
+                                onEdit={handleEdit}
+                                onDelete={handleDelete}
+                                selectedIds={selectedIds}
+                                onSelect={handleSelect}
+                                onExport={() => {
+                                                   // Optional: Export only selected products
+                                                   const headers = ['id', 'Name', 'Salt', 'Company', 'Packing', 'MRP', 'Category'];
+                                                   const data = selectedProducts.map(p => ({
+                                                     id: p.id,
+                                                     Name: p.Name,
+                                                     Salt: p.Salt,
+                                                     Company: p.Company,
+                                                     Packing: p.Packing,
+                                                     MRP: p.MRP,
+                                                     Category: p.Category || ''
+                                                   }));
+                                                   downloadCSV(data, headers, 'selected_products_export.csv');
+                                                 }}
+                                onImport={handleImport}
+                                onSave={async ({ originalId, changes }) => {
+                                    await updateProduct({ originalId, changes });
+                                  }}
+                            />
+                </Table>
+
+            </CardContent>
+           </Card>
           </TabsContent>
 
           <TabsContent value="analytics">

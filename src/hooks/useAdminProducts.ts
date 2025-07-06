@@ -117,6 +117,26 @@ const [products, setProducts] = useState<Product[]>([]);
       }
     };
 
+    const deleteProducts = async (ids: string[]) => {
+      console.log('Attempting to delete products:', ids);
+      try {
+        const { error } = await admin
+          .from('Product')
+          .delete()
+          .in('id', ids);
+
+        if (error) {
+          console.error('Deletion error:', error);
+          throw error;
+        }
+        console.log('Successfully deleted products');
+        await fetchProducts();
+      } catch (error) {
+        console.error('Full deletion error:', error);
+        throw error;
+      }
+    };
+
     const addProduct = async (newProduct: Omit<Product, 'id' | 'visibility'>) => {
         try {
             const productWithDefaults = {
@@ -133,6 +153,6 @@ const [products, setProducts] = useState<Product[]>([]);
         }
     };
 
-    return { products, loading, fetchProducts, applyVisibilityChanges, updateProduct, addProduct };
+    return { products, loading, fetchProducts, applyVisibilityChanges, updateProduct, addProduct, deleteProducts};
 };
 
