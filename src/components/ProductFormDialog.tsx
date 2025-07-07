@@ -1,38 +1,13 @@
-import React, { useMemo, useState, useCallback, useEffect } from 'react';
-import {
-  Card, CardContent, CardHeader, CardTitle, CardDescription
-} from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-  Tabs, TabsList, TabsTrigger, TabsContent
-} from '@/components/ui/tabs';
 import { uploadImageToGithub } from '@/utils/imageUpload';
 import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from '@/components/ui/select';
-import {admin} from '@/integrations/supabase/admin';
-import { downloadCSV, readCSV } from '@/utils/csvUtils';
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
-} from '@/components/ui/alert-dialog';
-import {
-  Trash2, CheckCircle, Download, LogOut, Package, Eye, EyeOff, Building, BarChart3, PlusCircle,
-  Settings, Users, Activity, Filter, Lock, User as UserIcon
-} from 'lucide-react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import AdminProductTable from '@/components/AdminProductTable';
-import { useAdminProducts, Product } from '@/hooks/useAdminProducts';
+import { Product } from '@/hooks/useAdminProducts';
 
 const ProductFormDialog = ({ open, onOpenChange, product, onAdd, onSave }: {
    open: boolean;

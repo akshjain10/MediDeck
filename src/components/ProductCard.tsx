@@ -1,10 +1,7 @@
 
 import React, { useState, useCallback, memo } from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Plus, Minus } from 'lucide-react';
+import { Card, CardContent} from '@/components/ui/card';
 import { Product } from '@/hooks/useProducts';
 
 interface ProductCardProps {
@@ -13,43 +10,8 @@ interface ProductCardProps {
 }
 
 const ProductCard = memo(({ product, onAddToCart }: ProductCardProps) => {
-  const [quantity, setQuantity] = useState(1);
   const [showFullName, setShowFullName] = useState(false);
   const [showFullBrandName, setShowFullBrandName] = useState(false);
-  const [editingQuantity, setEditingQuantity] = useState(false);
-  const [tempQuantity, setTempQuantity] = useState('');
-
-  const handleAddToCart = useCallback(() => {
-    onAddToCart(product, quantity);
-  }, [onAddToCart, product, quantity]);
-
-  const handleQuantityEdit = useCallback(() => {
-    setEditingQuantity(true);
-    setTempQuantity(quantity.toString());
-  }, [quantity]);
-
-  const handleQuantitySubmit = useCallback(() => {
-    const newQuantity = parseInt(tempQuantity);
-    if (newQuantity > 0) {
-      setQuantity(newQuantity);
-    } else {
-      setQuantity(1);
-    }
-    setEditingQuantity(false);
-  }, [tempQuantity]);
-
-  const handleQuantityCancel = useCallback(() => {
-    setEditingQuantity(false);
-    setTempQuantity('');
-  }, []);
-
-  const increaseQuantity = useCallback(() => {
-    setQuantity(prev => prev + 1);
-  }, []);
-
-  const decreaseQuantity = useCallback(() => {
-    setQuantity(prev => Math.max(1, prev - 1));
-  }, []);
 
   const getDisplayName = useCallback((text: string, maxLength: number, showFull: boolean, setShowFull: (show: boolean) => void) => {
     if (text.length <= maxLength || showFull) {
