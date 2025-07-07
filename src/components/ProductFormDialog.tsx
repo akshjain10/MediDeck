@@ -38,7 +38,7 @@ const ProductFormDialog = ({ open, onOpenChange, product, onAdd, onSave }: {
    open: boolean;
    onOpenChange: (open: boolean) => void;
    product: Product | null;
-   onSave: (params: { originalId: string; changes: Partial<Product> }) => void;
+   onSave: (product: Partial<Product>) => void;
    onAdd: (product: Partial<Product>) => void;
  }) => {
    const [formData, setFormData] = useState<Partial<Product>>({

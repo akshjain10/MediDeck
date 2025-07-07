@@ -1,159 +1,199 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search } from 'lucide-react';
-import { useProducts } from '@/hooks/useProducts';
-import { Link } from "react-router-dom";
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import Cart from '@/components/Cart';
-import { CartItem } from '@/types/cart';
+
+import React, { useState } from 'react';
+import Header from '@/components/Header';
+import OrderSuccess from '@/components/OrderSuccess';
+import EnquiryForm, { EnquiryData } from '@/components/EnquiryForm';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import { Link } from 'react-router-dom';
+import { Search, ShoppingBag, Phone, Mail } from 'lucide-react';
+import { useCartPersistence } from '@/hooks/useCartPersistence';
+
 
 const Index = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
   const [showCart, setShowCart] = useState(false);
-  const { products, loading, error } = useProducts();
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [showOrderSuccess, setShowOrderSuccess] = useState(false);
+  const [showEnquiryForm, setShowEnquiryForm] = useState(false);
+  const [orderNumber, setOrderNumber] = useState('');
+  const { toast } = useToast();
+  const { cartItems, setCartItems, clearCart } = useCartPersistence();
 
-  const addToCart = (product: any) => {
-    setCartItems(prev => {
-      const existingItem = prev.find(item => item.id === product.id);
-      if (existingItem) {
-        return prev.map(item =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-      return [...prev, {
-        id: product.id,
-        name: product.name,
-        brandName: product.brandName,
-        mrp: product.mrp,
-        quantity: 1,
-        image: product.image
-      }];
-    });
+
+
+  const handleSetCartItems = (items: CartItem[]) => {
+    setCartItems(items);
   };
 
-  const updateCartQuantity = (id: string, quantity: number) => {
+  const updateQuantity = (id: string, quantity: number) => {
     if (quantity === 0) {
       removeFromCart(id);
-    } else {
-      setCartItems(prev =>
-        prev.map(item =>
-          item.id === id ? { ...item, quantity } : item
-        )
-      );
+      return;
     }
+    setCartItems(prev =>
+      prev.map(item =>
+        item.id === id ? { ...item, quantity } : item
+      )
+    );
   };
 
   const removeFromCart = (id: string) => {
     setCartItems(prev => prev.filter(item => item.id !== id));
   };
 
-  useEffect(() => {
-    if (searchTerm) {
-      const results = products.filter(product =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.brandName.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setSearchResults(results);
-    } else {
-      setSearchResults(products);
-    }
-  }, [searchTerm, products]);
+  const placeOrder = () => {
+    const orderNum = Math.random().toString(36).substr(2, 9).toUpperCase();
+    setOrderNumber(orderNum);
+    setCartItems([]);
+    setShowCart(false);
+    setShowOrderSuccess(true);
+  };
 
-  if (loading) {
-    return <div className="flex justify-center items-center h-screen">Loading products...</div>;
-  }
+  const handleEnquirySubmit = (enquiry: EnquiryData) => {
+    console.log('Enquiry submitted:', enquiry);
+    toast({
+      title: "Enquiry Submitted",
+      description: "We have received your enquiry and will contact you soon.",
+    });
+    setShowEnquiryForm(false);
+  };
 
-  if (error) {
-    return <div className="flex justify-center items-center h-screen text-red-500">Error: {error}</div>;
-  }
+  const cartItemsCount = cartItems.length;
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-md">
-        <div className="container mx-auto py-4 px-5 flex items-center justify-between">
-          <Link to="/" className="text-2xl font-bold text-primary">
-            Arihant Medigens
-          </Link>
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <Input
-                type="search"
-                placeholder="Search products..."
-                className="px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:border-primary"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            </div>
-            <Button onClick={() => setShowCart(true)} variant="outline">
-              View Cart ({cartItems.length})
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <section className="bg-primary-foreground py-20">
-        <div className="container mx-auto text-center">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">
-            Welcome to Arihant Medigens
-          </h1>
-          <p className="text-lg text-gray-600">
-            Your trusted source for quality medicines and healthcare products.
-          </p>
-        </div>
-      </section>
-
-      <section className="container mx-auto py-12 px-5">
-        <h2 className="text-3xl font-semibold text-gray-800 mb-6">
-          Our Products
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {searchResults.map((product) => (
-            <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-              <img
-                src={`images/products/${product.id}.webp`}
-                alt={product.name}
-                className="w-full h-48 object-cover"
-              />
-              <div className="p-4">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                  {product.brandName}
-                </h3>
-                <p className="text-gray-600 text-sm mb-2">{product.name}</p>
-                <div className="flex items-center justify-between">
-                  <span className="text-primary font-bold text-xl">₹{product.mrp}</span>
-                  <Button onClick={() => addToCart(product)} variant="outline">Add to Cart</Button>
-                </div>
-                <Separator className="my-2" />
-                <div className="flex flex-wrap gap-1">
-                  <Badge className="bg-secondary-foreground border-secondary text-xs">
-                    {product.category}
-                  </Badge>
-                </div>
-                <Link to={`/product/${product.id}`} className="block mt-4 text-sm text-primary hover:underline">
-                  View Details
+      <Header
+        cartItemsCount={cartItemsCount}
+        onCartClick={() => setShowCart(true)}
+        onSetCartItems={handleSetCartItems}
+      />
+      
+      <main>
+        {/* Hero Section with Background */}
+        <section 
+          className="relative bg-cover bg-center bg-no-repeat min-h-[80vh] flex items-center"
+          style={{
+            backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url("https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1920&h=1080&fit=crop")'
+          }}
+        >
+          <div className="container mx-auto px-4 text-white">
+            <div className="max-w-3xl">
+              <h1 className="text-5xl md:text-6xl font-bold mb-6">
+                Your Trusted Medical Supplies Partner
+              </h1>
+              <p className="text-xl md:text-2xl mb-8 opacity-90">
+                Quality medical equipment and supplies delivered to your doorstep with care and reliability
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link to="/products">
+                  <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-4">
+                    <ShoppingBag className="mr-2" />
+                    Browse Products
+                  </Button>
                 </Link>
+                <Button
+                  onClick={() => setShowEnquiryForm(true)}
+                  variant="outline"
+                  size="lg"
+                  className="bg-white/10 border-white text-white hover:bg-white/20 text-lg px-8 py-4"
+                >
+                  Request Enquiry
+                </Button>
               </div>
             </div>
-          ))}
-        </div>
-      </section>
-      
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section className="py-20 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-bold mb-4">Why Choose Us?</h2>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                We provide comprehensive medical solutions with a commitment to quality and service excellence
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <Card className="text-center p-8 hover:shadow-lg transition-shadow">
+                <CardContent>
+                  <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span className="text-3xl">🚚</span>
+                  </div>
+                  <h3 className="text-2xl font-semibold mb-4">Fast Delivery</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Quick and reliable delivery to your location with real-time tracking and updates
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card className="text-center p-8 hover:shadow-lg transition-shadow">
+                <CardContent>
+                  <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span className="text-3xl">✅</span>
+                  </div>
+                  <h3 className="text-2xl font-semibold mb-4">Quality Products</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Certified and genuine medical supplies from trusted manufacturers worldwide
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card className="text-center p-8 hover:shadow-lg transition-shadow">
+                <CardContent>
+                  <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span className="text-3xl">💬</span>
+                  </div>
+                  <h3 className="text-2xl font-semibold mb-4">24/7 Support</h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    Always available to help with your queries and provide expert guidance
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
+
+        {/* Contact Section */}
+        {/*<section className="py-16 bg-gray-100">
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="text-3xl font-bold mb-8">Get In Touch</h2>
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-8">
+              <div className="flex items-center gap-3">
+                <Phone className="text-blue-600" />
+                <span className="text-lg">+91 98765 43210</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Mail className="text-blue-600" />
+                <span className="text-lg">info@medicareplus.com</span>
+              </div>
+            </div>
+          </div>
+        </section>*/}
+      </main>
+
       {showCart && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Cart
-            items={cartItems}
-            onUpdateQuantity={updateCartQuantity}
-            onRemoveItem={removeFromCart}
-            onClose={() => setShowCart(false)}
-          />
-        </div>
+        <Cart
+          items={cartItems}
+          onUpdateQuantity={updateQuantity}
+          onRemoveItem={removeFromCart}
+          onPlaceOrder={placeOrder}
+          onClose={() => setShowCart(false)}
+        />
+      )}
+
+      {showOrderSuccess && (
+        <OrderSuccess
+          orderNumber={orderNumber}
+          onClose={() => setShowOrderSuccess(false)}
+        />
+      )}
+
+      {showEnquiryForm && (
+        <EnquiryForm
+          onClose={() => setShowEnquiryForm(false)}
+          onSubmit={handleEnquirySubmit}
+        />
       )}
     </div>
   );

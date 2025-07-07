@@ -1,7 +1,7 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { admin } from '@/integrations/supabase/admin';
 import { useToast } from '@/hooks/use-toast';
+import { Product } from '@/hooks/useProducts';
 
 export interface Product {
     id: string;
@@ -40,6 +40,13 @@ const [products, setProducts] = useState<Product[]>([]);
         fetchProducts();
     }, [fetchProducts]);
 
+    const handleVisibilityToggle = (productId: string, isVisible: boolean) => {
+      setLocalProducts(prev =>
+        prev.map(p => p.id === productId ? { ...p, visibility: isVisible } : p)
+      );
+      setPendingVisChanges(prev => ({ ...prev, [productId]: isVisible }));
+    };
+
     const applyVisibilityChanges = async (changes: Record<string, boolean>) => {
         try {
             const updates = Object.entries(changes).map(([id, visibility]) =>
@@ -56,6 +63,7 @@ const [products, setProducts] = useState<Product[]>([]);
         }
     };
 
+    // Update the updateProduct function signature
     const updateProduct = async (params: {
       originalId: string;
       changes: Partial<Product>;
@@ -67,7 +75,7 @@ const [products, setProducts] = useState<Product[]>([]);
         if (changes.id && changes.id !== originalId) {
           // 1. Check if new ID already exists
           const { data: existing } = await admin
-            .from('Product')
+            .from('Product') // Changed from 'products' to 'Product' to match your table name
             .select('id')
             .eq('id', changes.id)
             .maybeSingle();
@@ -154,3 +162,4 @@ const [products, setProducts] = useState<Product[]>([]);
 
     return { products, loading, fetchProducts, applyVisibilityChanges, updateProduct, addProduct, deleteProducts};
 };
+
