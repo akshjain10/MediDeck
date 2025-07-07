@@ -1,8 +1,8 @@
-
 import React, { useState, useCallback, memo } from 'react';
 import { Link } from 'react-router-dom';
-import { Card, CardContent} from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Product } from '@/hooks/useProducts';
+import { ProductImage } from './ProductImage'; // Import the new component
 
 interface ProductCardProps {
   product: Product;
@@ -18,13 +18,11 @@ const ProductCard = memo(({ product, onAddToCart }: ProductCardProps) => {
       return text;
     }
     
-    // Check if text would exceed 2 lines (approximately 80 characters for 2 lines)
     const twoLineLimit = 80;
     if (text.length <= twoLineLimit) {
       return text;
     }
     
-    // Find the last complete word before maxLength
     const truncated = text.substring(0, maxLength);
     const lastSpaceIndex = truncated.lastIndexOf(' ');
     const cutPoint = lastSpaceIndex > 0 ? lastSpaceIndex : maxLength;
@@ -47,11 +45,10 @@ const ProductCard = memo(({ product, onAddToCart }: ProductCardProps) => {
     <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-300">
       <Link to={`/product/${product.id}`} className="block" onClick={() => window.scrollTo(0, 0)}>
         <div className="overflow-hidden rounded-t-lg h-48 flex items-center justify-center bg-gray-50">
-          <img
-            src={`/images/products/${product.id}.webp`}
-            alt={product.brandName}
-            className="max-w-full max-h-full object-contain hover:scale-105 transition-transform duration-300"
-            loading="lazy"
+          <ProductImage 
+            productId={product.id} 
+            altText={product.brandName}
+            className="hover:scale-105 transition-transform duration-300"
           />
         </div>
       </Link>

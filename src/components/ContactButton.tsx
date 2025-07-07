@@ -1,17 +1,19 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Phone, MessageCircle, X } from 'lucide-react';
+import { Phone, X } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faWhatsapp } from '@fortawesome/free-brands-svg-icons';
 
 const ContactButton = () => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const handleCall = () => {
-    window.open('tel:+918209703661', '_self');
+    window.open('tel:+919856686156', '_self');
   };
 
   const handleWhatsApp = () => {
-    window.open('https://api.whatsapp.com/send/?phone=918209703661&text=Hello, I would like to inquire about your products.', '_blank');
+    window.open('https://api.whatsapp.com/send/?phone=919856686156&text=Hello, I would like to inquire about your products.', '_blank');
   };
 
   return (
@@ -32,7 +34,7 @@ const ContactButton = () => {
               className="w-12 h-12 bg-green-600 hover:bg-green-700 text-white rounded-full p-3 shadow-lg animate-in slide-in-from-bottom-5 duration-300"
               size="sm"
             >
-              <MessageCircle className="w-5 h-5" />
+            <FontAwesomeIcon icon={faWhatsapp} className="w-5 h-5" />
             </Button>
           </>
         )}

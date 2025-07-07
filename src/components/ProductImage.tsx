@@ -1,29 +1,50 @@
-
-import React from 'react';
-import { Badge } from '@/components/ui/badge';
+import { useState, useEffect } from 'react';
 
 interface ProductImageProps {
-  product: {
-    id: string;
-    image: string;
-    brandName: string;
-    category: string;
-  };
+  productId: string;
+  altText: string;
+  className?: string;
 }
 
-const ProductImage = ({ product }: ProductImageProps) => {
+export const ProductImage = ({ productId, altText, className = '' }: ProductImageProps) => {
+  const [currentImageSrc, setCurrentImageSrc] = useState('');
+
+  // Supported image extensions in order of preference
+  const supportedExtensions = ['webp', 'png', 'jpg', 'jpeg'];
+
+  useEffect(() => {
+    const tryExtensions = async () => {
+      for (const extension of supportedExtensions) {
+        const testSrc = `/images/products/${productId}.${extension}`;
+        const exists = await checkImageExists(testSrc);
+        if (exists) {
+          setCurrentImageSrc(testSrc);
+          return;
+        }
+      }
+      // If none found, use default
+      setCurrentImageSrc('/images/products/default.webp');
+    };
+
+    tryExtensions();
+  }, [productId]);
+
+  const checkImageExists = (url: string): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(true);
+      img.onerror = () => resolve(false);
+      img.src = url;
+    });
+  };
+
   return (
-    <div className="space-y-4">
-      <Badge variant="secondary">{product.category}</Badge>
-      <div className="overflow-hidden rounded-lg bg-white p-8 max-w-lg mx-auto flex items-center justify-center" style={{ minHeight: '400px' }}>
-        <img
-          src={`/images/products/${product.id}.webp`}
-          alt={product.brandName}
-          className="max-w-full max-h-full object-contain rounded"
-        />
-      </div>
-    </div>
+    <img
+      src={currentImageSrc}
+      alt={altText}
+      className={`${className}`}
+      loading="lazy"
+      onError={() => setCurrentImageSrc('/images/products/default.webp')}
+    />
   );
 };
-
-export default ProductImage;
