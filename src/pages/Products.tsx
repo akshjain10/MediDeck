@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import Header from '@/components/Header';
 import ProductCard from '@/components/ProductCard';
-import Cart, { CartItem } from '@/components/Cart';
+import Cart from '@/components/Cart';
 import OrderSuccess from '@/components/OrderSuccess';
 import EnquiryForm, { EnquiryData } from '@/components/EnquiryForm';
 import { Button } from '@/components/ui/button';

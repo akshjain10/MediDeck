@@ -25,7 +25,6 @@ const WhatsAppIntegration = ({ cartItems, onSuccess }: WhatsAppIntegrationProps)
       total += itemTotal;
       message += `${index + 1}. ${item.name}-`;
       message += `${item.quantity} pc\n`;
-      //message += `   Company: ${item.company}\n\n`;
     });
 
     message += `\n🕒 Order Time: ${new Date().toLocaleString()}`;
@@ -33,7 +32,6 @@ const WhatsAppIntegration = ({ cartItems, onSuccess }: WhatsAppIntegrationProps)
     // Encode message for WhatsApp URL
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = "https://api.whatsapp.com/send/?phone=" + WHATSAPP_NUMBER + "&text=" + encodedMessage;
-    //const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
 
     // Open WhatsApp
     window.open(whatsappUrl, '_blank');

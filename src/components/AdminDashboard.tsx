@@ -22,14 +22,10 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 import {
-  Upload, Trash2, CheckCircle, Download, LogOut, Package, Eye, EyeOff, Building, BarChart3, PlusCircle,
-  Settings, Users, Activity, Filter, Lock, User as UserIcon
+  Upload, CheckCircle, Download, LogOut, Package, Eye, EyeOff, Building, BarChart3, PlusCircle,
+  Settings, Users, Activity
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import AdminProductTable from '@/components/AdminProductTable';

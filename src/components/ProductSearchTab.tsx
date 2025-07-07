@@ -1,20 +1,16 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Search, Loader2 } from 'lucide-react';
-import { useProducts, Product } from '@/hooks/useProducts';
+import { useProducts} from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
-// import EnquiryForm, { EnquiryData } from '@/components/EnquiryForm';
 
 const ProductSearchTab = () => {
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  // const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  // const [showEnquiryForm, setShowEnquiryForm] = useState(false);
   const { products, loading, error } = useProducts();
   const { toast } = useToast();
 
@@ -48,33 +44,6 @@ const ProductSearchTab = () => {
       (product.salt && product.salt.toLowerCase().includes(query))
     );
   }, [products, searchQuery]);
-
-  // const handleOrderProduct = (product: Product) => {
-  //   setSelectedProduct(product);
-  //   setShowEnquiryForm(true);
-  // };
-
-  // const handleEnquirySubmit = (enquiry: EnquiryData) => {
-  //   let message = "🛒 Product Order Request\n\n";
-  //   message += `Name: ${enquiry.name}\n`;
-  //   message += `Email: ${enquiry.email}\n`;
-  //   message += `Phone: ${enquiry.phone}\n`;
-  //   message += `Product: ${enquiry.productName}\n`;
-  //   if (enquiry.description) {
-  //     message += `Requirements: ${enquiry.description}\n`;
-  //   }
-
-  //   const encodedMessage = encodeURIComponent(message);
-  //   const whatsappUrl = `https://api.whatsapp.com/send/?phone=918209703661&text=${encodedMessage}`;
-    
-  //   window.open(whatsappUrl, '_blank');
-  //   toast({
-  //     title: "Order Request Sent",
-  //     description: "Your order request has been sent via WhatsApp!",
-  //   });
-  //   setShowEnquiryForm(false);
-  //   setSelectedProduct(null);
-  // };
 
   return (
     <div className="space-y-6">
@@ -164,16 +133,6 @@ const ProductSearchTab = () => {
                     <TableCell>{product.company}</TableCell>
                     <TableCell>{product.salt || '-'}</TableCell>
                     <TableCell className="font-semibold">₹{product.mrp}</TableCell>
-                    {/* <TableCell>
-                      <Button
-                        size="sm"
-                        onClick={() => handleOrderProduct(product)}
-                        className="flex items-center space-x-1"
-                      >
-                        <MessageSquare className="w-3 h-3" />
-                        <span>Order</span>
-                      </Button>
-                    </TableCell> */}
                   </TableRow>
                 ))}
               </TableBody>
@@ -182,16 +141,6 @@ const ProductSearchTab = () => {
         </Card>
       )}
 
-      {/* {showEnquiryForm && selectedProduct && (
-        <EnquiryForm
-          onClose={() => {
-            setShowEnquiryForm(false);
-            setSelectedProduct(null);
-          }}
-          onSubmit={handleEnquirySubmit}
-          productName={selectedProduct.brandName}
-        />
-      )} */}
     </div>
   );
 };

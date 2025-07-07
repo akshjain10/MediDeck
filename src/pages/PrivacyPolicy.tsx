@@ -1,21 +1,12 @@
 
 import { useLocation } from "react-router-dom";
-import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import WhatsAppIntegration from '@/components/WhatsAppIntegration';
-import { Search, Loader2 } from 'lucide-react';
-import { useProducts, Product } from '@/hooks/useProducts';
-import { useToast } from '@/hooks/use-toast';
+import React, { useEffect} from 'react';
 import { useCartPersistence } from '@/hooks/useCartPersistence';
 import Header from '@/components/Header';
-import Cart from '@/components/Cart';
 
 const PrivacyPolicy = () => {
   const location = useLocation();
-  const { cartItems, setCartItems, clearCart } = useCartPersistence();
+  const { cartItems, setCartItems} = useCartPersistence();
 
   useEffect(() => {
     console.error(
