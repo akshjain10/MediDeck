@@ -5,79 +5,55 @@ interface ProductImageProps {
   productId: string;
   altText: string;
   className?: string;
-  containerClassName?: string;
 }
-
-// Preload the default image at module level
-const DEFAULT_IMAGE_SRC = '/images/products/default.webp';
-const defaultImage = new Image();
-defaultImage.src = DEFAULT_IMAGE_SRC;
 
 export const ProductImage = ({
   productId,
   altText,
-  className = '',
-  containerClassName = ''
+  className = ''
 }: ProductImageProps) => {
   const [imgSrc, setImgSrc] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(true);
   const currentProductIdRef = useRef<string>('');
-  const retryTimeoutRef = useRef<NodeJS.Timeout>();
 
-  const supportedExtensions = ['webp', 'png', 'jpg', 'jpeg'];
-  const maxRetries = 2; // Reduced from 3 to speed up fallback
+  useEffect(() => {
+    currentProductIdRef.current = productId;
 
-  const clearRetryTimeout = () => {
-    if (retryTimeoutRef.current) {
-      clearTimeout(retryTimeoutRef.current);
-    }
-  };
-
-  const tryLoadImage = async (productId: string, retryCount = 0) => {
-    clearRetryTimeout();
-
-    if (!productId || currentProductIdRef.current !== productId) {
+    if (!productId) {
+      setImgSrc('/images/products/default.webp');
       return;
     }
 
-    setIsLoading(true);
+    // Try different image extensions
+    const extensions = ['webp', 'png', 'jpg', 'jpeg'];
+    let active = true;
 
-    // First try to load the product image
-    let foundImage = false;
-    for (const extension of supportedExtensions) {
-      const testSrc = `/images/products/${productId}.${extension}`;
-
-      try {
-        const exists = await checkImageExists(testSrc);
-        if (exists && currentProductIdRef.current === productId) {
-          setImgSrc(testSrc);
-          setIsLoading(false);
-          foundImage = true;
-          return;
+    const checkImage = async () => {
+      for (const ext of extensions) {
+        const src = `/images/products/${productId}.${ext}`;
+        try {
+          const exists = await imageExists(src);
+          if (exists && currentProductIdRef.current === productId) {
+            if (active) setImgSrc(src);
+            return;
+          }
+        } catch (error) {
+          console.error('Error checking image:', error);
         }
-      } catch (error) {
-        console.error('Error checking image:', error);
       }
-    }
+      if (active && currentProductIdRef.current === productId) {
+        setImgSrc('/images/products/default.webp');
+      }
+    };
 
-    // If no image found and we still have retries
-    if (!foundImage && retryCount < maxRetries && currentProductIdRef.current === productId) {
-      retryTimeoutRef.current = setTimeout(
-        () => tryLoadImage(productId, retryCount + 1),
-        200 * (retryCount + 1) // Reduced delay between retries
-      );
-      return;
-    }
+    checkImage();
 
-    // If we get here, use the preloaded default image
-    if (currentProductIdRef.current === productId) {
-      setImgSrc(DEFAULT_IMAGE_SRC);
-      setIsLoading(false);
-    }
-  };
+    return () => {
+      active = false;
+      currentProductIdRef.current = '';
+    };
+  }, [productId]);
 
-  // Optimized image check with timeout
-  const checkImageExists = (src: string): Promise<boolean> => {
+  const imageExists = (url: string): Promise<boolean> => {
     return new Promise((resolve) => {
       const img = new Image();
       const timer = setTimeout(() => {
@@ -93,53 +69,17 @@ export const ProductImage = ({
         clearTimeout(timer);
         resolve(false);
       };
-      img.src = src;
+      img.src = url;
     });
   };
 
-  useEffect(() => {
-    currentProductIdRef.current = productId;
-
-    if (!productId) {
-      setImgSrc(DEFAULT_IMAGE_SRC);
-      setIsLoading(false);
-      return;
-    }
-
-    setImgSrc('');
-    setIsLoading(true);
-    tryLoadImage(productId);
-
-    return () => {
-      currentProductIdRef.current = '';
-      clearRetryTimeout();
-    };
-  }, [productId]);
-
-  const handleError = () => {
-    if (currentProductIdRef.current === productId) {
-      setImgSrc(DEFAULT_IMAGE_SRC);
-      setIsLoading(false);
-    }
-  };
-
   return (
-    <div className={`relative flex items-center justify-center ${containerClassName}`}>
-      {isLoading && (
-        <div className="absolute inset-0 bg-gray-100 animate-pulse rounded" />
-      )}
-
-      {imgSrc && (
-        <img
-          src={imgSrc}
-          alt={altText}
-          className={`max-w-full max-h-full object-contain ${className} ${
-            isLoading ? 'opacity-0' : 'opacity-100'
-          } transition-opacity duration-200`} // Reduced transition duration
-          loading={imgSrc === DEFAULT_IMAGE_SRC ? 'eager' : 'lazy'} // Eager load default image
-          onError={handleError}
-        />
-      )}
-    </div>
+    <img
+      src={imgSrc}
+      alt={altText}
+      className={`max-w-full max-h-full object-contain ${className}`}
+      loading="lazy"
+      onError={() => setImgSrc('/images/products/default.webp')}
+    />
   );
 };

@@ -13,6 +13,7 @@ import { useProducts, Product } from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
 import { useCartPersistence } from '@/hooks/useCartPersistence';
 import { areProductsSimilar } from '@/utils/stringUtils';
+import { Badge } from '@/components/ui/badge';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -170,11 +171,20 @@ const ProductDetail = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          <ProductImage
-           productId={product.id}
-           altText={product.name}
-           className="max-w-full max-h-full object-contain rounded"
-          />
+          <div className="space-y-4">
+            <Badge variant="secondary">{product.category}</Badge>
+            <div
+              className="overflow-hidden rounded-lg bg-white p-8 max-w-lg mx-auto flex items-center justify-center"
+              style={{ minHeight: '400px' }}
+            >
+              <ProductImage
+                productId={product.id}
+                altText={product.brandName}
+                className="max-w-full max-h-full object-contain rounded"
+                containerClassName="w-full h-full"
+              />
+            </div>
+          </div>
           <ProductInfo
             product={product}
             quantity={quantity}

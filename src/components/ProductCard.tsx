@@ -48,7 +48,7 @@ const ProductCard = memo(({ product, onAddToCart }: ProductCardProps) => {
           <ProductImage 
             productId={product.id} 
             altText={product.brandName}
-            className="hover:scale-105 transition-transform duration-300"
+            className="max-w-full max-h-full object-contain hover:scale-105 transition-transform duration-300"
           />
         </div>
       </Link>
