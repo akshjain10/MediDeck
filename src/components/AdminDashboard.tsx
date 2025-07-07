@@ -514,6 +514,22 @@ const AdminDashboardTAB = () => {
     setIsFormOpen(true);
   };
 
+  const handleProductSave = async (params: { originalId: string; changes: Partial<Product> }) => {
+    await updateProduct(params);
+  };
+
+  const handleProductAdd = async (newProduct: Partial<Product>) => {
+    const productData = {
+      Name: newProduct.Name || '',
+      Salt: newProduct.Salt || '',
+      Company: newProduct.Company || '',
+      Packing: newProduct.Packing || '',
+      MRP: newProduct.MRP || 0,
+      Category: newProduct.Category || ''
+    };
+    await addProduct(productData);
+  };
+
   if (loading) return <div className="flex justify-center items-center h-64">Loading...</div>;
 
   const pendingChangeCount = Object.keys(pendingVisChanges).length;
@@ -623,9 +639,7 @@ const AdminDashboardTAB = () => {
                 pendingChanges={pendingVisChanges}
                 onExport={handleExport}
                 onImport={handleImport}
-                onSave={async ({ originalId, changes }) => {
-                    await updateProduct({ originalId, changes });
-                  }}
+                onSave={handleProductSave}
             />
           </TabsContent>
           <TabsContent value="selected">
@@ -634,37 +648,30 @@ const AdminDashboardTAB = () => {
                 <CardTitle>Selected Products ({selectedIds.length})</CardTitle>
               </CardHeader>
               <CardContent>
-                <Table>
                 <AdminProductTable
-                                products={selectedProducts}
-                                onToggleVisibility={handleVisibilityToggle}
-                                onEdit={handleEdit}
-                                onDelete={handleDelete}
-                                selectedIds={selectedIds}
-                                onSelect={handleSelect}
-                                pendingChanges={pendingVisChanges}
-                                onExport={() => {
-                                                   // Optional: Export only selected products
-                                                   const headers = ['id', 'Name', 'Salt', 'Company', 'Packing', 'MRP', 'Category'];
-                                                   const data = selectedProducts.map(p => ({
-                                                     id: p.id,
-                                                     Name: p.Name,
-                                                     Salt: p.Salt,
-                                                     Company: p.Company,
-                                                     Packing: p.Packing,
-                                                     MRP: p.MRP,
-                                                     Category: p.Category || ''
-                                                   }));
-                                                   downloadCSV(data, headers, 'selected_products_export.csv');
-                                                 }}
-                                onImport={handleImport}
-                                onSave={async ({ originalId, changes }) => {
-                                    await updateProduct({ originalId, changes });
-                                  }}
-                            />
-                </Table>
-
-            </CardContent>
+                    products={selectedProducts}
+                    onToggleVisibility={handleVisibilityToggle}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    selectedIds={selectedIds}
+                    onSelect={handleSelect}
+                    pendingChanges={pendingVisChanges}
+                    onExport={() => {
+                       const headers = ['id', 'Name', 'Salt', 'Company', 'Packing', 'MRP', 'Category'];
+                       const data = selectedProducts.map(p => ({
+                         id: p.id,
+                         Name: p.Name,
+                         Salt: p.Salt,
+                         Company: p.Company,
+                         Packing: p.Packing,
+                         MRP: p.MRP,
+                         Category: p.Category || ''
+                       }));
+                       downloadCSV(data, headers, 'selected_products_export.csv');
+                     }}
+                    onImport={handleImport}
+                />
+              </CardContent>
            </Card>
           </TabsContent>
 
@@ -690,8 +697,8 @@ const AdminDashboardTAB = () => {
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
         product={currentProduct}
-        onSave={updateProduct}
-        onAdd={addProduct}
+        onSave={handleProductSave}
+        onAdd={handleProductAdd}
       />
 
       <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>

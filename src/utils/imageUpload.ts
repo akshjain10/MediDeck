@@ -30,7 +30,96 @@ export const uploadImageToGithub = async ({
   path = 'images/products',
   branch = 'main'
 }: UploadImageParams): Promise<string> => {
-  // ... existing single image upload implementation ...
+  try {
+    if (!image || !imageName || !repo || !owner) {
+      throw new Error('Missing required parameters');
+    }
+
+    const token = import.meta.env.VITE_GITHUB_TOKEN;
+    if (!token) {
+      throw new Error('GitHub token is not configured');
+    }
+
+    const octokit = new Octokit({
+      auth: token,
+      request: {
+        retries: 3,
+        retryAfter: 5
+      }
+    });
+
+    // Convert image to base64
+    const content = await new Promise<ArrayBuffer>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as ArrayBuffer);
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsArrayBuffer(image);
+    });
+
+    const contentEncoded = Buffer.from(content).toString('base64');
+    const filePath = `${path}/${imageName}.webp`;
+
+    // Create blob
+    const { data: blobData } = await octokit.rest.git.createBlob({
+      owner,
+      repo,
+      content: contentEncoded,
+      encoding: 'base64',
+    });
+
+    // Get current branch reference
+    const { data: refData } = await octokit.rest.git.getRef({
+      owner,
+      repo,
+      ref: `heads/${branch}`,
+    });
+
+    // Get current commit
+    const { data: commitData } = await octokit.rest.git.getCommit({
+      owner,
+      repo,
+      commit_sha: refData.object.sha,
+    });
+
+    // Create new tree
+    const { data: newTreeData } = await octokit.rest.git.createTree({
+      owner,
+      repo,
+      tree: [{
+        path: filePath,
+        mode: '100644',
+        type: 'blob',
+        sha: blobData.sha,
+      }],
+      base_tree: commitData.tree.sha,
+    });
+
+    // Create new commit
+    const { data: newCommitData } = await octokit.rest.git.createCommit({
+      owner,
+      repo,
+      message: `Upload product image: ${imageName}`,
+      tree: newTreeData.sha,
+      parents: [commitData.sha],
+    });
+
+    // Update reference
+    await octokit.rest.git.updateRef({
+      owner,
+      repo,
+      ref: `heads/${branch}`,
+      sha: newCommitData.sha,
+    });
+
+    return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filePath}`;
+  } catch (error) {
+    console.error('GitHub upload error:', error);
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : 'Failed to upload image to GitHub'
+    );
+  }
 };
 
 export const bulkUploadImagesToGithub = async ({
