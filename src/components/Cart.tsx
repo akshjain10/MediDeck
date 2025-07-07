@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Trash2, Plus, Minus } from 'lucide-react';
 import WhatsAppIntegration from '@/components/WhatsAppIntegration';
+import {ProductImage} from '@/components/ProductImage';
 
 export interface CartItem {
   id: string;
@@ -81,11 +82,12 @@ const Cart = ({ items, onUpdateQuantity, onRemoveItem, onPlaceOrder, onClose }: 
                   {items.map((item) => (
                     <div key={item.id} className="flex items-center space-x-2 sm:space-x-4 p-2 sm:p-4 border rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow">
                       <div className="flex-shrink-0">
-                        <img
-                          src={`/images/products/${item.id}.webp`}
-                          alt={item.name}
+                        <ProductImage
+                          productId={item.id}
+                          altText={item.name}
                           className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 object-contain rounded-lg bg-gray-50 p-1 sm:p-2"
                         />
+
                       </div>
                       
                       <div className="flex-1 min-w-0">

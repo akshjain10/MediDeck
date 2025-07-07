@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Product } from '@/hooks/useAdminProducts';
+import {ProductImage} from '@/components/ProductImage'
 
 const ProductFormDialog = ({ open, onOpenChange, product, onAdd, onSave }: {
    open: boolean;
@@ -230,14 +231,11 @@ const ProductFormDialog = ({ open, onOpenChange, product, onAdd, onSave }: {
                    className="object-contain h-full w-full p-4"
                  />
                ) : formData.id ? (
-                 <img
-                   src={`images/products/${formData.id}.webp`}
-                   alt="Current Product"
+                 <ProductImage
+                   productId={formData.id}
+                   altText={formData.name}
                    className="object-contain h-full w-full p-4"
-                   onError={(e) => {
-                     (e.currentTarget as HTMLImageElement).style.display = 'none';
-                   }}
-                 />
+                  />
                ) : (
                  <div className="text-muted-foreground text-center p-4">
                    No image uploaded

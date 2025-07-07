@@ -10,7 +10,6 @@ import { useToast } from '@/hooks/use-toast';
 interface HeaderProps {
   cartItemsCount: number;
   onCartClick: () => void;
-  onSetCartItems: (items: CartItem[]) => void;
 }
 
 const Header = ({ cartItemsCount, onCartClick }: HeaderProps) => {
@@ -35,7 +34,7 @@ const Header = ({ cartItemsCount, onCartClick }: HeaderProps) => {
     }
 
     const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://api.whatsapp.com/send/?phone=918209703661&text=${encodedMessage}`;
+    const whatsappUrl = `https://api.whatsapp.com/send/?phone=919856686156&text=${encodedMessage}`;
     
     window.open(whatsappUrl, '_blank');
     toast({

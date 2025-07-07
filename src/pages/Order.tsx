@@ -130,7 +130,7 @@ const Order = () => {
   };
 
   const placeOrder = () => {
-    const WHATSAPP_NUMBER = '918209703661'; // Updated number
+    const WHATSAPP_NUMBER = '919856686156'; // Updated number
 
     if (cartItems.length === 0) {
       toast({

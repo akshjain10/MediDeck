@@ -11,7 +11,7 @@ interface ProductEnquiryProps {
 }
 
 const ProductEnquiry = ({ product, quantity, onSuccess }: ProductEnquiryProps) => {
-  const WHATSAPP_NUMBER = "918209703661";
+  const WHATSAPP_NUMBER = "919856686156";
 
   const sendProductEnquiry = () => {
     // Create enquiry message

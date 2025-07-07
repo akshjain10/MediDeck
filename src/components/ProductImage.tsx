@@ -1,29 +1,85 @@
-
-import React from 'react';
-import { Badge } from '@/components/ui/badge';
+// components/ProductImage.tsx
+import { useState, useEffect, useRef } from 'react';
 
 interface ProductImageProps {
-  product: {
-    id: string;
-    image: string;
-    brandName: string;
-    category: string;
-  };
+  productId: string;
+  altText: string;
+  className?: string;
 }
 
-const ProductImage = ({ product }: ProductImageProps) => {
+export const ProductImage = ({
+  productId,
+  altText,
+  className = ''
+}: ProductImageProps) => {
+  const [imgSrc, setImgSrc] = useState<string>('');
+  const currentProductIdRef = useRef<string>('');
+
+  useEffect(() => {
+    currentProductIdRef.current = productId;
+
+    if (!productId) {
+      setImgSrc('/images/products/default.webp');
+      return;
+    }
+
+    // Try different image extensions
+    const extensions = ['webp', 'png', 'jpg', 'jpeg'];
+    let active = true;
+
+    const checkImage = async () => {
+      for (const ext of extensions) {
+        const src = `/images/products/${productId}.${ext}`;
+        try {
+          const exists = await imageExists(src);
+          if (exists && currentProductIdRef.current === productId) {
+            if (active) setImgSrc(src);
+            return;
+          }
+        } catch (error) {
+          console.error('Error checking image:', error);
+        }
+      }
+      if (active && currentProductIdRef.current === productId) {
+        setImgSrc('/images/products/default.webp');
+      }
+    };
+
+    checkImage();
+
+    return () => {
+      active = false;
+      currentProductIdRef.current = '';
+    };
+  }, [productId]);
+
+  const imageExists = (url: string): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const timer = setTimeout(() => {
+        img.onload = img.onerror = null;
+        resolve(false);
+      }, 1000); // Timeout after 1 second
+
+      img.onload = () => {
+        clearTimeout(timer);
+        resolve(true);
+      };
+      img.onerror = () => {
+        clearTimeout(timer);
+        resolve(false);
+      };
+      img.src = url;
+    });
+  };
+
   return (
-    <div className="space-y-4">
-      <Badge variant="secondary">{product.category}</Badge>
-      <div className="overflow-hidden rounded-lg bg-white p-8 max-w-lg mx-auto flex items-center justify-center" style={{ minHeight: '400px' }}>
-        <img
-          src={`/images/products/${product.id}.webp`}
-          alt={product.brandName}
-          className="max-w-full max-h-full object-contain rounded"
-        />
-      </div>
-    </div>
+    <img
+      src={imgSrc}
+      alt={altText}
+      className={`max-w-full max-h-full object-contain ${className}`}
+      loading="lazy"
+      onError={() => setImgSrc('/images/products/default.webp')}
+    />
   );
 };
-
-export default ProductImage;

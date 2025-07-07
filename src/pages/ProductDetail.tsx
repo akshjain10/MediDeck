@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Header from '@/components/Header';
-import ProductImage from '@/components/ProductImage';
+import {ProductImage} from '@/components/ProductImage';
 import ProductInfo from '@/components/ProductInfo';
 import SimilarProducts from '@/components/SimilarProducts';
 import Cart, { CartItem } from '@/components/Cart';
@@ -13,6 +13,7 @@ import { useProducts, Product } from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
 import { useCartPersistence } from '@/hooks/useCartPersistence';
 import { areProductsSimilar } from '@/utils/stringUtils';
+import { Badge } from '@/components/ui/badge';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -141,7 +142,7 @@ const ProductDetail = () => {
     }
 
     const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://api.whatsapp.com/send/?phone=918209703661&text=${encodedMessage}`;
+    const whatsappUrl = `https://api.whatsapp.com/send/?phone=919856686156&text=${encodedMessage}`;
 
     window.open(whatsappUrl, '_blank');
     toast({
@@ -170,7 +171,20 @@ const ProductDetail = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          <ProductImage product={product} />
+          <div className="space-y-4">
+            <Badge variant="secondary">{product.category}</Badge>
+            <div
+              className="overflow-hidden rounded-lg bg-white p-8 max-w-lg mx-auto flex items-center justify-center"
+              style={{ minHeight: '400px' }}
+            >
+              <ProductImage
+                productId={product.id}
+                altText={product.brandName}
+                className="max-w-full max-h-full object-contain rounded"
+                containerClassName="w-full h-full"
+              />
+            </div>
+          </div>
           <ProductInfo
             product={product}
             quantity={quantity}

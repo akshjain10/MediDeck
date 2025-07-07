@@ -5,7 +5,7 @@ import { Phone, Mail, MapPin, MessageCircle } from 'lucide-react';
 
 const Footer = () => {
   const handleCall = () => {
-    window.open('tel:+918209703661', '_self');
+    window.open('tel:+919856686156', '_self');
   };
 
   const handleEmail = () => {
@@ -13,7 +13,7 @@ const Footer = () => {
   };
 
   const handleWhatsApp = () => {
-    window.open('https://api.whatsapp.com/send/?phone=918209703661&text=Hello, I would like to inquire about your products.', '_blank');
+    window.open('https://api.whatsapp.com/send/?phone=919856686156&text=Hello, I would like to inquire about your products.', '_blank');
   };
 
   const handleAddress = () => {
@@ -46,7 +46,7 @@ const Footer = () => {
                 onClick={handleCall}
               >
                 <Phone className="w-5 h-5" />
-                <span>+91 8209703661</span>
+                <span>+91 9856686156</span>
               </div>
 
               <div
