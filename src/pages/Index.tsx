@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Header from '@/components/Header';
 import Cart, { CartItem } from '@/components/Cart';
 import OrderSuccess from '@/components/OrderSuccess';
@@ -8,7 +7,100 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
-import { Search, ShoppingBag, Phone, Mail } from 'lucide-react';
+import { ShoppingBag, Phone, Mail, Clock, Percent } from 'lucide-react';
+import Slider from 'react-slick';
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
+
+// Sample data for new sections
+const newArrivals = [
+  {
+    id: '1',
+    name: 'Portable Oxygen Concentrator',
+    price: 29999,
+    image: 'https://images.unsplash.com/photo-1581595219315-a187dd40c322?w=500&auto=format',
+    category: 'Respiratory Care'
+  },
+  {
+    id: '2',
+    name: 'Digital Thermometer',
+    price: 499,
+    image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=500&auto=format',
+    category: 'Diagnostics'
+  },
+  {
+    id: '3',
+    name: 'Nebulizer Machine',
+    price: 1299,
+    image: 'https://images.unsplash.com/photo-1581595210415-a7c7a7a8f8b3?w=500&auto=format',
+    category: 'Respiratory Care'
+  },
+  {
+    id: '4',
+    name: 'Blood Pressure Monitor',
+    price: 899,
+    image: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=500&auto=format',
+    category: 'Diagnostics'
+  },
+ ];
+
+const discountedProducts = [
+  {
+    id: '5',
+    name: 'Wheelchair (Foldable)',
+    originalPrice: 8999,
+    discountedPrice: 7499,
+    image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=500&auto=format',
+    discount: '15% OFF'
+  },
+  {
+    id: '6',
+    name: 'First Aid Kit (Deluxe)',
+    originalPrice: 1299,
+    discountedPrice: 999,
+    image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=500&auto=format',
+    discount: '25% OFF'
+  },
+  {
+    id: '7',
+    name: 'Orthopedic Cervical Collar',
+    originalPrice: 799,
+    discountedPrice: 599,
+    image: 'https://images.unsplash.com/photo-1581595219315-a187dd40c322?w=500&auto=format',
+    discount: '30% OFF'
+  },
+  {
+    id: '8',
+    name: 'Pulse Oximeter',
+    originalPrice: 1499,
+    discountedPrice: 1199,
+    image: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=500&auto=format',
+    discount: '20% OFF'
+  },
+];
+
+const categories = [
+  { name: 'Diagnostics', image: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=300&auto=format' },
+  { name: 'Respiratory Care', image: 'https://images.unsplash.com/photo-1581595219315-a187dd40c322?w=300&auto=format' },
+  { name: 'Mobility Aids', image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=300&auto=format' },
+  { name: 'First Aid', image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300&auto=format' },
+  { name: 'Surgical Supplies', image: 'https://images.unsplash.com/photo-1581595210415-a7c7a7a8f8b3?w=300&auto=format' },
+];
+
+const hero = [
+  { url: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1920&h=1080&fit=crop'},
+  { url: 'https://images.unsplash.com/photo-1581595219315-a187dd40c322?w=1920&auto=format'},
+  { url: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=1920&auto=format'},
+];
+
+const brands = [
+  { name: 'Alkem', logo: '/images/icons/alkem.jpg'},
+  { name: 'Ranbaxy', logo: '/images/icons/sunpharma.jpg'},
+  { name: 'Lupin', logo: '/images/icons/lupin.jpg' },
+  { name: 'Dr. Morepen', logo: '/images/icons/drmorepen.jpg' },
+  { name: 'Abbott', logo: '/images/icons/abbott.jpg' },
+  { name: 'Intas', logo: '/images/icons/intas.jpg' },
+];
 
 const Index = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -17,6 +109,7 @@ const Index = () => {
   const [showEnquiryForm, setShowEnquiryForm] = useState(false);
   const [orderNumber, setOrderNumber] = useState('');
   const { toast } = useToast();
+  const enquirySectionRef = useRef<HTMLDivElement>(null);
 
   const handleSetCartItems = (items: CartItem[]) => {
     setCartItems(items);
@@ -55,47 +148,101 @@ const Index = () => {
     setShowEnquiryForm(false);
   };
 
+  const scrollToEnquiry = () => {
+      // Mobile-friendly smooth scroll with timeout
+      setTimeout(() => {
+        enquirySectionRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+      }, 100); // Small delay for mobile menu to close
+    };
+
+
   const cartItemsCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
+  const HeroSliderSettings = {
+    dots: false,
+    infinite: true,
+    speed: 1000,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    autoplay: true,
+    autoplaySpeed: 5000,
+    fade: true,
+    arrows: false,
+    pauseOnHover: false,
+    cssEase: 'linear'
+  };
+
+  const sliderSettings = {
+    dots: false,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 4,
+    slidesToScroll: 1,
+    autoplay: true,
+    autoplaySpeed: 2000,
+    responsive: [
+      { breakpoint: 1024, settings: { slidesToShow: 3 } },
+      { breakpoint: 768, settings: { slidesToShow: 2 } },
+      { breakpoint: 480, settings: { slidesToShow: 1 } },
+    ]
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header
+        onContactClick={scrollToEnquiry}
         cartItemsCount={cartItemsCount}
         onCartClick={() => setShowCart(true)}
         onSetCartItems={handleSetCartItems}
       />
-
       <main>
-        {/* Hero Section with Background */}
-        <section
-          className="relative bg-cover bg-center bg-no-repeat min-h-[80vh] flex items-center"
-          style={{
-            backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url("https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1920&h=1080&fit=crop")'
-          }}
-        >
-          <div className="container mx-auto px-4 text-white">
-            <div className="max-w-3xl">
-              <h1 className="text-5xl md:text-6xl font-bold mb-6">
-                Your Trusted Medical Supplies Partner
-              </h1>
-              <p className="text-xl md:text-2xl mb-8 opacity-90">
-                Quality medical equipment and supplies delivered to your doorstep with care and reliability
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/products">
-                  <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-4">
-                    <ShoppingBag className="mr-2" />
-                    Browse Products
+        {/* Hero Section */}
+        <section className="relative min-h-[80vh]">
+          {/* Background Slider */}
+          <Slider {...HeroSliderSettings} className="absolute inset-0 z-0">
+            {hero.map((image, index) => (
+              <div key={index}>
+                <div
+                  className="h-[80vh] bg-cover bg-center"
+                  style={{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${image.url})` }}
+                />
+              </div>
+            ))}
+          </Slider>
+
+          {/* Content Overlay */}
+          <div className="relative z-10 flex items-center justify-center h-[80vh]">
+            <div className="container mx-auto px-4 text-white">
+              <div className="max-w-3xl bg-black bg-transparent p-8 rounded-lg">
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+                  Your Trusted Medical Supplies Partner
+                </h1>
+                <p className="text-lg md:text-xl lg:text-2xl mb-8 opacity-95 leading-relaxed">
+                  Premium medical equipment and supplies delivered to your doorstep with unparalleled care and reliability.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Link to="/products">
+                    <Button
+                      size="lg"
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-8 py-4 transition-all duration-300 transform hover:scale-105"
+                    >
+                      <ShoppingBag className="mr-2 h-5 w-5" />
+                      Browse Products
+                    </Button>
+                  </Link>
+                  <Button
+                    onClick={scrollToEnquiry}
+                    variant="outline"
+                    size="lg"
+                    className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-blue-600 text-lg px-8 py-4 transition-all duration-300 transform hover:scale-105"
+                  >
+                    <Phone className="mr-2 h-5 w-5" />
+                    Request Enquiry
                   </Button>
-                </Link>
-                <Button
-                  onClick={() => setShowEnquiryForm(true)}
-                  variant="outline"
-                  size="lg"
-                  className="bg-white/10 border-white text-white hover:bg-white/20 text-lg px-8 py-4"
-                >
-                  Request Enquiry
-                </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -107,10 +254,9 @@ const Index = () => {
             <div className="text-center mb-16">
               <h2 className="text-4xl font-bold mb-4">Why Choose Us?</h2>
               <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                We provide comprehensive medical solutions with a commitment to quality and service excellence
+                We provide comprehensive medical solutions with a commitment to quality and service excellence.
               </p>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <Card className="text-center p-8 hover:shadow-lg transition-shadow">
                 <CardContent>
@@ -119,11 +265,10 @@ const Index = () => {
                   </div>
                   <h3 className="text-2xl font-semibold mb-4">Fast Delivery</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    Quick and reliable delivery to your location with real-time tracking and updates
+                    Quick and reliable Service.
                   </p>
                 </CardContent>
               </Card>
-
               <Card className="text-center p-8 hover:shadow-lg transition-shadow">
                 <CardContent>
                   <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -131,11 +276,10 @@ const Index = () => {
                   </div>
                   <h3 className="text-2xl font-semibold mb-4">Quality Products</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    Certified and genuine medical supplies from trusted manufacturers worldwide
+                    Certified and genuine medical supplies from trusted manufacturers worldwide.
                   </p>
                 </CardContent>
               </Card>
-
               <Card className="text-center p-8 hover:shadow-lg transition-shadow">
                 <CardContent>
                   <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -143,7 +287,7 @@ const Index = () => {
                   </div>
                   <h3 className="text-2xl font-semibold mb-4">24/7 Support</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    Always available to help with your queries and provide expert guidance
+                    Always available to help with your queries and provide expert guidance.
                   </p>
                 </CardContent>
               </Card>
@@ -151,19 +295,206 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Contact Section */}
+        {/* Categories Slider Section */}
+        {/*<section className="py-16 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold mb-12 text-center">Shop By Category</h2>
+            <Slider {...sliderSettings}>
+              {categories.map((category, index) => (
+                <div key={index} className="px-2">
+                  <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+                    <img
+                      src={category.image}
+                      alt={category.name}
+                      className="w-full h-48 object-cover"
+                    />
+                    <CardContent className="p-4 text-center">
+                      <h3 className="text-xl font-semibold">{category.name}</h3>
+                      <Button variant="link" className="text-blue-600 mt-2">
+                        View Products
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+              ))}
+            </Slider>
+          </div>
+        </section>*/}
+
+        {/* New Arrivals Section */}
+        {/*<section className="py-16 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="flex justify-between items-center mb-12">
+              <h2 className="text-3xl font-bold">New Arrivals</h2>
+              <Link to="/products" className="text-blue-600 hover:underline flex items-center">
+                View All <span className="ml-1">→</span>
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+              {newArrivals.map(product => (
+                <Card key={product.id} className="hover:shadow-lg transition-shadow">
+                  <div className="relative">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-48 object-cover"
+                    />
+                    <div className="absolute top-2 left-2 bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-medium">
+                      New
+                    </div>
+                  </div>
+                  <CardContent className="p-4">
+                    <div className="text-sm text-gray-500 mb-1">{product.category}</div>
+                    <h3 className="text-lg font-semibold mb-2">{product.name}</h3>
+                    <div className="flex justify-between items-center mt-4">
+                      <span className="text-lg font-bold">₹{product.price.toLocaleString()}</span>
+                      <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                        Add to Cart
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>*/}
+
+        {/* Special Discounts Section */}
+        {/*<section className="py-16 bg-blue-50">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center mb-12">
+              <Percent className="text-red-500 mr-2" size={32} />
+              <h2 className="text-3xl font-bold">Special Discounts</h2>
+              <div className="ml-auto bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                Limited Time Offer
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+              {discountedProducts.map(product => (
+                <Card key={product.id} className="hover:shadow-lg transition-shadow relative">
+                  <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-sm font-medium">
+                    {product.discount}
+                  </div>
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-48 object-cover"
+                  />
+                  <CardContent className="p-4">
+                    <h3 className="text-lg font-semibold mb-2">{product.name}</h3>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <span className="text-gray-400 line-through">₹{product.originalPrice.toLocaleString()}</span>
+                      <span className="text-red-500 font-bold">₹{product.discountedPrice.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center mt-4">
+                      <Button variant="outline" className="border-blue-600 text-blue-600">
+                        View Details
+                      </Button>
+                      <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                        Add to Cart
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>*/}
+
+        {/* Brands Slider Section */}
+        <section className="py-16 bg-white">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold mb-12 text-center">Our Trusted Brands</h2>
+            <Slider {...sliderSettings}>
+              {brands.map((brand, index) => (
+                <div key={index} className="px-4">
+                  <div className="h-24 flex items-center justify-center p-4 bg-white rounded-lg transition-shadow">
+                    <img
+                      src={brand.logo}
+                      alt={brand.name}
+                      className="max-h-16 max-w-full object-contain"
+                    />
+                  </div>
+                </div>
+              ))}
+            </Slider>
+          </div>
+        </section>
+
+        {/* How to Order Section */}
         <section className="py-16 bg-gray-100">
-          <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold mb-8">Get In Touch</h2>
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-8">
-              <div className="flex items-center gap-3">
-                <Phone className="text-blue-600" />
-                <span className="text-lg">+91 9856686156</span>
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold mb-12 text-center">How to Order</h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">1</span>
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Browse Products</h3>
+                <p className="text-gray-600">Explore our wide range of medical products</p>
               </div>
-              <div className="flex items-center gap-3">
-                <Mail className="text-blue-600" />
-                <span className="text-lg">info@arihantmedigens.com</span>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">2</span>
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Add to Cart</h3>
+                <p className="text-gray-600">Select items and add them to your shopping cart</p>
               </div>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">3</span>
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Checkout</h3>
+                <p className="text-gray-600">Click on Send Order to WhatsApp button on the Cart or Order Page</p>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">4</span>
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Delivery</h3>
+                <p className="text-gray-600">Make Payment and collect your Order</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Contact Section with Enquiry Form */}
+        <section ref={enquirySectionRef} className="py-16 bg-white scroll-mt-16">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+              <div>
+                <h2 className="text-3xl font-bold mb-6">Contact Us</h2>
+                <p className="text-lg text-gray-600 mb-8">
+                  Have questions or need assistance? Our team is ready to help you with any inquiries about our products and services.
+                </p>
+                <div className="space-y-6">
+                  <div className="flex items-start">
+                    <Phone className="text-blue-600 mt-1 mr-4" />
+                    <div>
+                      <h3 className="text-lg font-semibold">Phone</h3>
+                      <p className="text-gray-600">+91 9856686156</p>
+                      <p className="text-gray-600">Mon-Sat: 9AM - 7PM</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <Mail className="text-blue-600 mt-1 mr-4" />
+                    <div>
+                      <h3 className="text-lg font-semibold">Email</h3>
+                      <p className="text-gray-600">info@arihantmedigens.com</p>
+                      <p className="text-gray-600">Response within 24 hours</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <Clock className="text-blue-600 mt-1 mr-4" />
+                    <div>
+                      <h3 className="text-lg font-semibold">Business Hours</h3>
+                      <p className="text-gray-600">Monday - Saturday: 9:00 AM - 7:00 PM</p>
+                      <p className="text-gray-600">Sunday: Closed</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <EnquiryForm onSubmit={handleEnquirySubmit} />
             </div>
           </div>
         </section>
@@ -183,13 +514,6 @@ const Index = () => {
         <OrderSuccess
           orderNumber={orderNumber}
           onClose={() => setShowOrderSuccess(false)}
-        />
-      )}
-
-      {showEnquiryForm && (
-        <EnquiryForm
-          onClose={() => setShowEnquiryForm(false)}
-          onSubmit={handleEnquirySubmit}
         />
       )}
     </div>

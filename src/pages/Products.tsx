@@ -370,11 +370,14 @@ const Products = React.memo(() => {
                                           value={filters.priceRange}
                                           onValueChange={handlePriceChange}
                                           className="w-full"
+                                          minStepsBetweenThumbs={1}
+                                          defaultValue={[minPrice, maxPrice]}
                                         />
                                         <div className="flex justify-between text-sm text-gray-600">
                                           <span>₹{filters.priceRange[0]}</span>
                                           <span>₹{filters.priceRange[1]}</span>
                                         </div>
+
                                       </div>
                                     </div>
 
@@ -493,21 +496,22 @@ const Products = React.memo(() => {
 
                       {/* Price Range Filter */}
                       <div>
-                        <h3 className="font-medium mb-2">Price Range</h3>
-                        <div className="space-y-3">
-                          <Slider
-                            min={0}
-                            max={1000}
-                            step={10}
-                            value={filters.priceRange}
-                            onValueChange={handlePriceChange}
-                          />
-                          <div className="flex justify-between text-sm text-gray-600">
-                            <span>₹{filters.priceRange[0]}</span>
-                            <span>₹{filters.priceRange[1]}</span>
+                            <h3 className="font-medium mb-2">Price Range</h3>
+                            <div className="space-y-3">
+                              <Slider
+                                min={0}
+                                max={10000}
+                                step={100}
+                                value={priceRange}
+                                onValueChange={setPriceRange}
+                                className="w-full"
+                              />
+                              <div className="flex justify-between text-sm text-gray-600">
+                                <span>₹{priceRange[0]}</span>
+                                <span>₹{priceRange[1]}</span>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
 
                       <Button
                         variant="outline"
