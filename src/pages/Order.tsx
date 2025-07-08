@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Loader2, MessageCircle } from 'lucide-react'; // Added MessageCircle
+import { Search, Loader2, MessageCircle } from 'lucide-react';
 import { useProducts, Product } from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
 import { useCartPersistence } from '@/hooks/useCartPersistence';
@@ -11,9 +11,9 @@ import Header from '@/components/Header';
 import Cart from '@/components/Cart';
 
 const Order = () => {
-  const quantityInputRef = useRef<HTMLInputElement | null>(null); // Kept for potential future use or focusing
+  const quantityInputRef = useRef<HTMLInputElement | null>(null);
   const [searchInput, setSearchInput] = useState('');
-  const [searchQuery, setSearchQuery] = useState(''); // This state is updated by debounced searchInput
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [quantityInput, setQuantityInput] = useState('');
   const [showCart, setShowCart] = useState(false);
@@ -30,37 +30,41 @@ const Order = () => {
     return () => clearTimeout(timeoutId);
   }, [searchInput]);
 
-  // Filter products based on searchQuery (memoized for performance)
   const filteredProducts = useMemo(() => {
-    if (!searchQuery.trim()) return [];
-    const query = searchQuery.toLowerCase();
-    return products.filter(product =>
-      product.brandName.toLowerCase().includes(query) ||
-      product.company.toLowerCase().includes(query) ||
-      product.name.toLowerCase().includes(query) ||
-      (product.salt && product.salt.toLowerCase().includes(query))
-    );
-  }, [products, searchQuery]);
+      if (!searchQuery.trim()) return [];
 
-  // Handlers for product search and selection
-  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchInput(e.target.value);
-    setSelectedProduct(null); // Clear selected product on new search input
-  };
+      // Split search query into individual words
+      const searchWords = searchQuery.toLowerCase().split(/\s+/).filter(word => word.length > 0);
 
-  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      // Trigger search immediately on Enter, otherwise debounce handles it
-      setSearchQuery(searchInput);
-    }
-  };
+      return products.filter(product => {
+        // Check if all search words are present in any of the search fields (AND condition)
+        return searchWords.every(word =>
+          product.brandName.toLowerCase().includes(word) ||
+          product.company.toLowerCase().includes(word) ||
+          product.name.toLowerCase().includes(word) ||
+          (product.salt && product.salt.toLowerCase().includes(word))
+        );
+      });
+    }, [products, searchQuery]);
 
-  const handleProductSelect = (product: Product) => {
-    setSelectedProduct(product);
-    setQuantityInput(''); // Reset quantity input
-    setSearchInput('');   // Clear search input
-    setSearchQuery('');   // Clear search query to hide results
-  };
+    // Handlers for product search and selection
+    const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSearchInput(e.target.value);
+      setSelectedProduct(null);
+    };
+
+    const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        setSearchQuery(searchInput);
+      }
+    };
+
+    const handleProductSelect = (product: Product) => {
+      setSelectedProduct(product);
+      setQuantityInput('');
+      setSearchInput('');
+      setSearchQuery('');
+    };
 
   // Cart Management Functions
   const handleAddSelectedToCart = (product: Product) => {
@@ -156,6 +160,7 @@ const Order = () => {
   };
 
   const distinctProductCount = cartItems.length;
+  const searchWords = searchQuery.toLowerCase().split(/\s+/).filter(word => word.length > 0);
 
   return (
     <div className="min-h-screen bg-gray-50">

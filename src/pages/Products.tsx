@@ -8,10 +8,18 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Loader2, Filter } from 'lucide-react';
+import { Search, Loader2, Filter, X } from 'lucide-react';
 import { useProducts, Product } from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
 import { useCartPersistence } from '@/hooks/useCartPersistence';
+import { Slider } from '@/components/ui/slider';
+import { Label } from '@/components/ui/label';
+
+interface Filters {
+  categories: string[];
+  companies: string[];
+  priceRange: [number, number];
+}
 
 const Products = React.memo(() => {
   const [showCart, setShowCart] = useState(false);
@@ -20,16 +28,49 @@ const Products = React.memo(() => {
   const [orderNumber, setOrderNumber] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [showFilters, setShowFilters] = useState(false);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+  const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
   const { products, loading, error } = useProducts();
   const { cartItems, setCartItems, clearCart } = useCartPersistence();
+
+  // Initialize filters with price range based on products
+  const [filters, setFilters] = useState<Filters>({
+    categories: [],
+    companies: [],
+    priceRange: [0, 1000] // Default range, will be updated with actual product prices
+  });
+
+  // Update price range based on products
+  const { minPrice, maxPrice } = useMemo(() => {
+    if (products.length === 0) return { minPrice: 0, maxPrice: 1000 };
+
+    const prices = products.map(p => p.mrp);
+    return {
+      minPrice: Math.floor(Math.min(...prices)),
+      maxPrice: Math.ceil(Math.max(...prices))
+    };
+  }, [products]);
+
+  useEffect(() => {
+    if (products.length > 0) {
+      const prices = products.map(p => p.mrp);
+      const minPrice = Math.min(...prices);
+      const maxPrice = Math.max(...prices);
+      setFilters(prev => ({
+        ...prev,
+        priceRange: [minPrice, maxPrice]
+      }));
+    }
+  }, [products]);
 
   // Debounced search effect
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setSearchQuery(searchInput);
-    }, 500); // 500ms delay
+      setCurrentPage(1); // Reset to first page on new search
+    }, 500);
 
     return () => clearTimeout(timeoutId);
   }, [searchInput]);
@@ -38,13 +79,17 @@ const Products = React.memo(() => {
   const handleSearchKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       setSearchQuery(searchInput);
+      setCurrentPage(1);
     }
   }, [searchInput]);
 
-  // Memoize categories to prevent recalculation
-  const categories = useMemo(() => {
-    const uniqueCategories = ['All', ...new Set(products.map(p => p.category))];
-    return uniqueCategories;
+  // Memoize categories and companies to prevent recalculation
+  const allCategories = useMemo(() => {
+    return ['All', ...new Set(products.map(p => p.category))];
+  }, [products]);
+
+  const allCompanies = useMemo(() => {
+    return ['All', ...new Set(products.map(p => p.company))];
   }, [products]);
 
   // Optimize search with debounced filtering
@@ -52,16 +97,135 @@ const Products = React.memo(() => {
     if (!searchQuery.trim()) {
       return [];
     }
-    
-    const query = searchQuery.toLowerCase();
+
+    // Split search query into individual words
+    const searchWords = searchQuery.toLowerCase().split(/\s+/).filter(word => word.length > 0);
+    const [minPrice, maxPrice] = filters.priceRange;
+
     return products.filter(product => {
-      const matchesSearch = product.brandName.toLowerCase().includes(query) ||
-                           product.company.toLowerCase().includes(query) ||
-                           product.name.toLowerCase().includes(query);
-      const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
-      return matchesSearch && matchesCategory;
+      // Check if all search words are present in any of the search fields (AND condition)
+      const matchesSearch = searchWords.every(word =>
+        product.brandName.toLowerCase().includes(word) ||
+        product.company.toLowerCase().includes(word) ||
+        product.name.toLowerCase().includes(word)
+      );
+
+      // Check category filter
+      const matchesCategory = filters.categories.length === 0 ||
+        filters.categories.includes('All') ||
+        filters.categories.includes(product.category);
+
+      // Check company filter
+      const matchesCompany = filters.companies.length === 0 ||
+        filters.companies.includes('All') ||
+        filters.companies.includes(product.company);
+
+      // Check price range
+      const matchesPrice = product.mrp >= minPrice && product.mrp <= maxPrice;
+
+      return matchesSearch && matchesCategory && matchesCompany && matchesPrice;
     });
-  }, [products, searchQuery, selectedCategory]);
+  }, [products, searchQuery, filters]);
+
+  // Pagination logic
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredProducts.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredProducts, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+
+  const toggleCategory = useCallback((category: string) => {
+    setFilters(prev => {
+      if (category === 'All') {
+        // If "All" is selected, toggle all categories
+        const newCategories = prev.categories.length === allCategories.length - 1
+          ? []
+          : allCategories.filter(c => c !== 'All');
+        return { ...prev, categories: newCategories };
+      } else {
+        // Regular category toggle
+        const newCategories = prev.categories.includes(category)
+          ? prev.categories.filter(c => c !== category)
+          : [...prev.categories, category];
+
+        // If all specific categories are selected, also select "All"
+        const allSpecificSelected = allCategories
+          .filter(c => c !== 'All')
+          .every(c => newCategories.includes(c));
+
+        return {
+          ...prev,
+          categories: allSpecificSelected
+            ? [...newCategories, 'All']
+            : newCategories.filter(c => c !== 'All')
+        };
+      }
+    });
+    setCurrentPage(1);
+  }, [allCategories]);
+
+  // Do the same for companies filter
+  const toggleCompany = useCallback((company: string) => {
+    setFilters(prev => {
+      if (company === 'All') {
+        const newCompanies = prev.companies.length === allCompanies.length - 1
+          ? []
+          : allCompanies.filter(c => c !== 'All');
+        return { ...prev, companies: newCompanies };
+      } else {
+        const newCompanies = prev.companies.includes(company)
+          ? prev.companies.filter(c => c !== company)
+          : [...prev.companies, company];
+
+        const allSpecificSelected = allCompanies
+          .filter(c => c !== 'All')
+          .every(c => newCompanies.includes(c));
+
+        return {
+          ...prev,
+          companies: allSpecificSelected
+            ? [...newCompanies, 'All']
+            : newCompanies.filter(c => c !== 'All')
+        };
+      }
+    });
+    setCurrentPage(1);
+  }, [allCompanies]);
+
+  // Update the filter rendering to show "All" first
+  <div className="space-y-2 max-h-60 overflow-y-auto">
+    {['All', ...allCategories.filter(c => c !== 'All')].map(category => (
+      <div key={category} className="flex items-center">
+        <input
+          type="checkbox"
+          id={`cat-${category}`}
+          checked={filters.categories.includes(category) ||
+                  (category === 'All' && filters.categories.length === allCategories.length - 1)}
+          onChange={() => toggleCategory(category)}
+          className="mr-2"
+        />
+        <label htmlFor={`cat-${category}`}>{category}</label>
+      </div>
+    ))}
+  </div>
+
+  const handlePriceChange = useCallback((value: [number, number]) => {
+    setFilters(prev => ({
+      ...prev,
+      priceRange: value
+    }));
+    setCurrentPage(1);
+  }, []);
+
+  const resetFilters = useCallback(() => {
+    setFilters({
+      categories: [],
+      companies: [],
+      priceRange: [0, 1000]
+    });
+    setCurrentPage(1);
+  }, []);
 
   const addToCart = useCallback((product: Product, quantity: number = 1) => {
     const existingItem = cartItems.find(item => item.id === product.id);
@@ -123,125 +287,352 @@ const Products = React.memo(() => {
   }, [toast]);
 
   const cartItemsCount = cartItems.length;
+    const searchWords = searchQuery.toLowerCase().split(/\s+/).filter(word => word.length > 0);
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <Header
-        cartItemsCount={cartItemsCount}
-        onCartClick={() => setShowCart(true)}
-        onSetCartItems={setCartItems}
-      />
-      
-      <main className="container mx-auto px-4 py-8">
-        {/* Search Section */}
-        <Card>
-                    <CardHeader>
-                      <CardTitle className="text-xl">
-                      <div className="container mx-auto">
-                        <div className="flex justify-center sm:justify-start">
-                          <h2 className="text-lg font-semibold text-gray-800">Explore Products</h2>
-                          </div>
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header
+          cartItemsCount={cartItemsCount}
+          onCartClick={() => setShowCart(true)}
+          onSetCartItems={setCartItems}
+        />
+
+        <main className="container mx-auto px-4 py-8">
+          {/* Search Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl">
+                <div className="container mx-auto">
+                  <div className="flex justify-center sm:justify-start">
+                    <h2 className="text-lg font-semibold text-gray-800">Explore Products</h2>
+                  </div>
+                </div>
+              </CardTitle>
+            </CardHeader>
+          </Card>
+
+          <div className="flex flex-col lg:flex-row gap-6 mt-6">
+            {/* Filters Sidebar - Desktop */}
+            <div className="hidden lg:block w-64 shrink-0">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Filters</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Categories Filter */}
+                  <div>
+                    <h3 className="font-medium mb-2">Categories</h3>
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {['All', ...allCategories.filter(c => c !== 'All')].map(category => (
+                        <div key={category} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id={`cat-${category}`}
+                            checked={filters.categories.includes(category) ||
+                                    (category === 'All' && filters.categories.length === allCategories.length - 1)}
+                            onChange={() => toggleCategory(category)}
+                            className="mr-2"
+                          />
+                          <label htmlFor={`cat-${category}`}>{category}</label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Companies Filter */}
+                  <div>
+                    <h3 className="font-medium mb-2">Companies</h3>
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {allCompanies.map(company => (
+                        <div key={company} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id={`comp-${company}`}
+                            checked={filters.companies.includes(company) ||
+                                                                (company === 'All' && filters.companies.length === allCompanies.length - 1)}
+                            onChange={() => toggleCompany(company)}
+                            className="mr-2"
+                          />
+                          <label htmlFor={`comp-${company}`}>{company}</label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Price Range Filter */}
+                                    <div>
+                                      <h3 className="font-medium mb-2">Price Range</h3>
+                                      <div className="space-y-3">
+                                        <Slider
+                                          min={minPrice}
+                                          max={maxPrice}
+                                          step={Math.max(1, Math.floor((maxPrice - minPrice) / 100))}
+                                          value={filters.priceRange}
+                                          onValueChange={handlePriceChange}
+                                          className="w-full"
+                                          minStepsBetweenThumbs={1}
+                                          defaultValue={[minPrice, maxPrice]}
+                                        />
+                                        <div className="flex justify-between text-sm text-gray-600">
+                                          <span>₹{filters.priceRange[0]}</span>
+                                          <span>₹{filters.priceRange[1]}</span>
+                                        </div>
+
+                                      </div>
+                                    </div>
+
+                  <Button
+                    variant="outline"
+                    onClick={resetFilters}
+                    className="w-full"
+                  >
+                    Reset Filters
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Main Content */}
+            <div className="flex-1">
+              <div className="mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                  {/* Search Bar */}
+                  <div className="relative w-full sm:flex-1 sm:max-w-md">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      type="text"
+                      placeholder="Search products..."
+                      className="pl-10"
+                      value={searchInput}
+                      onChange={(e) => setSearchInput(e.target.value)}
+                      onKeyDown={handleSearchKeyDown}
+                    />
+                  </div>
+
+                  {/* Filter Button - Mobile */}
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowFilters(!showFilters)}
+                    className="lg:hidden flex items-center gap-2"
+                  >
+                    <Filter className="w-4 h-4" />
+                    Filters
+                  </Button>
+
+                  {/* Items per page selector */}
+                  <div className="flex items-center gap-2">
+                    <Label className="whitespace-nowrap">Show:</Label>
+                    <Select
+                      value={itemsPerPage.toString()}
+                      onValueChange={(value) => {
+                        setItemsPerPage(Number(value));
+                        setCurrentPage(1);
+                      }}
+                    >
+                      <SelectTrigger className="w-20">
+                        <SelectValue placeholder="25" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="25">25</SelectItem>
+                        <SelectItem value="50">50</SelectItem>
+                        <SelectItem value="100">100</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Mobile Filters Panel */}
+                {showFilters && (
+                  <Card className="mt-4 p-4 lg:hidden">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="font-semibold">Filters</h3>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowFilters(false)}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+
+                    <div className="space-y-4">
+                      {/* Categories Filter */}
+                      <div>
+                        <h3 className="font-medium mb-2">Categories</h3>
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                          {allCategories.map(category => (
+                            <div key={category} className="flex items-center">
+                              <input
+                                type="checkbox"
+                                id={`mob-cat-${category}`}
+                                checked={filters.categories.includes(category)}
+                                onChange={() => toggleCategory(category)}
+                                className="mr-2"
+                              />
+                              <label htmlFor={`mob-cat-${category}`}>{category}</label>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      </CardTitle>
-                    </CardHeader>
-        </Card>
 
-        <div className="mb-6 mt-6">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            {/* Search Bar */}
-            <div className="relative w-full sm:flex-1 sm:max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                type="text"
-                placeholder="Search products..."
-                className="pl-10"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                onKeyDown={handleSearchKeyDown}
-              />
-            </div>
+                      {/* Companies Filter */}
+                      <div>
+                        <h3 className="font-medium mb-2">Companies</h3>
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                          {allCompanies.map(company => (
+                            <div key={company} className="flex items-center">
+                              <input
+                                type="checkbox"
+                                id={`mob-comp-${company}`}
+                                checked={filters.companies.includes(company)}
+                                onChange={() => toggleCompany(company)}
+                                className="mr-2"
+                              />
+                              <label htmlFor={`mob-comp-${company}`}>{company}</label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
 
-            {/* Category Filter */}
-            {searchQuery.trim() && (
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <Filter className="w-4 h-4 text-gray-500" />
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-36 sm:w-48">
-                    <SelectValue placeholder="Filter by category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                      {/* Price Range Filter */}
+                      <div>
+                            <h3 className="font-medium mb-2">Price Range</h3>
+                            <div className="space-y-3">
+                              <Slider
+                                min={0}
+                                max={10000}
+                                step={100}
+                                value={priceRange}
+                                onValueChange={setPriceRange}
+                                className="w-full"
+                              />
+                              <div className="flex justify-between text-sm text-gray-600">
+                                <span>₹{priceRange[0]}</span>
+                                <span>₹{priceRange[1]}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                      <Button
+                        variant="outline"
+                        onClick={resetFilters}
+                        className="w-full"
+                      >
+                        Reset Filters
+                      </Button>
+                    </div>
+                  </Card>
+                )}
               </div>
-            )}
-          </div>
-        </div>
 
+              {/* Results count - Only show when searching */}
+              {searchQuery.trim() && (
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600">
+                    Found {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
+                    {filters.categories.length > 0 && !filters.categories.includes('All')}
+                  </p>
+                </div>
+              )}
 
-        {/* Results count - Only show when searching */}
-        {searchQuery.trim() && filteredProducts.length > 0 && (
-          <div className="mb-4">
-            <p className="text-sm text-gray-600">
-              Found {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
-              {selectedCategory !== 'All' && ` in ${selectedCategory}`}
-            </p>
-          </div>
-        )}
+              {/* Products Grid */}
+              <section>
+                {loading ? (
+                  <Card className="p-8 text-center">
+                    <CardContent>
+                      <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+                      <p className="text-gray-500">Loading products...</p>
+                    </CardContent>
+                  </Card>
+                ) : error ? (
+                  <Card className="p-8 text-center">
+                    <CardContent>
+                      <p className="text-red-500 mb-4">Error loading products: {error}</p>
+                      <p className="text-gray-500">Please try again later.</p>
+                    </CardContent>
+                  </Card>
+                ) : !searchQuery.trim() ? (
+                  <Card className="p-8 text-center">
+                    <CardContent>
+                      <div className="mb-4 text-4xl">🔍</div>
+                      <p className="text-gray-500 mb-4 text-lg">Start searching to discover products</p>
+                      <p className="text-sm text-gray-400">Type in the search box above to find medicines and healthcare products</p>
+                    </CardContent>
+                  </Card>
+                ) : paginatedProducts.length === 0 ? (
+                  <Card className="p-8 text-center">
+                    <CardContent>
+                      <div className="mb-4 text-4xl">📦</div>
+                      <p className="text-gray-500 mb-4 text-lg">No products found</p>
+                      <p className="text-sm text-gray-400 mb-4">Try adjusting your search terms or filters</p>
+                      <Button onClick={() => setShowEnquiryForm(true)} className="bg-blue-600 hover:bg-blue-700">
+                        Request This Product
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                     {paginatedProducts.map(product => {
+                       return (
+                         <ProductCard
+                           key={product.id}
+                           product={product}
+                           onAddToCart={addToCart}
+                         />
+                       );
+                     })}
+                    </div>
 
-        {/* Products Grid */}
-        <section>
-          {loading ? (
-            <Card className="p-8 text-center">
-              <CardContent>
-                <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
-                <p className="text-gray-500">Loading products...</p>
-              </CardContent>
-            </Card>
-          ) : error ? (
-            <Card className="p-8 text-center">
-              <CardContent>
-                <p className="text-red-500 mb-4">Error loading products: {error}</p>
-                <p className="text-gray-500">Please try again later.</p>
-              </CardContent>
-            </Card>
-          ) : !searchQuery.trim() ? (
-            <Card className="p-8 text-center">
-              <CardContent>
-                <div className="mb-4 text-4xl">🔍</div>
-                <p className="text-gray-500 mb-4 text-lg">Start searching to discover products</p>
-                <p className="text-sm text-gray-400">Type in the search box above to find medicines and healthcare products</p>
-              </CardContent>
-            </Card>
-          ) : filteredProducts.length === 0 ? (
-            <Card className="p-8 text-center">
-              <CardContent>
-                <div className="mb-4 text-4xl">📦</div>
-                <p className="text-gray-500 mb-4 text-lg">No products found</p>
-                <p className="text-sm text-gray-400 mb-4">Try adjusting your search terms or category filter</p>
-                <Button onClick={() => setShowEnquiryForm(true)} className="bg-blue-600 hover:bg-blue-700">
-                  Request This Product
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredProducts.map(product => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onAddToCart={addToCart}
-                />
-              ))}
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="flex justify-center mt-8">
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            disabled={currentPage === 1}
+                            onClick={() => setCurrentPage(prev => prev - 1)}
+                          >
+                            Previous
+                          </Button>
+                          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                            let pageNum;
+                            if (totalPages <= 5) {
+                              pageNum = i + 1;
+                            } else if (currentPage <= 3) {
+                              pageNum = i + 1;
+                            } else if (currentPage >= totalPages - 2) {
+                              pageNum = totalPages - 4 + i;
+                            } else {
+                              pageNum = currentPage - 2 + i;
+                            }
+
+                            return (
+                              <Button
+                                key={pageNum}
+                                variant={currentPage === pageNum ? "default" : "outline"}
+                                onClick={() => setCurrentPage(pageNum)}
+                              >
+                                {pageNum}
+                              </Button>
+                            );
+                          })}
+                          <Button
+                            variant="outline"
+                            disabled={currentPage === totalPages}
+                            onClick={() => setCurrentPage(prev => prev + 1)}
+                          >
+                            Next
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </section>
             </div>
-          )}
-        </section>
-      </main>
-
+          </div>
+        </main>
       {showCart && (
         <Cart
           items={cartItems}

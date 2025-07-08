@@ -1,18 +1,17 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Home, Package, Phone, ShoppingBag, Menu, X } from 'lucide-react';
 import EnquiryForm, { EnquiryData } from '@/components/EnquiryForm';
 import { Button } from '@/components/ui/button';
-import { CartItem } from '@/components/Cart';
 import { useToast } from '@/hooks/use-toast';
 
 interface HeaderProps {
   cartItemsCount: number;
+  onContactClick?: () => void;
   onCartClick: () => void;
 }
 
-const Header = ({ cartItemsCount, onCartClick }: HeaderProps) => {
+const Header = ({ cartItemsCount, onContactClick, onCartClick }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showEnquiryForm, setShowEnquiryForm] = useState(false);
   const { toast } = useToast();
@@ -88,7 +87,7 @@ const Header = ({ cartItemsCount, onCartClick }: HeaderProps) => {
                 </Link>
                 <Button
                   variant="ghost"
-                  onClick={handleContactClick}
+                  onClick={onContactClick}
                   className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 transition-colors"
                 >
                   <Phone className="w-4 h-4" />
@@ -155,7 +154,7 @@ const Header = ({ cartItemsCount, onCartClick }: HeaderProps) => {
                 <Button
                   variant="ghost"
                   onClick={() => {
-                    handleContactClick();
+                    onContactClick();
                     closeMobileMenu();
                   }}
                   className="flex items-center space-x-2 p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors justify-start"
