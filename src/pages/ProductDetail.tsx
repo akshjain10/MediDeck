@@ -8,18 +8,25 @@ import Cart, { CartItem } from '@/components/Cart';
 import OrderSuccess from '@/components/OrderSuccess';
 import EnquiryForm, { EnquiryData } from '@/components/EnquiryForm';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Share2 } from 'lucide-react';
 import { useProducts, Product } from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
 import { useCartPersistence } from '@/hooks/useCartPersistence';
 import { areProductsSimilar } from '@/utils/stringUtils';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const [showCart, setShowCart] = useState(false);
   const [showOrderSuccess, setShowOrderSuccess] = useState(false);
   const [showEnquiryForm, setShowEnquiryForm] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
   const [orderNumber, setOrderNumber] = useState('');
   const [quantity, setQuantity] = useState(1);
   const { toast } = useToast();
@@ -38,6 +45,39 @@ const ProductDetail = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
+
+  const handleShare = (platform: string) => {
+      if (!product) return;
+
+      const productUrl = `${window.location.origin}/products/${product.id}`;
+      const shareText = `Check out ${product.brandName} by ${product.company} - ${product.mrp}₹\n\n${productUrl}`;
+
+      switch (platform) {
+        case 'whatsapp':
+          window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, '_blank');
+          break;
+        case 'facebook':
+          window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}&quote=${encodeURIComponent(shareText)}`, '_blank');
+          break;
+        case 'twitter':
+          window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`, '_blank');
+          break;
+        case 'telegram':
+          window.open(`https://t.me/share/url?url=${encodeURIComponent(productUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
+          break;
+        case 'copy':
+          navigator.clipboard.writeText(shareText);
+          toast({
+            title: "Copied to clipboard",
+            description: "Product details have been copied to your clipboard.",
+          });
+          break;
+        default:
+          break;
+      }
+
+      setShowShareDialog(false);
+    };
 
   if (loading) {
     return (
@@ -155,21 +195,28 @@ const ProductDetail = () => {
   const cartItemsCount = cartItems.length;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header
-        cartItemsCount={cartItemsCount}
-        onCartClick={() => setShowCart(true)}
-        onSetCartItems={setCartItems}
-      />
+      <div className="min-h-screen bg-gray-50">
+        <Header
+          cartItemsCount={cartItemsCount}
+          onCartClick={() => setShowCart(true)}
+          onSetCartItems={setCartItems}
+        />
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-6">
-          <Link to="/products" className="flex items-center text-blue-600 hover:text-blue-700 mb-4">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Products
-          </Link>
-        </div>
-
+        <main className="container mx-auto px-4 py-8">
+          <div className="mb-6 flex justify-between items-center">
+            <Link to="/products" className="flex items-center text-blue-600 hover:text-blue-700">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Products
+            </Link>
+            <Button
+              variant="outline"
+              onClick={() => setShowShareDialog(true)}
+              className="flex items-center gap-2"
+            >
+              <Share2 className="w-4 h-4" />
+              Share
+            </Button>
+          </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           <div className="space-y-4">
             <Badge variant="secondary">{product.category}</Badge>
@@ -225,6 +272,37 @@ const ProductDetail = () => {
           onSubmit={handleEnquirySubmit}
         />
       )}
+
+      {showShareDialog && (
+                <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Share Product</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <Button variant="outline" onClick={() => handleShare('whatsapp')}>
+                        WhatsApp
+                      </Button>
+                      <Button variant="outline" onClick={() => handleShare('facebook')}>
+                        Facebook
+                      </Button>
+                      <Button variant="outline" onClick={() => handleShare('twitter')}>
+                        Twitter
+                      </Button>
+                      <Button variant="outline" onClick={() => handleShare('telegram')}>
+                        Telegram
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => handleShare('copy')}
+                        className="col-span-2"
+                      >
+                        Copy Link
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
     </div>
   );
 };

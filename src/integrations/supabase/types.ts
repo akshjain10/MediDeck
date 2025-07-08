@@ -45,7 +45,6 @@ export type Database = {
         Row: {
           Category: string | null
           Company: string | null
-          Division: string | null
           id: string
           MRP: number | null
           Name: string
@@ -56,7 +55,6 @@ export type Database = {
         Insert: {
           Category?: string | null
           Company?: string | null
-          Division?: string | null
           id: string
           MRP?: number | null
           Name: string
@@ -67,7 +65,6 @@ export type Database = {
         Update: {
           Category?: string | null
           Company?: string | null
-          Division?: string | null
           id?: string
           MRP?: number | null
           Name?: string
