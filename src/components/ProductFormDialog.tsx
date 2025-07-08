@@ -126,7 +126,7 @@ const ProductFormDialog = ({ open, onOpenChange, product, onAdd, onSave }: {
        if (formData.id.length > 50) {
          newErrors.id = 'ID must be 50 characters or less';
        }
-       if (!/^[a-z0-9-]+$/.test(formData.id)) {
+       if (!/^[A-Za-z0-9-]+$/.test(formData.id)) {
          newErrors.id = 'ID can only contain lowercase letters, numbers, and hyphens';
        }
      }
