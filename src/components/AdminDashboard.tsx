@@ -57,6 +57,8 @@ const StatCard = ({
   </Card>
 );
 
+
+
 const AnalyticsTab = () => (
   <div className="space-y-6">
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -88,90 +90,113 @@ const AnalyticsTab = () => (
   </div>
 );
 
-const SettingsTab = () => {
-  const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const MAX_FILES = 50;
-  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB per file
+  const SettingsTab = () => {
+    const { toast } = useToast();
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const MAX_FILES = 50;
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB per file
 
-  const cleanFileName = (fileName: string) => {
-    return fileName
-      .replace(/\.[^/.]+$/, "") // Remove extension
-      .toLowerCase()
-      .replace(/[^a-z0-9-]/g, "-") // Replace special chars with hyphens
-      .replace(/-+/g, "-") // Collapse multiple hyphens
-      .replace(/^-+|-+$/g, "") // Trim hyphens from ends
-      .substring(0, 50); // Limit length
-  };
+    const cleanFileName = (fileName: string) => {
+      return fileName
+        .replace(/\.[^/.]+$/, "") // Remove extension
+        .toLowerCase()
+        .replace(/[^a-z0-9-]/g, "-") // Replace special chars with hyphens
+        .replace(/-+/g, "-") // Collapse multiple hyphens
+        .replace(/^-+|-+$/g, "") // Trim hyphens from ends
+        .substring(0, 50); // Limit length
+    };
 
-  const handleBulkImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+    const handleBulkImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
 
-    // Validate files
-    const validFiles = Array.from(files).filter(file =>
-      file.type.startsWith('image/') && file.size <= MAX_FILE_SIZE
-    );
+      // Validate files
+      const validFiles = Array.from(files).filter(file =>
+        file.type.startsWith('image/') && file.size <= MAX_FILE_SIZE
+      );
 
-    if (validFiles.length === 0) {
-      toast({
-        title: "No Valid Files",
-        description: "No valid image files found for upload",
-        variant: "destructive"
+      if (validFiles.length === 0) {
+        toast({
+          title: "No Valid Files",
+          description: "No valid image files found for upload",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const uploadToast = toast({
+        title: "Starting Bulk Upload",
+        description: `Preparing to upload ${validFiles.length} images`,
+        duration: Infinity // Keep toast open during upload
       });
-      return;
-    }
 
-    const uploadToast = toast({
-      title: "Starting Bulk Upload",
-      description: `Preparing to upload ${validFiles.length} images`,
-      duration: Infinity // Keep toast open during upload
-    });
+      try {
+        const imagesToUpload = validFiles.map(file => ({
+          file,
+          name: cleanFileName(file.name)
+        }));
 
+        const { success, failures } = await bulkUploadImagesToGithub({
+          images: imagesToUpload,
+          repo: import.meta.env.VITE_GITHUB_REPO,
+          owner: import.meta.env.VITE_GITHUB_OWNER,
+          branch: 'main'
+        });
+
+        uploadToast.update({
+          id: uploadToast.id,
+          title: "Bulk Upload Complete",
+          description: `Successfully uploaded ${success.length}/${validFiles.length} images`,
+          variant: failures.length > 0 ? "destructive" : "default",
+          duration: 5000
+        });
+
+        if (failures.length > 0) {
+          console.error("Failed uploads:", failures);
+          toast({
+            title: "Some Uploads Failed",
+            description: `${failures.length} images failed to upload. Please check the console for details.`,
+            variant: "destructive"
+          });
+        }
+      } catch (error) {
+        uploadToast.update({
+          id: uploadToast.id,
+          title: "Bulk Upload Failed",
+          description: error instanceof Error ? error.message : "Unknown error occurred",
+          variant: "destructive",
+          duration: 5000
+        });
+      } finally {
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      }
+    };
+
+
+  const uploadSingleImage = async (file: File): Promise<void> => {
     try {
-      const imagesToUpload = validFiles.map(file => ({
-        file,
-        name: cleanFileName(file.name)
-      }));
+      const imageName = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
+      const cleanId = imageName
+        .toLowerCase()
+        .replace(/[^a-z0-9-]/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .substring(0, 50);
 
-      const { success, failures } = await bulkUploadImagesToGithub({
-        images: imagesToUpload,
+      await uploadImageToGithub({
+        image: file,
+        imageName: cleanId,
         repo: import.meta.env.VITE_GITHUB_REPO,
         owner: import.meta.env.VITE_GITHUB_OWNER,
         branch: 'main'
       });
 
-      uploadToast.update({
-        id: uploadToast.id,
-        title: "Bulk Upload Complete",
-        description: `Successfully uploaded ${success.length}/${validFiles.length} images`,
-        variant: failures.length > 0 ? "destructive" : "default",
-        duration: 5000
-      });
-
-      if (failures.length > 0) {
-        console.error("Failed uploads:", failures);
-        toast({
-          title: "Some Uploads Failed",
-          description: `${failures.length} images failed to upload. Please check the console for details.`,
-          variant: "destructive"
-        });
-      }
     } catch (error) {
-      uploadToast.update({
-        id: uploadToast.id,
-        title: "Bulk Upload Failed",
-        description: error instanceof Error ? error.message : "Unknown error occurred",
-        variant: "destructive",
-        duration: 5000
-      });
-    } finally {
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      throw new Error(`Failed to upload ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
-
   const handleDownloadTemplate = () => {
       const headers = ['id', 'Name', 'Salt', 'Company', 'Packing', 'MRP', 'Category'];
       const data = [{
@@ -439,18 +464,18 @@ const AdminDashboardTAB = () => {
   const handleSelect = useCallback((id: string, checked: boolean) => {
     setSelectedIds(prev =>
       checked ? [...prev, id] : prev.filter(item => item !== id)
-    );
+    ); // <-- Added closing parenthesis and semicolon here
   }, []);
 
   const handleDelete = useCallback(async (ids: string[]) => {
-    console.log('DELETE INITIATED - IDs:', ids);
+    console.log('DELETE INITIATED - IDs:', ids); // Add this line
     try {
       await deleteProducts(ids);
-      console.log('DELETE SUCCESSFUL');
+      console.log('DELETE SUCCESSFUL'); // Add this line
       setSelectedIds(prev => prev.filter(id => !ids.includes(id)));
       toast({ title: "Success", description: "Products deleted successfully" });
     } catch (error) {
-      console.error('DELETE ERROR:', error);
+      console.error('DELETE ERROR:', error); // Add this line
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to delete products",
@@ -595,6 +620,9 @@ const AdminDashboardTAB = () => {
                 pendingChanges={pendingVisChanges}
                 onExport={handleExport}
                 onImport={handleImport}
+                onSave={async ({ originalId, changes }) => {
+                    await updateProduct({ originalId, changes });
+                  }}
             />
           </TabsContent>
           <TabsContent value="selected">
@@ -627,6 +655,9 @@ const AdminDashboardTAB = () => {
                                                    downloadCSV(data, headers, 'selected_products_export.csv');
                                                  }}
                                 onImport={handleImport}
+                                onSave={async ({ originalId, changes }) => {
+                                    await updateProduct({ originalId, changes });
+                                  }}
                             />
                 </Table>
 

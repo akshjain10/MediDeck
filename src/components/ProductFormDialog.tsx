@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { uploadImageToGithub } from '@/utils/imageUpload';
@@ -15,8 +14,8 @@ const ProductFormDialog = ({ open, onOpenChange, product, onAdd, onSave }: {
    open: boolean;
    onOpenChange: (open: boolean) => void;
    product: Product | null;
-   onSave: (params: { originalId: string; changes: Partial<Product> }) => Promise<boolean>;
-   onAdd: (product: Partial<Product>) => Promise<void>;
+   onSave: (product: Partial<Product>) => void;
+   onAdd: (product: Partial<Product>) => void;
  }) => {
    const [formData, setFormData] = useState<Partial<Product>>({
      id: '',
@@ -234,7 +233,7 @@ const ProductFormDialog = ({ open, onOpenChange, product, onAdd, onSave }: {
                ) : formData.id ? (
                  <ProductImage
                    productId={formData.id}
-                   altText={formData.Name}
+                   altText={formData.name}
                    className="object-contain h-full w-full p-4"
                   />
                ) : (
