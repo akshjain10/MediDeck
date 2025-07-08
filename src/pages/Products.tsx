@@ -530,8 +530,7 @@ const Products = React.memo(() => {
                 <div className="mb-4">
                   <p className="text-sm text-gray-600">
                     Found {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
-                    {filters.categories.length > 0 && !filters.categories.includes('All') &&
-                      ` in ${filters.categories.join(', ')}`}
+                    {filters.categories.length > 0 && !filters.categories.includes('All')}
                   </p>
                 </div>
               )}
