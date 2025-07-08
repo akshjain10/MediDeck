@@ -401,9 +401,6 @@ const AdminDashboardTAB = () => {
                   validationErrors.push(`Row ${index + 1}: Name is required`);
               }
               if (row.id) {
-                  if (!/^[a-zA-Z0-9\-_]+$/.test(row.id)) {
-                            validationErrors.push(`Row ${index + 1}: ID must contain only letters, numbers, hyphens, or underscores`);
-                          }
                   if (existingIds.has(row.id)) {
                       validationErrors.push(`Row ${index + 1}: ID ${row.id} already exists`);
                   }
@@ -418,9 +415,13 @@ const AdminDashboardTAB = () => {
               throw new Error(validationErrors.join('\n'));
           }
 
+          const generateId = () => {
+               return Math.random().toString(36).substring(2, 10);
+          };
+
           // Prepare data for insert
           const productsToInsert = csvData.map(row => ({
-              id: row.id || undefined, // Let Supabase generate ID if not provided
+              id: row.id || generateId(), // Let Supabase generate ID if not provided
               Name: row.Name,
               Salt: row.Salt || '',
               Company: row.Company || '',
@@ -432,7 +433,7 @@ const AdminDashboardTAB = () => {
 
           // Bypass RLS
           const { error } = await admin
-              .from('products')
+              .from('Product')
               .insert(productsToInsert)
               .select();
 
