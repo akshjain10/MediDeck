@@ -31,16 +31,11 @@ const EnquiryForm = ({ onSubmit }: EnquiryFormProps) => {
 
       try {
         const formDataToSend = new FormData();
-        formDataToSend.append('access_key',import.meta.env.FORM_ACCESS_KEY); // Replace with your Web3Form access key
+        formDataToSend.append('access_key',import.meta.env.VITE_FORM_ACCESS_KEY); // Replace with your Web3Form access key
         formDataToSend.append('name', formData.name);
         formDataToSend.append('email', formData.email);
         formDataToSend.append('phone', formData.phone);
-        formDataToSend.append('product_name', formData.productName);
-        formDataToSend.append('description', formData.description);
-
-        if (selectedImage) {
-          formDataToSend.append('attachment', selectedImage);
-        }
+        formDataToSend.append('description', formData.message);
 
         const response = await fetch('https://api.web3forms.com/submit', {
           method: 'POST',
@@ -51,8 +46,7 @@ const EnquiryForm = ({ onSubmit }: EnquiryFormProps) => {
 
         if (result.success) {
           onSubmit({
-            ...formData,
-            image: selectedImage || undefined,
+            ...formData
           });
         } else {
           throw new Error('Form submission failed');
