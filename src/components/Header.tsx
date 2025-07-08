@@ -1,18 +1,18 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Home, Package, Phone, ShoppingBag, Menu, X } from 'lucide-react';
 import EnquiryForm, { EnquiryData } from '@/components/EnquiryForm';
 import { Button } from '@/components/ui/button';
-import { CartItem } from '@/components/Cart';
+import { CartItem } from '@/types/cart';
 import { useToast } from '@/hooks/use-toast';
 
 interface HeaderProps {
   cartItemsCount: number;
   onCartClick: () => void;
+  onSetCartItems?: (items: CartItem[]) => void;
 }
 
-const Header = ({ cartItemsCount, onCartClick }: HeaderProps) => {
+const Header = ({ cartItemsCount, onCartClick, onSetCartItems }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showEnquiryForm, setShowEnquiryForm] = useState(false);
   const { toast } = useToast();

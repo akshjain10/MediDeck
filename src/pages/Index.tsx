@@ -20,10 +20,6 @@ const Index = () => {
   const { toast } = useToast();
   const { cartItems, setCartItems} = useCartPersistence();
 
-  const handleSetCartItems = (items: CartItem[]) => {
-    setCartItems(items);
-  };
-
   const updateQuantity = (id: string, quantity: number) => {
     if (quantity === 0) {
       removeFromCart(id);
@@ -64,7 +60,6 @@ const Index = () => {
       <Header
         cartItemsCount={cartItemsCount}
         onCartClick={() => setShowCart(true)}
-        onSetCartItems={handleSetCartItems}
       />
       
       <main>
