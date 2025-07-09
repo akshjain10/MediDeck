@@ -29,6 +29,7 @@ const Products = React.memo(() => {
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [newArrivals, setNewArrivals] = useState<Product[]>([]);
   const [itemsPerPage, setItemsPerPage] = useState(25);
   const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
@@ -62,6 +63,13 @@ const Products = React.memo(() => {
         ...prev,
         priceRange: [minPrice, maxPrice]
       }));
+    }
+  }, [products]);
+
+  useEffect(() => {
+    if (products.length > 0) {
+      const arrivals = products.filter(product => product.newArrival === true);
+      setNewArrivals(arrivals);
     }
   }, [products]);
 
