@@ -31,7 +31,7 @@ const ProductCard = memo(({ product, onAddToCart }: ProductCardProps) => {
       <>
         {text.substring(0, cutPoint)}{' '}
         <Link
-          to={`/product/${product.id}`}
+          to={`/products/${product.id}`}
           onClick={() => window.scrollTo(0, 0)}
           className="text-blue-600 hover:text-blue-800 underline text-sm"
         >
@@ -43,7 +43,7 @@ const ProductCard = memo(({ product, onAddToCart }: ProductCardProps) => {
 
   return (
     <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-300">
-      <Link to={`/product/${product.id}`} className="block" onClick={() => window.scrollTo(0, 0)}>
+      <Link to={`/products/${product.id}`} className="block" onClick={() => window.scrollTo(0, 0)}>
         <div className="overflow-hidden rounded-t-lg h-48 flex items-center justify-center bg-gray-50">
           <ProductImage 
             productId={product.id} 
@@ -53,7 +53,7 @@ const ProductCard = memo(({ product, onAddToCart }: ProductCardProps) => {
         </div>
       </Link>
       <CardContent className="flex-1 p-4">
-        <Link to={`/product/${product.id}`} onClick={() => window.scrollTo(0, 0)}>
+        <Link to={`/products/${product.id}`} onClick={() => window.scrollTo(0, 0)}>
           <h3 className="font-semibold text-lg mb-2 hover:text-blue-600 transition-colors" title={product.brandName}>
             {getDisplayName(product.brandName, 40, showFullBrandName, setShowFullBrandName)}
           </h3>

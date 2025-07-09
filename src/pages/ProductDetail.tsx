@@ -345,11 +345,22 @@ const ProductDetail = () => {
   const [showEnquiryForm, setShowEnquiryForm] = useState(false);
   const [orderNumber, setOrderNumber] = useState('');
   const [quantity, setQuantity] = useState(1);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const { toast } = useToast();
   const { products, loading } = useProducts();
   const { cartItems, setCartItems, clearCart } = useCartPersistence();
 
+  //const product = React.useMemo(() => products.find(p => p.id === id), [products, id]);
   const product = products.find(p => p.id === id);
+
+
+   useEffect(() => {
+      if (!loading) {
+        // Small timeout to ensure products are actually populated
+        const timer = setTimeout(() => setHasLoaded(true), 100);
+        return () => clearTimeout(timer);
+      }
+    }, [loading]);
 
   // Get similar products using the updated logic
   const similarProducts = products.filter(p =>
@@ -361,6 +372,11 @@ const ProductDetail = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
+
+    const handleBack = () => {
+      const navigate = useNavigate();
+      navigate(-1); // go back to previous page
+    };
 
   const copyToClipboard = (text: string) => {
     // Use modern clipboard API if available (secure contexts)
@@ -391,7 +407,7 @@ const ProductDetail = () => {
       if (!product) return;
 
       const productUrl = `${window.location.origin}/products/${product.id}`;
-      const shareText = `Check out ${product.brandName} by ${product.company} - ${product.mrp}₹\n\n${productUrl}`;
+      const shareText = `Check out ${product.brandName} by ${product.company} - MRP ₹${product.mrp}\n\n${productUrl}`;
       const emailSubject = `Check out this product: ${product.brandName}`;
       const emailBody = `I thought you might be interested in this product:\n\n${shareText}`;
 
@@ -423,39 +439,37 @@ const ProductDetail = () => {
       }
     };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header
-          cartItemsCount={0}
-          onCartClick={() => {}}
-          onSetCartItems={() => {}}
-        />
-        <div className="container mx-auto px-4 py-8 text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
-          <p className="text-gray-500">Loading product...</p>
+  if (loading || !hasLoaded) {
+      return (
+        <div className="min-h-screen bg-gray-50">
+          <Header
+            cartItemsCount={0}
+            onCartClick={() => {}}
+            onSetCartItems={() => {}}
+          />
+          <div className="container mx-auto px-4 py-8 text-center">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+            <p className="text-gray-500">Loading product...</p>
+          </div>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  if (!product) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header
-          cartItemsCount={0}
-          onCartClick={() => {}}
-          onSetCartItems={() => {}}
-        />
-        <div className="container mx-auto px-4 py-8 text-center">
-          <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
-          <Link to="/products">
-            <Button>Back to Products</Button>
-          </Link>
+    if (!product) {
+      return (
+        <div className="min-h-screen bg-gray-50">
+          <Header
+            cartItemsCount={0}
+            onCartClick={() => {}}
+            onSetCartItems={() => {}}
+          />
+          <div className="container mx-auto px-4 py-8 text-center">
+            <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
+              <Button onClick={handleBack}>Back</Button>
+          </div>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
   const addToCart = (productToAdd: Product, qty: number = 1) => {
     const existingItem = cartItems.find(item => item.id === productToAdd.id);
@@ -548,46 +562,108 @@ const ProductDetail = () => {
 
         <main className="container mx-auto px-4 py-8">
           <div className="mb-6 flex justify-between items-center">
-            <Link to="/products" className="flex items-center text-blue-600 hover:text-blue-700">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Products
-            </Link>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="flex items-center gap-2"
+            <button
+                  onClick={() => window.history.back()}
+                  className="flex items-center text-blue-600 hover:text-blue-700"
                 >
-                  <Share2 className="w-4 h-4" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-48">
-                <div className="grid gap-4">
-                                   <Button variant="ghost" className="justify-start" onClick={() => handleShare('whatsapp')}>
-                                                     <img src="https://img.icons8.com/?size=100&id=QkXeKixybttw&format=png&color=000000" alt="WhatsApp" className="mr-2 h-4 w-4" />
-                                                           WhatsApp
-                                   </Button>
-                                   <Button variant="ghost" className="justify-start" onClick={() => handleShare('telegram')}>
-                                                    <img src="https://img.icons8.com/?size=100&id=63306&format=png&color=000000" alt="Telegram" className="mr-2 h-4 w-4" />
-                                                           Telegram
-                                   </Button>
-                  <Button variant="ghost" className="justify-start" onClick={() => handleShare('email')}>
-                    <Mail className="mr-2 h-4 w-4" />
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </button>
+            <Popover>
+              <div className="relative">
+                {/* Inverted triangle indicator on the button */}
+                <div className="absolute -bottom-1.5 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-white rotate-45 border-t border-l border-gray-200 z-0 hidden group-hover:block" />
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2 group relative"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    <span>Share</span>
+                  </Button>
+                </PopoverTrigger>
+              </div>
+              <PopoverContent
+                className="w-56 p-2 rounded-lg shadow-lg border-0"
+                sideOffset={5}
+                align="end"
+                style={{ boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)' }}
+              >
+                <div className="grid gap-1 bg-white">
+                  <Button
+                    variant="ghost"
+                    className="justify-start px-3 py-2 h-10 rounded-md hover:bg-gray-100"
+                    onClick={() => handleShare('whatsapp')}
+                  >
+                    <img
+                      src="https://img.icons8.com/ios-filled/50/008000/whatsapp.png"
+                      alt="WhatsApp"
+                      className="mr-3 h-5 w-5"
+                    />
+                    WhatsApp
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="justify-start px-3 py-2 h-10 rounded-md hover:bg-gray-100"
+                    onClick={() => handleShare('telegram')}
+                  >
+                    <img
+                      src="https://img.icons8.com/ios-filled/50/0088CC/telegram-app.png"
+                      alt="Telegram"
+                      className="mr-3 h-5 w-5"
+                    />
+                    Telegram
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="justify-start px-3 py-2 h-10 rounded-md hover:bg-gray-100"
+                    onClick={() => handleShare('email')}
+                  >
+                    <Mail className="mr-3 h-5 w-5" />
                     Email
                   </Button>
-                  <Button variant="ghost" className="justify-start" onClick={() => handleShare('pinterest')}>
-                    <img src="https://img.icons8.com/color/48/pinterest.png" alt="Pinterest" className="mr-2 h-4 w-4" />
-                    Pinterest
-                  </Button>
-                  <Button variant="ghost" className="justify-start" onClick={() => handleShare('facebook')}>
-                     <img src="https://img.icons8.com/color/48/facebook-new.png" alt="Facebook" className="mr-2 h-4 w-4" />
+                  <Button
+                    variant="ghost"
+                    className="justify-start px-3 py-2 h-10 rounded-md hover:bg-gray-100"
+                    onClick={() => handleShare('facebook')}
+                  >
+                    <img
+                      src="https://img.icons8.com/ios-filled/50/1877F2/facebook-new.png"
+                      alt="Facebook"
+                      className="mr-3 h-5 w-5"
+                    />
                     Facebook
                   </Button>
-                  <Button variant="ghost" className="justify-start" onClick={() => handleShare('twitter')}>
-                    <X className="mr-2 h-4 w-4" />X
+                  <Button
+                    variant="ghost"
+                    className="justify-start px-3 py-2 h-10 rounded-md hover:bg-gray-100"
+                    onClick={() => handleShare('twitter')}
+                  >
+                    <img
+                      src="https://img.icons8.com/ios-filled/50/1DA1F2/twitter.png"
+                      alt="Twitter"
+                      className="mr-3 h-5 w-5"
+                    />
+                    Twitter
                   </Button>
-                  <Button variant="ghost" className="justify-start" onClick={() => handleShare('copy')}>
-                    <Copy className="mr-2 h-4 w-4" />
+                  <Button
+                    variant="ghost"
+                    className="justify-start px-3 py-2 h-10 rounded-md hover:bg-gray-100"
+                    onClick={() => handleShare('pinterest')}
+                  >
+                    <img
+                      src="https://img.icons8.com/ios-filled/50/BD081C/pinterest.png"
+                      alt="Pinterest"
+                      className="mr-3 h-5 w-5"
+                    />
+                    Pinterest
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="justify-start px-3 py-2 h-10 rounded-md hover:bg-gray-100"
+                    onClick={() => handleShare('copy')}
+                  >
+                    <Copy className="mr-3 h-5 w-5" />
                     Copy Link
                   </Button>
                 </div>
@@ -596,7 +672,9 @@ const ProductDetail = () => {
           </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           <div className="space-y-4">
-            <Badge variant="secondary">{product.category}</Badge>
+            {product.category && (
+                          <Badge variant="secondary">{product.category}</Badge>
+                        )}
             <div
               className="overflow-hidden rounded-lg bg-white p-8 max-w-lg mx-auto flex items-center justify-center"
               style={{ minHeight: '400px' }}

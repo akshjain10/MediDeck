@@ -31,6 +31,11 @@ import { useToast } from '@/hooks/use-toast';
 import AdminProductTable from '@/components/AdminProductTable';
 import { useAdminProducts, Product } from '@/hooks/useAdminProducts';
 
+interface PendingChanges {
+  visibility?: boolean;
+  newArrivals?: boolean;
+}
+
 const StatCard = ({
   title,
   value,
@@ -323,7 +328,7 @@ const UsersTab = () => (
 );
 
 const AdminDashboardTAB = () => {
-  const { products, loading, applyVisibilityChanges, updateProduct, addProduct, deleteProducts } = useAdminProducts();
+  const { products, loading, applyVisibilityChanges, updateProduct, addProduct, deleteProducts, applyNewArrivalsChanges } = useAdminProducts();
   const [localProducts, setLocalProducts] = useState<Product[]>([]);
   const [appliedProducts, setAppliedProducts] = useState<Product[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -332,7 +337,7 @@ const AdminDashboardTAB = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const [filter, setFilter] = useState<'all' | 'visible' | 'hidden'>('all');
-  const [pendingVisChanges, setPendingVisChanges] = useState<Record<string, boolean>>({});
+  const [pendingVisChanges, setPendingVisChanges] = useState<Record<string, PendingChanges>>({});
 
   // Update filteredProducts to account for pending changes
   const filteredProducts = useMemo(() => {
@@ -340,14 +345,13 @@ const AdminDashboardTAB = () => {
 
     if (filter === 'visible') products = appliedProducts.filter(p => p.visibility);
     if (filter === 'hidden') products = appliedProducts.filter(p => !p.visibility);
+    if (filter === 'newArrivals') products = appliedProducts.filter(p => p.newArrivals);
 
-    // Apply pending changes to the view
-    return products.map(product => {
-      if (product.id in pendingVisChanges) {
-        return { ...product, visibility: pendingVisChanges[product.id] };
-      }
-      return product;
-    });
+    return products.map(product => ({
+      ...product,
+      visibility: pendingVisChanges[product.id]?.visibility ?? product.visibility,
+      newArrivals: pendingVisChanges[product.id]?.newArrivals ?? product.newArrivals
+    }));
   }, [appliedProducts, filter, pendingVisChanges]);
 
    const selectedProducts = useMemo(() => {
@@ -428,7 +432,8 @@ const AdminDashboardTAB = () => {
               Packing: row.Packing || '',
               MRP: parseFloat(row.MRP) || 0,
               Category: row.Category || '',
-              visibility: true // Default value
+              visibility: true,// Default value
+              newArrivals: false
           }));
 
           // Bypass RLS
@@ -445,21 +450,25 @@ const AdminDashboardTAB = () => {
       }
   };
 
+  const handleNewArrivalsToggle = useCallback((productId: string, newArrivals: boolean) => {
+    setPendingVisChanges(prev => ({
+      ...prev,
+      [productId]: {
+        ...prev[productId],
+        newArrivals
+      }
+    }));
+  }, []);
+
   const handleVisibilityToggle = useCallback((productId: string, isVisible: boolean) => {
-      setLocalProducts(current => {
-        const index = current.findIndex(p => p.id === productId);
-        if (index === -1) return current;
-
-        const updated = [...current];
-        updated[index] = { ...updated[index], visibility: isVisible };
-        return updated;
-      });
-
-      setPendingVisChanges(prev => ({
-        ...prev,
-        [productId]: isVisible
-      }));
-    }, []);
+    setPendingVisChanges(prev => ({
+      ...prev,
+      [productId]: {
+        ...prev[productId],
+        visibility: isVisible
+      }
+    }));
+  }, [])
 
   const handleSelect = useCallback((id: string, checked: boolean) => {
     setSelectedIds(prev =>
@@ -486,13 +495,47 @@ const AdminDashboardTAB = () => {
 
   const handleApplyChanges = async () => {
     try {
-      await applyVisibilityChanges(pendingVisChanges);
+      // Separate visibility and new arrival changes
+      const visibilityChanges: Record<string, boolean> = {};
+      const newArrivalChanges: Record<string, boolean> = {};
+
+      Object.entries(pendingVisChanges).forEach(([id, changes]) => {
+        if (changes.visibility !== undefined) {
+          visibilityChanges[id] = changes.visibility;
+        }
+        if (changes.newArrivals !== undefined) {
+          newArrivalChanges[id] = changes.newArrivals;
+        }
+      });
+
+      // Apply changes in parallel if both exist
+      const changePromises = [];
+
+      if (Object.keys(visibilityChanges).length > 0) {
+        changePromises.push(applyVisibilityChanges(visibilityChanges));
+      }
+
+      if (Object.keys(newArrivalChanges).length > 0) {
+        changePromises.push(applyNewArrivalsChanges(newArrivalChanges));
+      }
+
+      await Promise.all(changePromises);
+
+      // Update local state
       setAppliedProducts(localProducts);
       setPendingVisChanges({});
       setIsConfirmOpen(false);
-      toast({ title: "Success", description: "Visibility changes applied" });
+
+      toast({
+        title: "Success",
+        description: `Applied ${changePromises.length} type(s) of changes`
+      });
     } catch (error) {
-      toast({ title: "Error", description: "Failed to apply changes", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to apply some changes",
+        variant: "destructive"
+      });
     }
   };
 
@@ -595,34 +638,34 @@ const AdminDashboardTAB = () => {
               </Button>
 
               {/* Companies Button (optional) */}
-              <Button
-                variant="ghost"
-                className="h-full p-0"
-                onClick={() => {
-                  // Optional: Add company filter logic later
-                  toast({ title: "Feature coming soon", description: "Company filtering will be added soon!" });
-                }}
-              >
-                <StatCard
-                  title="Companies"
-                  value={companyCount}
-                  icon={<Building className="h-5 w-5" />}
-                />
-              </Button>
+               <Button
+                      variant="ghost"
+                      className="h-full p-0"
+                      onClick={() => setFilter('newArrivals')}
+                  >
+                      <StatCard
+                          title="New Arrivals"
+                          value={appliedProducts.filter(p => p.newArrivals).length}
+                          icon={<PlusCircle className="h-5 w-5" />}
+                          variant="default"
+                          active={filter === 'newArrivals'}
+                      />
+                  </Button>
             </div>
             <AdminProductTable
-                products={filteredProducts}
-                onToggleVisibility={handleVisibilityToggle}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                selectedIds={selectedIds}
-                onSelect={handleSelect}
-                pendingChanges={pendingVisChanges}
-                onExport={handleExport}
-                onImport={handleImport}
-                onSave={async ({ originalId, changes }) => {
-                    await updateProduct({ originalId, changes });
-                  }}
+              products={filteredProducts}
+              onToggleNewArrivals={handleNewArrivalsToggle}
+              onToggleVisibility={handleVisibilityToggle}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              selectedIds={selectedIds}
+              onSelect={handleSelect}
+              pendingChanges={pendingVisChanges}
+              onExport={handleExport}
+              onImport={handleImport}
+              onSave={async ({ originalId, changes }) => {
+                await updateProduct({ originalId, changes });
+              }}
             />
           </TabsContent>
           <TabsContent value="selected">
@@ -634,6 +677,7 @@ const AdminDashboardTAB = () => {
                 <Table>
                 <AdminProductTable
                                 products={selectedProducts}
+                                onToggleNewArrivals={handleNewArrivalsToggle}
                                 onToggleVisibility={handleVisibilityToggle}
                                 onEdit={handleEdit}
                                 onDelete={handleDelete}

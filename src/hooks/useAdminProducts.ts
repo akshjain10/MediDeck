@@ -12,6 +12,7 @@ export interface Product {
     MRP: number;
     Category: string;
     visibility: boolean;
+    newArrivals: boolean;
 }
 
 export const useAdminProducts = () => {
@@ -47,21 +48,38 @@ const [products, setProducts] = useState<Product[]>([]);
       setPendingVisChanges(prev => ({ ...prev, [productId]: isVisible }));
     };
 
-    const applyVisibilityChanges = async (changes: Record<string, boolean>) => {
+    const applyNewArrivalsChanges = async (changes: Record<string, boolean>) => {
         try {
-            const updates = Object.entries(changes).map(([id, visibility]) =>
-                admin.from('Product').update({ visibility }).eq('id', id)
+            const updates = Object.entries(changes).map(([id, newArrivals]) =>
+                admin.from('Product').update({ newArrivals }).eq('id', id)
             );
             const results = await Promise.all(updates);
             const error = results.find(res => res.error);
             if (error) throw error.error;
 
             await fetchProducts();
-            toast({ title: "Success", description: `Visibility updated for ${Object.keys(changes).length} product(s).` });
+            toast({ title: "Success", description: `New Arrival status updated for ${Object.keys(changes).length} product(s).` });
         } catch (error: any) {
             toast({ title: "Error applying changes", description: error.message, variant: "destructive" });
         }
     };
+
+    const applyVisibilityChanges = async (changes: Record<string, boolean>) => {
+            try {
+                const updates = Object.entries(changes).map(([id, visibility]) =>
+                    admin.from('Product').update({ visibility }).eq('id', id)
+                );
+                const results = await Promise.all(updates);
+                const error = results.find(res => res.error);
+                if (error) throw error.error;
+
+                await fetchProducts();
+                toast({ title: "Success", description: `Status updated for ${Object.keys(changes).length} product(s).` });
+            } catch (error: any) {
+                toast({ title: "Error applying changes", description: error.message, variant: "destructive" });
+            }
+        };
+
 
     // Update the updateProduct function signature
     const updateProduct = async (params: {
@@ -160,6 +178,6 @@ const [products, setProducts] = useState<Product[]>([]);
         }
     };
 
-    return { products, loading, fetchProducts, applyVisibilityChanges, updateProduct, addProduct, deleteProducts};
+    return { products, loading, fetchProducts, applyVisibilityChanges, updateProduct, addProduct, deleteProducts, applyNewArrivalsChanges};
 };
 

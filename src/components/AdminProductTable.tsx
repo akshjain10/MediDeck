@@ -22,11 +22,13 @@ interface Product {
     MRP: number;
     Category?: string;
     visibility: boolean;
+    newArrivals: boolean;
 }
 
 interface Props {
     products: Product[];
     pendingChanges: Record<string, boolean>;
+    onToggleNewArrivals: (id: string, value: boolean) => void;
     onToggleVisibility: (id: string, value: boolean) => void;
     onEdit: (product: Product) => void;
     onDelete: (ids: string[]) => void;
@@ -39,6 +41,7 @@ interface Props {
 const AdminProductTable: React.FC<Props> = ({
     products,
     pendingChanges,
+    onToggleNewArrivals,
     onToggleVisibility,
     onEdit,
     onDelete,
@@ -237,6 +240,7 @@ const AdminProductTable: React.FC<Props> = ({
                         <TableRow>
                             <TableHead className="w-12">
                                 <Checkbox
+                                    checked={isAllSelected}
                                     onCheckedChange={toggleSelectAll}
                                 />
                             </TableHead>
@@ -257,6 +261,7 @@ const AdminProductTable: React.FC<Props> = ({
                                 </TableHead>
                             ))}
                             <TableHead>Status</TableHead>
+                            <TableHead>New Arrival</TableHead>
                             <TableHead>Actions</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -303,6 +308,24 @@ const AdminProductTable: React.FC<Props> = ({
                                     </span>
                                   </div>
                                 </TableCell>
+                                <TableCell>
+                                                <div className="flex items-center gap-2">
+                                                    <Switch
+                                                        checked={product.newArrivals}
+                                                        onCheckedChange={(checked) => onToggleNewArrivals(product.id, checked)}
+                                                        className={`data-[state=checked]:bg-blue-500 ${
+                                                            product.id in pendingChanges ? 'ring-2 ring-yellow-400' : ''
+                                                        }`}
+                                                    />
+                                                    <span className={`text-sm font-medium ${
+                                                        product.newArrivals ? 'text-blue-600' : 'text-gray-500'
+                                                    } ${
+                                                        product.id in pendingChanges ? 'font-bold' : ''
+                                                    }`}>
+                                                        {product.newArrivals ? 'New' : 'Regular'}
+                                                    </span>
+                                                </div>
+                                            </TableCell>
                                 <TableCell>
                                     <Button
                                         variant="ghost"
