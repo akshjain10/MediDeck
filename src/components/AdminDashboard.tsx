@@ -31,6 +31,11 @@ import { useToast } from '@/hooks/use-toast';
 import AdminProductTable from '@/components/AdminProductTable';
 import { useAdminProducts, Product } from '@/hooks/useAdminProducts';
 
+interface PendingChanges {
+  visibility?: boolean;
+  newArrivals?: boolean;
+}
+
 const StatCard = ({
   title,
   value,
@@ -332,21 +337,21 @@ const AdminDashboardTAB = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const [filter, setFilter] = useState<'all' | 'visible' | 'hidden'>('all');
-  const [pendingVisChanges, setPendingVisChanges] = useState<Record<string, boolean>>({});
+  const [pendingVisChanges, setPendingVisChanges] = useState<Record<string, PendingChanges>>({});
 
   // Update filteredProducts to account for pending changes
   const filteredProducts = useMemo(() => {
-      let products = appliedProducts;
+    let products = appliedProducts;
 
-      if (filter === 'visible') products = appliedProducts.filter(p => p.visibility);
-      if (filter === 'hidden') products = appliedProducts.filter(p => !p.visibility);
-      if (filter === 'newArrivals') products = appliedProducts.filter(p => p.newArrivals);
+    if (filter === 'visible') products = appliedProducts.filter(p => p.visibility);
+    if (filter === 'hidden') products = appliedProducts.filter(p => !p.visibility);
+    if (filter === 'newArrivals') products = appliedProducts.filter(p => p.newArrivals);
 
-      return products.map(product => ({
-          ...product,
-          visibility: pendingVisChanges[product.id]?.visibility ?? product.visibility,
-          newArrivals: pendingVisChanges[product.id]?.newArrivals ?? product.newArrivals
-      }));
+    return products.map(product => ({
+      ...product,
+      visibility: pendingVisChanges[product.id]?.visibility ?? product.visibility,
+      newArrivals: pendingVisChanges[product.id]?.newArrivals ?? product.newArrivals
+    }));
   }, [appliedProducts, filter, pendingVisChanges]);
 
    const selectedProducts = useMemo(() => {
@@ -446,30 +451,24 @@ const AdminDashboardTAB = () => {
   };
 
   const handleNewArrivalsToggle = useCallback((productId: string, newArrivals: boolean) => {
-      setPendingVisChanges(prev => ({
-          ...prev,
-          [productId]: {
-              ...prev[productId],
-              newArrivals
-          }
-      }));
+    setPendingVisChanges(prev => ({
+      ...prev,
+      [productId]: {
+        ...prev[productId],
+        newArrivals
+      }
+    }));
   }, []);
 
   const handleVisibilityToggle = useCallback((productId: string, isVisible: boolean) => {
-      setLocalProducts(current => {
-        const index = current.findIndex(p => p.id === productId);
-        if (index === -1) return current;
-
-        const updated = [...current];
-        updated[index] = { ...updated[index], visibility: isVisible };
-        return updated;
-      });
-
-      setPendingVisChanges(prev => ({
-        ...prev,
-        [productId]: isVisible
-      }));
-    }, []);
+    setPendingVisChanges(prev => ({
+      ...prev,
+      [productId]: {
+        ...prev[productId],
+        visibility: isVisible
+      }
+    }));
+  }, [])
 
   const handleSelect = useCallback((id: string, checked: boolean) => {
     setSelectedIds(prev =>
@@ -495,50 +494,50 @@ const AdminDashboardTAB = () => {
   }, [deleteProducts, toast]);
 
   const handleApplyChanges = async () => {
-      try {
-        // Separate visibility and new arrival changes
-        const visibilityChanges: Record<string, boolean> = {};
-        const newArrivalChanges: Record<string, boolean> = {};
+    try {
+      // Separate visibility and new arrival changes
+      const visibilityChanges: Record<string, boolean> = {};
+      const newArrivalChanges: Record<string, boolean> = {};
 
-        Object.entries(pendingVisChanges).forEach(([id, changes]) => {
-          if ('visibility' in changes) {
-            visibilityChanges[id] = changes.visibility;
-          }
-          if ('newArrivals' in changes) {
-            newArrivalChanges[id] = changes.newArrivals;
-          }
-        });
-
-        // Apply changes in parallel if both exist
-        const changePromises = [];
-
-        if (Object.keys(visibilityChanges).length > 0) {
-          changePromises.push(applyVisibilityChanges(visibilityChanges));
+      Object.entries(pendingVisChanges).forEach(([id, changes]) => {
+        if (changes.visibility !== undefined) {
+          visibilityChanges[id] = changes.visibility;
         }
-
-        if (Object.keys(newArrivalChanges).length > 0) {
-          changePromises.push(applyNewArrivalsChanges(newArrivalChanges));
+        if (changes.newArrivals !== undefined) {
+          newArrivalChanges[id] = changes.newArrivals;
         }
+      });
 
-        await Promise.all(changePromises);
+      // Apply changes in parallel if both exist
+      const changePromises = [];
 
-        // Update local state
-        setAppliedProducts(localProducts);
-        setPendingVisChanges({});
-        setIsConfirmOpen(false);
-
-        toast({
-          title: "Success",
-          description: `Applied ${changePromises.length} type(s) of changes`
-        });
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to apply some changes",
-          variant: "destructive"
-        });
+      if (Object.keys(visibilityChanges).length > 0) {
+        changePromises.push(applyVisibilityChanges(visibilityChanges));
       }
-    };
+
+      if (Object.keys(newArrivalChanges).length > 0) {
+        changePromises.push(applyNewArrivalsChanges(newArrivalChanges));
+      }
+
+      await Promise.all(changePromises);
+
+      // Update local state
+      setAppliedProducts(localProducts);
+      setPendingVisChanges({});
+      setIsConfirmOpen(false);
+
+      toast({
+        title: "Success",
+        description: `Applied ${changePromises.length} type(s) of changes`
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to apply some changes",
+        variant: "destructive"
+      });
+    }
+  };
 
   const handleDiscardChanges = () => {
     setLocalProducts(appliedProducts);
@@ -654,19 +653,19 @@ const AdminDashboardTAB = () => {
                   </Button>
             </div>
             <AdminProductTable
-                products={filteredProducts}
-                onToggleNewArrivals={handleNewArrivalsToggle}
-                onToggleVisibility={handleVisibilityToggle}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                selectedIds={selectedIds}
-                onSelect={handleSelect}
-                pendingChanges={pendingVisChanges}
-                onExport={handleExport}
-                onImport={handleImport}
-                onSave={async ({ originalId, changes }) => {
-                    await updateProduct({ originalId, changes });
-                  }}
+              products={filteredProducts}
+              onToggleNewArrivals={handleNewArrivalsToggle}
+              onToggleVisibility={handleVisibilityToggle}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              selectedIds={selectedIds}
+              onSelect={handleSelect}
+              pendingChanges={pendingVisChanges}
+              onExport={handleExport}
+              onImport={handleImport}
+              onSave={async ({ originalId, changes }) => {
+                await updateProduct({ originalId, changes });
+              }}
             />
           </TabsContent>
           <TabsContent value="selected">
