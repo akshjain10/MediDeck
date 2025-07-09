@@ -323,7 +323,7 @@ const UsersTab = () => (
 );
 
 const AdminDashboardTAB = () => {
-  const { products, loading, applyVisibilityChanges, updateProduct, addProduct, deleteProducts } = useAdminProducts();
+  const { products, loading, applyVisibilityChanges, updateProduct, addProduct, deleteProducts, applyNewArrivalsChanges } = useAdminProducts();
   const [localProducts, setLocalProducts] = useState<Product[]>([]);
   const [appliedProducts, setAppliedProducts] = useState<Product[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -336,18 +336,17 @@ const AdminDashboardTAB = () => {
 
   // Update filteredProducts to account for pending changes
   const filteredProducts = useMemo(() => {
-    let products = appliedProducts;
+      let products = appliedProducts;
 
-    if (filter === 'visible') products = appliedProducts.filter(p => p.visibility);
-    if (filter === 'hidden') products = appliedProducts.filter(p => !p.visibility);
+      if (filter === 'visible') products = appliedProducts.filter(p => p.visibility);
+      if (filter === 'hidden') products = appliedProducts.filter(p => !p.visibility);
+      if (filter === 'newArrivals') products = appliedProducts.filter(p => p.newArrivals);
 
-    // Apply pending changes to the view
-    return products.map(product => {
-      if (product.id in pendingVisChanges) {
-        return { ...product, visibility: pendingVisChanges[product.id] };
-      }
-      return product;
-    });
+      return products.map(product => ({
+          ...product,
+          visibility: pendingVisChanges[product.id]?.visibility ?? product.visibility,
+          newArrivals: pendingVisChanges[product.id]?.newArrivals ?? product.newArrivals
+      }));
   }, [appliedProducts, filter, pendingVisChanges]);
 
    const selectedProducts = useMemo(() => {
@@ -428,7 +427,8 @@ const AdminDashboardTAB = () => {
               Packing: row.Packing || '',
               MRP: parseFloat(row.MRP) || 0,
               Category: row.Category || '',
-              visibility: true // Default value
+              visibility: true,// Default value
+              newArrivals: false
           }));
 
           // Bypass RLS
@@ -444,6 +444,16 @@ const AdminDashboardTAB = () => {
           throw error;
       }
   };
+
+  const handleNewArrivalsToggle = useCallback((productId: string, newArrivals: boolean) => {
+      setPendingVisChanges(prev => ({
+          ...prev,
+          [productId]: {
+              ...prev[productId],
+              newArrivals
+          }
+      }));
+  }, []);
 
   const handleVisibilityToggle = useCallback((productId: string, isVisible: boolean) => {
       setLocalProducts(current => {
@@ -485,16 +495,50 @@ const AdminDashboardTAB = () => {
   }, [deleteProducts, toast]);
 
   const handleApplyChanges = async () => {
-    try {
-      await applyVisibilityChanges(pendingVisChanges);
-      setAppliedProducts(localProducts);
-      setPendingVisChanges({});
-      setIsConfirmOpen(false);
-      toast({ title: "Success", description: "Visibility changes applied" });
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to apply changes", variant: "destructive" });
-    }
-  };
+      try {
+        // Separate visibility and new arrival changes
+        const visibilityChanges: Record<string, boolean> = {};
+        const newArrivalChanges: Record<string, boolean> = {};
+
+        Object.entries(pendingVisChanges).forEach(([id, changes]) => {
+          if ('visibility' in changes) {
+            visibilityChanges[id] = changes.visibility;
+          }
+          if ('newArrivals' in changes) {
+            newArrivalChanges[id] = changes.newArrivals;
+          }
+        });
+
+        // Apply changes in parallel if both exist
+        const changePromises = [];
+
+        if (Object.keys(visibilityChanges).length > 0) {
+          changePromises.push(applyVisibilityChanges(visibilityChanges));
+        }
+
+        if (Object.keys(newArrivalChanges).length > 0) {
+          changePromises.push(applyNewArrivalsChanges(newArrivalChanges));
+        }
+
+        await Promise.all(changePromises);
+
+        // Update local state
+        setAppliedProducts(localProducts);
+        setPendingVisChanges({});
+        setIsConfirmOpen(false);
+
+        toast({
+          title: "Success",
+          description: `Applied ${changePromises.length} type(s) of changes`
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to apply some changes",
+          variant: "destructive"
+        });
+      }
+    };
 
   const handleDiscardChanges = () => {
     setLocalProducts(appliedProducts);
@@ -595,23 +639,23 @@ const AdminDashboardTAB = () => {
               </Button>
 
               {/* Companies Button (optional) */}
-              <Button
-                variant="ghost"
-                className="h-full p-0"
-                onClick={() => {
-                  // Optional: Add company filter logic later
-                  toast({ title: "Feature coming soon", description: "Company filtering will be added soon!" });
-                }}
-              >
-                <StatCard
-                  title="Companies"
-                  value={companyCount}
-                  icon={<Building className="h-5 w-5" />}
-                />
-              </Button>
+               <Button
+                      variant="ghost"
+                      className="h-full p-0"
+                      onClick={() => setFilter('newArrivals')}
+                  >
+                      <StatCard
+                          title="New Arrivals"
+                          value={appliedProducts.filter(p => p.newArrivals).length}
+                          icon={<PlusCircle className="h-5 w-5" />}
+                          variant="default"
+                          active={filter === 'newArrivals'}
+                      />
+                  </Button>
             </div>
             <AdminProductTable
                 products={filteredProducts}
+                onToggleNewArrivals={handleNewArrivalsToggle}
                 onToggleVisibility={handleVisibilityToggle}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
@@ -634,6 +678,7 @@ const AdminDashboardTAB = () => {
                 <Table>
                 <AdminProductTable
                                 products={selectedProducts}
+                                onToggleNewArrivals={handleNewArrivalsToggle}
                                 onToggleVisibility={handleVisibilityToggle}
                                 onEdit={handleEdit}
                                 onDelete={handleDelete}
