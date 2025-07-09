@@ -432,6 +432,7 @@ const AdminDashboardTAB = () => {
               Packing: row.Packing || '',
               MRP: parseFloat(row.MRP) || 0,
               Category: row.Category || '',
+              Division: row.Division || '',
               visibility: true,// Default value
               newArrivals: false
           }));
