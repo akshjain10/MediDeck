@@ -230,8 +230,11 @@ const Index = () => {
 
   const newArrivalsSliderSettings = {
       dots: true,
+      cssEase: "linear",
       infinite: true,
       speed: 500,
+      autoplay: true,
+      autoplaySpeed: 1500,
       slidesToShow: Math.min(4, newArrivals.length),
       slidesToScroll: 1,
       responsive: [

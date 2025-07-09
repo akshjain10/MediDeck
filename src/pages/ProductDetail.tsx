@@ -373,6 +373,11 @@ const ProductDetail = () => {
     window.scrollTo(0, 0);
   }, [id]);
 
+    const handleBack = () => {
+      const navigate = useNavigate();
+      navigate(-1); // go back to previous page
+    };
+
   const copyToClipboard = (text: string) => {
     // Use modern clipboard API if available (secure contexts)
     if (navigator.clipboard && window.isSecureContext) {
@@ -460,9 +465,7 @@ const ProductDetail = () => {
           />
           <div className="container mx-auto px-4 py-8 text-center">
             <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
-            <Link to="/products">
-              <Button>Back to Products</Button>
-            </Link>
+              <Button onClick={handleBack}>Back</Button>
           </div>
         </div>
       );
@@ -559,10 +562,13 @@ const ProductDetail = () => {
 
         <main className="container mx-auto px-4 py-8">
           <div className="mb-6 flex justify-between items-center">
-            <Link to="/products" className="flex items-center text-blue-600 hover:text-blue-700">
+            <button
+                  onClick={() => window.history.back()}
+                  className="flex items-center text-blue-600 hover:text-blue-700"
+                >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Products
-            </Link>
+              Back
+            </button>
             <Popover>
               <div className="relative">
                 {/* Inverted triangle indicator on the button */}
