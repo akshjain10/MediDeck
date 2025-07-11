@@ -12,7 +12,7 @@ import { Search, Loader2, Filter, X } from 'lucide-react';
 import { useProducts, Product } from '@/hooks/useProducts';
 import { useToast } from '@/hooks/use-toast';
 import { useCartPersistence } from '@/hooks/useCartPersistence';
-import { Slider } from '@/components/ui/slider';
+import { SmoothSlider } from '@/components/ui/SmoothSlider';
 import { Label } from '@/components/ui/label';
 
 interface Filters {
@@ -250,26 +250,54 @@ const Products = React.memo(() => {
     </div>
   );
 
-  const PriceRangeFilter = () => (
-    <div>
-      <h3 className="font-medium mb-2">Price Range</h3>
-      <div className="space-y-3">
-        <Slider
-          min={minPrice}
-          max={maxPrice}
-          step={Math.max(1, Math.floor((maxPrice - minPrice) / 100))}
-          value={filters.priceRange}
-          onValueChange={handlePriceChange}
-          className="w-full"
-          minStepsBetweenThumbs={1}
-        />
-        <div className="flex justify-between text-sm text-gray-600">
-          <span>₹{filters.priceRange[0]}</span>
-          <span>₹{filters.priceRange[1]}</span>
+  const PriceRangeFilter = React.memo(() => {
+    const step = useMemo(() => {
+      const range = maxPrice - minPrice;
+      return Math.max(1, Math.floor(range / 100)); // Optimal step size
+    }, [minPrice, maxPrice]);
+
+    // Throttle with animation frame for maximum smoothness
+    const handlePriceChange = useMemo(() => {
+      let animationFrame: number;
+      let lastValue: [number, number] | null = null;
+
+      return (value: [number, number]) => {
+        if (lastValue && value[0] === lastValue[0] && value[1] === lastValue[1]) {
+          return;
+        }
+
+        if (animationFrame) {
+          cancelAnimationFrame(animationFrame);
+        }
+
+        animationFrame = requestAnimationFrame(() => {
+          setFilters(prev => ({ ...prev, priceRange: value }));
+          setCurrentPage(1);
+          lastValue = value;
+        });
+      };
+    }, []);
+
+    return (
+      <div className="px-2">
+        <h3 className="font-medium mb-3">Price Range</h3>
+        <div className="space-y-4">
+          <SmoothSlider
+            min={minPrice}
+            max={maxPrice}
+            step={step}
+            value={filters.priceRange}
+            onValueChange={handlePriceChange}
+            minStepsBetweenThumbs={1}
+          />
+          <div className="flex justify-between text-sm text-gray-600 px-1">
+            <span>₹{filters.priceRange[0].toLocaleString()}</span>
+            <span>₹{filters.priceRange[1].toLocaleString()}</span>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  });
 
   const FiltersSidebar = ({ mobile = false }: { mobile?: boolean }) => (
     <Card className={mobile ? "p-4 lg:hidden" : "hidden lg:block w-64 shrink-0"}>
