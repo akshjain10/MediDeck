@@ -83,6 +83,7 @@ const ProductDetail = () => {
       if (!product) return;
 
       const productUrl = `${window.location.origin}/products/${product.id}`;
+      const previewUrl = `${window.location.origin}/products/${product.id}/preview`;
       const shareText = `Check out ${product.brandName} by ${product.company} - MRP ₹${product.mrp}\n\n${productUrl}`;
       const emailSubject = `Check out this product: ${product.brandName}`;
       const emailBody = `I thought you might be interested in this product:\n\n${shareText}`;
@@ -90,7 +91,7 @@ const ProductDetail = () => {
 
       switch (platform) {
         case 'whatsapp':
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, '_blank');
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(previewUrl)}, '_blank');
             break;
         case 'telegram':
             window.open(`https://t.me/share/url?url=${encodeURIComponent(productUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
