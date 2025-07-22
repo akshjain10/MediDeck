@@ -162,7 +162,7 @@ const ProductFormDialog = ({ open, onOpenChange, product, onAdd, onSave }: {
          try {
            await uploadImageToGithub({
              image,
-             imageName: formData.id!,
+             imageName: formData.id,
              repo: import.meta.env.VITE_GITHUB_REPO,
              owner: import.meta.env.VITE_GITHUB_OWNER,
              branch: 'main'

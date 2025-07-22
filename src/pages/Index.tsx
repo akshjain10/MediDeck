@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 import ProductCard from '@/components/ProductCard';
-import { ShoppingBag, Phone, Mail, Clock, Percent } from 'lucide-react';
+import { ShoppingBag, Phone, Mail, Clock} from 'lucide-react';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
