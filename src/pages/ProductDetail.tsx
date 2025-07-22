@@ -139,13 +139,11 @@ const ProductDetail = () => {
         {/* Open Graph tags */}
         <meta property="og:title" content={`${product.brandName} by ${product.company}`} />
         <meta property="og:description" content={`MRP ₹${product.mrp} - Available now!`} />
-        <meta property="og:image" content={`https://www.example.com/products/${product.id}.webp`} />
-        <meta property="og:url" content={`https://www.example.com/products/${product.id}`} />
+        <meta property="og:image" content={`https://www.arihantmedigens.com/products/${product.id}.webp`} />
+        <meta property="og:url" content={`https://www.arihantmedigens.com/products/${product.id}`} />
         <meta property="og:type" content="product" />
         <meta name="twitter:card" content="summary_large_image" />
       </Helmet>
-
-
       return (
         <div className="min-h-screen bg-gray-50">
           <Header
