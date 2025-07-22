@@ -8,14 +8,6 @@ import {
   Tabs, TabsList, TabsTrigger, TabsContent
 } from '@/components/ui/tabs';
 import ProductFormDialog from '@/components/ProductFormDialog';
-import { bulkUploadImagesToGithub } from '@/utils/imageUpload';
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from '@/components/ui/select';
 import {admin} from '@/integrations/supabase/admin';
 import { downloadCSV, readCSV } from '@/utils/csvUtils';
 import {
@@ -23,11 +15,10 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 import {
-  Upload, CheckCircle, Download, LogOut, Package, Eye, EyeOff, Building,
-  BarChart3, PlusCircle, Settings, Users, Activity
+  CheckCircle, LogOut, Package, Eye, EyeOff, Building,
+  BarChart3, PlusCircle, Settings, Users
 } from 'lucide-react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Label } from '@/components/ui/label';
+import { Table } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import AdminProductTable from '@/components/AdminProductTable';
 import { useAdminProducts, Product } from '@/hooks/useAdminProducts';
@@ -142,14 +133,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ adminName, onLogout }) 
 
             // Prepare data for insert
             const productsToInsert = csvData.map(row => ({
-                id: row.id || generateId(), // Let Supabase generate ID if not provided
+                id: row.id ?? generateId(), // Let Supabase generate ID if not provided
                 Name: row.Name,
-                Salt: row.Salt || '',
-                Company: row.Company || '',
-                Packing: row.Packing || '',
-                MRP: parseFloat(row.MRP) || 0,
-                Category: row.Category || '',
-                Division: row.Division || '',
+                Salt: row.Salt ?? '',
+                Company: row.Company ?? '',
+                Packing: row.Packing ?? '',
+                MRP: parseFloat(row.MRP) ?? 0,
+                Category: row.Category ?? '',
+                Division: row.Division ?? '',
                 visibility: true,// Default value
                 newArrivals: false
             }));

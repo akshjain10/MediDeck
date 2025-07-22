@@ -27,7 +27,7 @@ const [products, setProducts] = useState<Product[]>([]);
             if (error) throw error;
             const sanitizedProducts = (data || []).map(p => ({
                 ...p,
-                MRP: p.MRP === null || p.MRP === undefined ? 0 : p.MRP,
+                MRP: p.MRP ?? 0,
             }));
             setProducts(sanitizedProducts);
         } catch (error: any) {
@@ -40,13 +40,6 @@ const [products, setProducts] = useState<Product[]>([]);
     useEffect(() => {
         fetchProducts();
     }, [fetchProducts]);
-
-    const handleVisibilityToggle = (productId: string, isVisible: boolean) => {
-      setLocalProducts(prev =>
-        prev.map(p => p.id === productId ? { ...p, visibility: isVisible } : p)
-      );
-      setPendingVisChanges(prev => ({ ...prev, [productId]: isVisible }));
-    };
 
     const applyNewArrivalsChanges = async (changes: Record<string, boolean>) => {
         try {
