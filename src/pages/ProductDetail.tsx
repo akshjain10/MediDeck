@@ -242,6 +242,34 @@ const ProductDetail = () => {
   const cartItemsCount = cartItems.length;
 
   return (
+      <>
+      <Helmet>
+        {/* Always wrap dynamic content in braces {} */}
+        <title>{`${product.brandName} by ${product.company} - ₹${product.mrp}`}</title>
+        <meta
+          name="description"
+          content={`Buy ${product.brandName} from ${product.company}. MRP ₹${product.mrp}`}
+        />
+
+        {/* Open Graph tags */}
+        <meta
+          property="og:title"
+          content={`${product.brandName} by ${product.company}`}
+        />
+        <meta
+          property="og:description"
+          content={`MRP ₹${product.mrp} - Available now!`}
+        />
+        <meta
+          property="og:image"
+          content={`${window.location.origin}/products/${product.id}.webp`
+          }
+        />
+        <meta
+          property="og:url"
+          content={`${window.location.origin}/products/${product.id}`}
+        />
+      </Helmet>
       <div className="min-h-screen bg-gray-50">
         <Header
           cartItemsCount={cartItemsCount}
@@ -415,6 +443,7 @@ const ProductDetail = () => {
         />
       )}
     </div>
+    </>
   );
 };
 
