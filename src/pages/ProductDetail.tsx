@@ -132,21 +132,19 @@ const ProductDetail = () => {
     }
 
     if (!product) {
-      <Helmet>
-        <title>{product.brandName} by {product.company} - ₹{product.mrp}</title>
-        <meta name="description" content={`Buy ${product.brandName} from ${product.company}. MRP ₹${product.mrp}`} />
-
-        {/* Open Graph tags */}
-        <meta property="og:title" content={`${product.brandName} by ${product.company}`} />
-        <meta property="og:description" content={`MRP ₹${product.mrp} - Available now!`} />
-        <meta property="og:image" content={`https://www.example.com/products/${product.id}.webp`} />
-        <meta property="og:url" content={`https://www.example.com/products/${product.id}`} />
-        <meta property="og:type" content="product" />
-        <meta name="twitter:card" content="summary_large_image" />
-      </Helmet>
-
-
       return (
+          <Helmet>
+                  <title>{product.brandName} by {product.company} - ₹{product.mrp}</title>
+                  <meta name="description" content={`Buy ${product.brandName} from ${product.company}. MRP ₹${product.mrp}`} />
+
+                  {/* Open Graph tags */}
+                  <meta property="og:title" content={`${product.brandName} by ${product.company}`} />
+                  <meta property="og:description" content={`MRP ₹${product.mrp} - Available now!`} />
+                  <meta property="og:image" content={`https://www.example.com/products/${product.id}.webp`} />
+                  <meta property="og:url" content={`https://www.example.com/products/${product.id}`} />
+                  <meta property="og:type" content="product" />
+                  <meta name="twitter:card" content="summary_large_image" />
+                </Helmet>
         <div className="min-h-screen bg-gray-50">
           <Header
             cartItemsCount={0}
