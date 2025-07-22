@@ -91,7 +91,7 @@ const ProductDetail = () => {
 
       switch (platform) {
         case 'whatsapp':
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(previewUrl)}, '_blank');
+             window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(previewUrl)}`,'_blank');
             break;
         case 'telegram':
             window.open(`https://t.me/share/url?url=${encodeURIComponent(productUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
