@@ -262,7 +262,7 @@ const ProductDetail = () => {
         />
         <meta
           property="og:image"
-          content={`${window.location.origin}/images/products/${product.id}.webp`
+          content={`${window.location.origin}/products/${product.id}.webp`
           }
         />
         <meta
