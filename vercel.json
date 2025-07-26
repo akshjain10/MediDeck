@@ -1,6 +1,9 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/(.*)", "destination": "/index.html" },
+    {
+      "source": "/products/:id/preview", "destination": "/api/share/:id"
+    }
   ],
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "git": {

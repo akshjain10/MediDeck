@@ -83,6 +83,7 @@ const ProductDetail = () => {
       if (!product) return;
 
       const productUrl = `${window.location.origin}/products/${product.id}`;
+      const previewUrl = `${window.location.origin}/products/${product.id}/preview`;
       const shareText = `Check out ${product.brandName} by ${product.company} - MRP ₹${product.mrp}\n\n${productUrl}`;
       const emailSubject = `Check out this product: ${product.brandName}`;
       const emailBody = `I thought you might be interested in this product:\n\n${shareText}`;
@@ -90,7 +91,7 @@ const ProductDetail = () => {
 
       switch (platform) {
         case 'whatsapp':
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, '_blank');
+             window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(previewUrl)}`,'_blank');
             break;
         case 'telegram':
             window.open(`https://t.me/share/url?url=${encodeURIComponent(productUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
@@ -241,6 +242,34 @@ const ProductDetail = () => {
   const cartItemsCount = cartItems.length;
 
   return (
+      <>
+      <Helmet>
+        {/* Always wrap dynamic content in braces {} */}
+        <title>{`${product.brandName} by ${product.company} - ₹${product.mrp}`}</title>
+        <meta
+          name="description"
+          content={`Buy ${product.brandName} from ${product.company}. MRP ₹${product.mrp}`}
+        />
+
+        {/* Open Graph tags */}
+        <meta
+          property="og:title"
+          content={`${product.brandName} by ${product.company}`}
+        />
+        <meta
+          property="og:description"
+          content={`MRP ₹${product.mrp} - Available now!`}
+        />
+        <meta
+          property="og:image"
+          content={`${window.location.origin}/products/${product.id}.webp`
+          }
+        />
+        <meta
+          property="og:url"
+          content={`${window.location.origin}/products/${product.id}`}
+        />
+      </Helmet>
       <div className="min-h-screen bg-gray-50">
         <Header
           cartItemsCount={cartItemsCount}
@@ -414,6 +443,7 @@ const ProductDetail = () => {
         />
       )}
     </div>
+    </>
   );
 };
 
