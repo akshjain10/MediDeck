@@ -299,6 +299,17 @@ const ProductFormDialog = ({ open, onOpenChange, product, onAdd, onSave }: {
              </div>
 
              <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="Division" className="text-right">Division</Label>
+                            <Input
+                              id="Division"
+                              name="Division"
+                              value={formData.Division}
+                              onChange={handleChange}
+                              className="col-span-3"
+                            />
+             </div>
+
+             <div className="grid grid-cols-4 items-center gap-4">
                <Label htmlFor="Packing" className="text-right">Packing</Label>
                <Input
                  id="Packing"

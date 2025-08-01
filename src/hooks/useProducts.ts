@@ -43,7 +43,7 @@ export const useProducts = () => {
     try {
       const { data, error } = await supabase
         .from('Product')
-        .select('*,newArrivals')
+        .select('*')
         .eq('visibility', true); // Only fetch visible products
 
       if (error) {
