@@ -1,6 +1,6 @@
-# 🏥 Medcart Request Hub
+# 🏥 MediDeck
 
-**Medcart Request Hub** is a full-stack admin dashboard enabled online catalogue built for managing product listings in a medical e-commerce environment. It empowers admins to efficiently curate product visibility, perform bulk actions, and filter listings based on multiple criteria, helping streamline catalog operations for large-scale product databases.
+**MediDeck** is a full-stack admin dashboard enabled online catalogue built for managing product listings in a medical e-commerce environment. It empowers admins to efficiently curate product visibility, perform bulk actions, and filter listings based on multiple criteria, helping streamline catalog operations for large-scale product databases.
 
 ---
 
