@@ -1,73 +1,42 @@
-# Welcome to your Lovable project
+# 🏥 Medcart Request Hub
 
-## Project info
+**Medcart Request Hub** is a full-stack admin dashboard enabled online catalogue built for managing product listings in a medical e-commerce environment. It empowers admins to efficiently curate product visibility, perform bulk actions, and filter listings based on multiple criteria, helping streamline catalog operations for large-scale product databases.
 
-**URL**: https://lovable.dev/projects/205b329c-5419-4f81-9acd-63acc3bb3af0
+---
 
-## How can I edit this code?
+## 🚀 Features
 
-There are several ways of editing your application.
+### 🔧 Admin Dashboard
+- **Show/Hide Products**: Toggle visibility status for individual or multiple products.
+- **Advanced Filtering**:
+  - Filter by **Company**, **Division**, **Visibility**, and **New Arrival** status.
+- **Live Search**: Instantly find products with real-time search.
+- **Inline Editing**: Edit product details directly in the dashboard.
+- **CSV Upload/Download**: Import/export product data in CSV format for bulk updates.
+- **Image Check**: Identify and filter out products with missing images.
+- **Bulk Actions**: Update multiple product records with a single click.
+- **Product Statistics Panel**:
+  - Total product count
+  - Visible vs Hidden
+  - Breakdown by company and division
 
-**Use Lovable**
+---
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/205b329c-5419-4f81-9acd-63acc3bb3af0) and start prompting.
+## 🛠 Tech Stack
 
-Changes made via Lovable will be committed automatically to this repo.
+| Layer | Technology |
+|-------|------------|
+| **Frontend** | React.js, Vite.js, Tailwind CSS |
+| **Backend** | Supabase (PostgreSQL + REST API) |
+| **Deployment** | Vercel |
+| **Utilities** | CSV Parsing |
 
-**Use your preferred IDE**
+---
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 📦 Deployment
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+The app is deployed and live on **Vercel**.
 
-Follow these steps:
+➡️ **[Live Demo](https://arihantmedigens.com)**  
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/205b329c-5419-4f81-9acd-63acc3bb3af0) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+---
