@@ -58,6 +58,7 @@
     "input-otp": "^1.2.4",
     "lovable-tagger": "^1.1.8",
     "lucide-react": "^0.462.0",
+    "next": "^14.0.0",
     "next-themes": "^0.3.0",
     "octokit": "^5.0.3",
     "postgres": "^3.4.7",
